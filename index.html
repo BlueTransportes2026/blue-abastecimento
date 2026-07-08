@@ -30,6 +30,9 @@
   #topo h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.2px;line-height:1.1}
   #topo .tag{font-size:10px;opacity:.85;letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
   #topo p{margin:9px 0 0;font-size:11.5px;opacity:.9;display:flex;align-items:center;gap:6px}
+  #syncStatus.sync{margin-top:9px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;display:inline-block}
+  #syncStatus.nuvem{background:rgba(120,230,170,.28)}
+  #syncStatus.erro{background:#e5484d}
   .gear{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.15);color:#fff;width:34px;height:34px;border-radius:9px;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0}
   .gear:hover{background:rgba(255,255,255,.28)}
 
@@ -144,6 +147,7 @@
         </div>
       </div>
       <p>⛽ Roteirizador de Abastecimento · Brasil &amp; Mercosul</p>
+      <div id="syncStatus" class="sync local" onclick="sincronizar()" title="Clique para atualizar da nuvem">💾 Só neste computador</div>
     </div>
 
     <div class="tabs">
@@ -334,7 +338,36 @@ let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
 let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null;
 
-function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
+let modoNuvem=false, _saveTimer=null;
+function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); if(modoNuvem) salvarNuvem(); }
+function salvarNuvem(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(async ()=>{
+    try{ const r=await fetch('/postos',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(postos)}); statusNuvem(r.ok?'ok':'erro'); }
+    catch{ statusNuvem('erro'); }
+  }, 700);
+}
+async function carregarPostos(){
+  try{
+    const r=await fetch('/postos',{cache:'no-store'});
+    if(r.ok){
+      const arr=await r.json();
+      modoNuvem=true;
+      if(Array.isArray(arr) && arr.length){ postos=arr; localStorage.setItem('bluePostos',JSON.stringify(arr)); }
+      else if(postos.length){ salvarNuvem(); }
+      statusNuvem('ok');
+    } else statusNuvem('local');
+  }catch{ statusNuvem('local'); }
+  renderMarcadores();
+}
+async function sincronizar(){ statusNuvem('sync'); await carregarPostos(); }
+function statusNuvem(e){
+  const el=document.getElementById('syncStatus'); if(!el) return;
+  if(e==='ok'){ el.className='sync nuvem'; el.innerHTML='🌐 Compartilhado · salvo na nuvem'; }
+  else if(e==='sync'){ el.className='sync'; el.innerHTML='🔄 Sincronizando…'; }
+  else if(e==='erro'){ el.className='sync erro'; el.innerHTML='⚠️ Falha ao salvar na nuvem'; }
+  else { el.className='sync local'; el.innerHTML='💾 Só neste computador · toque p/ tentar nuvem'; }
+}
 function fmt(v){ return (v===''||v==null||isNaN(v))?'—':'R$ '+Number(v).toFixed(3).replace('.',','); }
 
 // ---------- Abas ----------
@@ -709,5 +742,5 @@ function importar(ev){ const f=ev.target.files[0]; if(!f) return; const rd=new F
 
 // ---------- Início ----------
 renderConfig();
-renderMarcadores();
+carregarPostos();
 </script>
