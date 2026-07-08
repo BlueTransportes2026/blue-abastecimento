@@ -1,0 +1,483 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blue Transportes — Roteirizador de Abastecimento</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  :root{
+    --azul:#0a4da2; --azul-escuro:#073471; --azul-claro:#e7f0fb; --ciano:#1c9dd7;
+    --verde:#12a150; --vermelho:#e5484d; --amarelo:#f5a623; --cinza:#6b7280;
+    --borda:#e2e6ee; --fundo:#f4f6fb; --texto:#1b2333;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--texto)}
+  #app{display:flex;height:100%;overflow:hidden}
+
+  #painel{width:390px;min-width:390px;background:#fff;border-right:1px solid var(--borda);display:flex;flex-direction:column;height:100%}
+  #topo{background:linear-gradient(135deg,var(--azul-escuro),var(--azul) 60%,var(--ciano));color:#fff;padding:18px 20px}
+  #topo .marca{display:flex;align-items:center;gap:10px}
+  #topo .logo{background:#fff;color:var(--azul-escuro);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800}
+  #topo h1{margin:0;font-size:19px;font-weight:800;letter-spacing:.3px}
+  #topo .tag{font-size:11px;opacity:.9;letter-spacing:2px;text-transform:uppercase}
+  #topo p{margin:8px 0 0;font-size:12px;opacity:.9}
+  .conteudo{padding:16px 18px;overflow-y:auto;flex:1}
+
+  .secao{margin-bottom:22px}
+  .secao h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--cinza);margin:0 0 10px}
+
+  label{display:block;font-size:12px;color:var(--cinza);margin:8px 0 3px;font-weight:600}
+  input,select{width:100%;padding:9px 10px;border:1px solid var(--borda);border-radius:8px;font-size:14px;outline:none;background:#fff}
+  input:focus,select:focus{border-color:var(--azul)}
+  .linha{display:flex;gap:8px}
+  .linha > *{flex:1}
+
+  button{cursor:pointer;border:none;border-radius:8px;font-size:14px;font-weight:600;padding:10px 12px;transition:.15s}
+  .btn-primario{background:var(--azul);color:#fff;width:100%}
+  .btn-primario:hover{background:var(--azul-escuro)}
+  .btn-sec{background:var(--azul-claro);color:var(--azul-escuro)}
+  .btn-sec:hover{background:#d3e4f8}
+  .btn-linha{display:flex;gap:8px;margin-top:10px}
+  .btn-linha button{flex:1}
+  .link-mini{background:none;color:var(--azul);text-decoration:underline;padding:4px 0;font-size:12px;font-weight:600;width:auto}
+
+  .aviso{background:#fff8e6;border:1px solid #ffe4a1;color:#7a5a00;font-size:12px;padding:10px 12px;border-radius:8px;line-height:1.5}
+
+  .cfg-mod{background:var(--fundo);border-radius:8px;padding:8px 10px;margin-top:8px}
+  .cfg-lbl{font-size:12px;font-weight:700;margin-bottom:2px}
+  .cfg-mod .linha > div{display:flex;flex-direction:column}
+  .cfg-mod span{font-size:10px;color:var(--cinza);margin:2px 0}
+
+  .custo{background:#eef3ff;border-radius:8px;padding:8px 10px;margin-top:8px;text-align:center}
+  .custo .rs{font-size:18px;font-weight:800;color:var(--azul-escuro)}
+  .custo .det{font-size:10px;color:var(--cinza);margin-top:2px}
+  .resumo-viagem{background:var(--azul-claro);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--azul-escuro);margin-bottom:12px;line-height:1.5}
+
+  .posto-card{border:1px solid var(--borda);border-radius:10px;padding:11px 12px;margin-bottom:10px;position:relative}
+  .posto-card.melhor{border-color:var(--verde);box-shadow:0 0 0 2px #12a15022}
+  .posto-card .nome{font-weight:700;font-size:14px;margin-bottom:2px}
+  .posto-card .dist{font-size:11px;color:var(--cinza);margin-bottom:8px}
+  .tag-melhor{position:absolute;top:-9px;right:10px;background:var(--verde);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+  .precos{display:flex;gap:6px;flex-wrap:wrap}
+  .preco{flex:1;min-width:70px;background:var(--fundo);border-radius:7px;padding:6px 7px;text-align:center}
+  .preco .lbl{font-size:9px;color:var(--cinza);text-transform:uppercase;letter-spacing:.4px}
+  .preco .val{font-size:14px;font-weight:700}
+  .preco.destaque{background:#e7f8ee}
+  .preco.destaque .val{color:var(--verde)}
+  .vazio{color:var(--cinza);font-size:13px;text-align:center;padding:18px 0}
+
+  .lista-todos{font-size:13px}
+  .lista-todos .item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--borda)}
+  .lista-todos .item a{color:var(--azul);cursor:pointer;text-decoration:none;font-weight:600}
+  .lista-todos .item .x{color:var(--vermelho);cursor:pointer;font-weight:700;padding:0 6px}
+
+  #mapa{flex:1;height:100%}
+  .contador{font-size:12px;color:var(--cinza);margin-top:6px}
+
+  #modal{position:fixed;inset:0;background:#0006;display:none;align-items:center;justify-content:center;z-index:1000}
+  #modal .caixa{background:#fff;border-radius:14px;padding:22px;width:340px;box-shadow:0 20px 60px #0004}
+  #modal h3{margin:0 0 4px;font-size:17px}
+  #modal .sub{font-size:12px;color:var(--cinza);margin-bottom:14px}
+
+  .pin{background:var(--azul);width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px #0005;display:flex;align-items:center;justify-content:center}
+  .pin span{transform:rotate(45deg);font-size:14px}
+  .pin.origem{background:var(--verde)}
+  .pin.destino{background:var(--vermelho)}
+  .pin.parada{background:var(--amarelo)}
+
+  .dica-add{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:var(--azul);color:#fff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;box-shadow:0 4px 12px #0003;display:none}
+  .modo-add{cursor:crosshair !important}
+</style>
+
+<div id="app">
+  <aside id="painel">
+    <div id="topo">
+      <div class="marca">
+        <div class="logo">B</div>
+        <div>
+          <h1>Blue Transportes</h1>
+          <div class="tag">Soluções em Transporte</div>
+        </div>
+      </div>
+      <p>Roteirizador de abastecimento — Brasil &amp; Mercosul</p>
+    </div>
+
+    <div class="conteudo">
+      <!-- Rota -->
+      <div class="secao">
+        <h2>🧭 Traçar rota</h2>
+        <label>Origem</label>
+        <input id="origem" placeholder="Cidade, endereço ou CEP" />
+
+        <div id="paradas"></div>
+        <button class="link-mini" onclick="addParada()">+ Adicionar parada</button>
+
+        <label>Destino</label>
+        <input id="destino" placeholder="Cidade, endereço ou CEP" />
+
+        <label>Modalidade da carga</label>
+        <select id="modalidade" onchange="if(rotaCoords) listarPostosNaRota()">
+          <option value="seca">🚛 Carga seca (Sider)</option>
+          <option value="container">📦 Container refrigerado</option>
+          <option value="frigo">❄️ Carreta frigorífica</option>
+        </select>
+
+        <label>Mostrar postos até <span id="raioLbl">15</span> km da estrada <small style="font-weight:400">(a rota não tem limite de km)</small></label>
+        <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords) listarPostosNaRota()" />
+
+        <div class="btn-linha">
+          <button class="btn-primario" onclick="tracarRota()">Traçar rota</button>
+          <button class="btn-sec" style="flex:0 0 auto" onclick="limparRota()">Limpar</button>
+        </div>
+        <div class="contador" id="infoRota"></div>
+      </div>
+
+      <!-- Resultado -->
+      <div class="secao" id="secaoResultado" style="display:none">
+        <h2>💰 Postos no caminho</h2>
+        <div id="resultado"></div>
+      </div>
+
+      <!-- Frota -->
+      <div class="secao">
+        <h2>🚛 Frota e consumo</h2>
+        <div class="linha">
+          <div><label>Diesel do caminhão</label>
+            <select id="cfgDiesel" onchange="salvarConfig()">
+              <option value="s10">Diesel S10</option>
+              <option value="s500">Diesel S500</option>
+            </select>
+          </div>
+          <div><label>Arla (% do diesel)</label>
+            <input id="cfgArla" type="number" step="0.5" onchange="salvarConfig()" />
+          </div>
+        </div>
+        <div class="cfg-mod">
+          <div class="cfg-lbl">🚛 Carga seca</div>
+          <div class="linha">
+            <div><span>km/l</span><input id="kml_seca" type="number" step="0.1" onchange="salvarConfig()" /></div>
+            <div><span>Aparelho (L/h)</span><input id="ap_seca" type="number" step="0.1" onchange="salvarConfig()" /></div>
+          </div>
+        </div>
+        <div class="cfg-mod">
+          <div class="cfg-lbl">📦 Container refrigerado</div>
+          <div class="linha">
+            <div><span>km/l</span><input id="kml_container" type="number" step="0.1" onchange="salvarConfig()" /></div>
+            <div><span>Aparelho (L/h)</span><input id="ap_container" type="number" step="0.1" onchange="salvarConfig()" /></div>
+          </div>
+        </div>
+        <div class="cfg-mod">
+          <div class="cfg-lbl">❄️ Carreta frigorífica</div>
+          <div class="linha">
+            <div><span>km/l</span><input id="kml_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div>
+            <div><span>Aparelho (L/h)</span><input id="ap_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cadastro -->
+      <div class="secao">
+        <h2>➕ Cadastrar posto</h2>
+        <button class="btn-sec" onclick="iniciarAddPosto()">Adicionar posto no mapa</button>
+        <div class="contador" id="contadorPostos"></div>
+      </div>
+
+      <!-- Todos os postos -->
+      <div class="secao">
+        <h2>📋 Postos cadastrados</h2>
+        <div class="lista-todos" id="listaTodos"></div>
+      </div>
+
+      <div class="aviso">
+        Os postos ficam salvos <b>neste computador/navegador</b>. Use "Exportar" para backup ou levar para outro PC.
+        <div class="btn-linha">
+          <button class="btn-sec" onclick="exportar()">⬇️ Exportar</button>
+          <button class="btn-sec" onclick="document.getElementById('arquivo').click()">⬆️ Importar</button>
+        </div>
+        <input type="file" id="arquivo" accept=".json" style="display:none" onchange="importar(event)" />
+      </div>
+    </div>
+  </aside>
+
+  <div style="flex:1;position:relative">
+    <div class="dica-add" id="dicaAdd">Clique no mapa onde fica o posto…</div>
+    <div id="mapa"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+  <div class="caixa">
+    <h3 id="modalTitulo">Novo posto</h3>
+    <div class="sub" id="modalLocal"></div>
+    <label>Nome do posto</label>
+    <input id="mNome" placeholder="Ex.: Posto Ipiranga BR-101" />
+    <label>Cidade / referência (opcional)</label>
+    <input id="mRef" placeholder="Ex.: Uberlândia - MG" />
+    <label>Gerenciadora de risco (opcional)</label>
+    <input id="mGr" placeholder="Ex.: Buonny / Apisul / etc" />
+    <div class="linha">
+      <div><label>Diesel S10 (R$)</label><input id="mS10" type="number" step="0.001" placeholder="6,29" /></div>
+      <div><label>Diesel S500 (R$)</label><input id="mS500" type="number" step="0.001" placeholder="6,09" /></div>
+    </div>
+    <label>Arla 32 (R$)</label>
+    <input id="mArla" type="number" step="0.001" placeholder="3,50" />
+    <div class="btn-linha">
+      <button class="btn-primario" onclick="salvarPosto()">Salvar</button>
+      <button class="btn-sec" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   BLUE TRANSPORTES — Roteirizador de Abastecimento
+   Mapa: Leaflet + OpenStreetMap / Satélite Esri (gratuito, sem chave)
+   Rotas: OSRM  |  Busca: Nominatim  |  Dados: localStorage
+========================================================= */
+
+// ---------- Config da frota ----------
+const configPadrao = {
+  dieselTipo:'s10', arlaPct:5,
+  modalidades:{ seca:{kml:2.8,aparelho:0}, container:{kml:2.4,aparelho:3.0}, frigo:{kml:2.3,aparelho:3.5} }
+};
+let config = Object.assign({}, configPadrao, JSON.parse(localStorage.getItem('blueConfig')||'{}'));
+
+function renderConfig(){
+  cfgDiesel.value=config.dieselTipo; cfgArla.value=config.arlaPct;
+  for(const k of ['seca','container','frigo']){
+    document.getElementById('kml_'+k).value=config.modalidades[k].kml;
+    document.getElementById('ap_'+k).value=config.modalidades[k].aparelho;
+  }
+}
+function salvarConfig(){
+  config.dieselTipo=cfgDiesel.value; config.arlaPct=parseFloat(cfgArla.value)||0;
+  for(const k of ['seca','container','frigo']){
+    config.modalidades[k].kml=parseFloat(document.getElementById('kml_'+k).value)||1;
+    config.modalidades[k].aparelho=parseFloat(document.getElementById('ap_'+k).value)||0;
+  }
+  localStorage.setItem('blueConfig',JSON.stringify(config));
+  if(rotaCoords) listarPostosNaRota();
+}
+
+// ---------- Estado ----------
+let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
+let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false;
+let paradas=[];                 // {id}
+let rotaCoords=null, rota_km=0, rota_horas=0;
+let marcadoresRota=[], linhaRota=null;
+
+function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
+function fmt(v){ return (v===''||v==null||isNaN(v))?'—':'R$ '+Number(v).toFixed(3).replace('.',','); }
+
+// ---------- Mapa ----------
+const mapa = L.map('mapa').setView([-15.78,-47.93],5);
+const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap', maxZoom:19}).addTo(mapa);
+const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
+L.control.layers({'🗺️ Ruas':ruas, '🛰️ Satélite':satelite}, null, {position:'topright'}).addTo(mapa);
+
+function pinIcon(classe,emoji){
+  return L.divIcon({className:'', html:`<div class="pin ${classe}"><span>${emoji}</span></div>`,
+    iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30]});
+}
+
+// ---------- Marcadores dos postos ----------
+function renderMarcadores(){
+  Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
+  postos.forEach(p=>{
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon('','⛽')}).addTo(mapa);
+    m.bindPopup(`<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.gr?'<br><small>🛡️ '+p.gr+'</small>':''}<br><br>
+      S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br><br>
+      <a href="#" onclick="editarPosto('${p.id}');return false">✏️ Editar</a> &nbsp;
+      <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">🗑️ Excluir</a>`);
+    marcadores[p.id]=m;
+  });
+  atualizarPainelPostos();
+}
+function atualizarPainelPostos(){
+  contadorPostos.textContent=postos.length+' posto(s) cadastrado(s)';
+  const el=document.getElementById('listaTodos');
+  el.innerHTML = postos.length ? postos.map(p=>`
+    <div class="item"><a onclick="irPara('${p.id}')">${p.nome}</a>
+    <span class="x" onclick="excluirPosto('${p.id}')">✕</span></div>`).join('')
+    : '<div class="vazio">Nenhum posto ainda. Clique em "Adicionar posto no mapa".</div>';
+}
+function irPara(id){ const p=postos.find(x=>x.id===id); mapa.setView([p.lat,p.lng],13); marcadores[id].openPopup(); }
+
+// ---------- Adicionar posto ----------
+function iniciarAddPosto(){ modoAddPosto=true; dicaAdd.style.display='block'; document.getElementById('mapa').classList.add('modo-add'); }
+mapa.on('click', e=>{
+  if(modoAddPosto){
+    modoAddPosto=false; dicaAdd.style.display='none'; document.getElementById('mapa').classList.remove('modo-add');
+    abrirModal(null, e.latlng.lat, e.latlng.lng);
+  }
+});
+function abrirModal(id,lat,lng){
+  editandoId=id;
+  if(id){ const p=postos.find(x=>x.id===id); coordNovoPosto={lat:p.lat,lng:p.lng};
+    modalTitulo.textContent='Editar posto';
+    mNome.value=p.nome; mRef.value=p.ref||''; mGr.value=p.gr||''; mS10.value=p.s10??''; mS500.value=p.s500??''; mArla.value=p.arla??'';
+  } else { coordNovoPosto={lat,lng}; modalTitulo.textContent='Novo posto';
+    mNome.value=''; mRef.value=''; mGr.value=''; mS10.value=''; mS500.value=''; mArla.value=''; }
+  modalLocal.textContent=`📍 ${coordNovoPosto.lat.toFixed(4)}, ${coordNovoPosto.lng.toFixed(4)}`;
+  modal.style.display='flex'; mNome.focus();
+}
+function fecharModal(){ modal.style.display='none'; editandoId=null; }
+function salvarPosto(){
+  if(!mNome.value.trim()){ alert('Dê um nome ao posto.'); return; }
+  const dados={ nome:mNome.value.trim(), ref:mRef.value.trim(), gr:mGr.value.trim(),
+    lat:coordNovoPosto.lat, lng:coordNovoPosto.lng,
+    s10:mS10.value===''?null:parseFloat(mS10.value), s500:mS500.value===''?null:parseFloat(mS500.value), arla:mArla.value===''?null:parseFloat(mArla.value) };
+  if(editandoId) Object.assign(postos.find(x=>x.id===editandoId), dados);
+  else { dados.id='p'+Date.now(); postos.push(dados); }
+  salvar(); renderMarcadores(); fecharModal();
+  if(rotaCoords) listarPostosNaRota();
+}
+function editarPosto(id){ mapa.closePopup(); abrirModal(id); }
+function excluirPosto(id){
+  if(!confirm('Excluir este posto?')) return;
+  postos=postos.filter(x=>x.id!==id); salvar(); renderMarcadores();
+  if(rotaCoords) listarPostosNaRota();
+}
+
+// ---------- Paradas ----------
+function addParada(){
+  const id='w'+Date.now();
+  const box=document.createElement('div'); box.className='linha'; box.style.marginTop='6px'; box.id='box_'+id;
+  box.innerHTML=`<input id="${id}" placeholder="Parada intermediária" />
+    <button class="btn-sec" style="flex:0 0 auto" onclick="removerParada('${id}')">✕</button>`;
+  document.getElementById('paradas').appendChild(box);
+  paradas.push({id});
+}
+function removerParada(id){ const b=document.getElementById('box_'+id); if(b) b.remove(); paradas=paradas.filter(p=>p.id!==id); }
+
+// ---------- Busca de endereço (Nominatim) ----------
+async function geocode(texto){
+  const m=texto.match(/^\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*$/);
+  if(m) return {lat:parseFloat(m[1]), lng:parseFloat(m[2])};
+  const url=`https://nominatim.openstreetmap.org/search?format=json&countrycodes=br,ar,uy,py,cl&limit=1&q=${encodeURIComponent(texto)}`;
+  try{ const r=await fetch(url); const d=await r.json(); if(d.length) return {lat:parseFloat(d[0].lat), lng:parseFloat(d[0].lon)}; }catch{}
+  return null;
+}
+
+// ---------- Traçar rota ----------
+async function tracarRota(){
+  infoRota.textContent='Buscando endereços…';
+  const oTxt=origem.value.trim(), dTxt=destino.value.trim();
+  if(!oTxt || !dTxt){ infoRota.textContent='Informe origem e destino.'; return; }
+
+  const o=await geocode(oTxt), d=await geocode(dTxt);
+  if(!o||!d){ infoRota.textContent='Não encontrei um dos endereços. Tente ser mais específico (cidade + estado).'; return; }
+
+  const coordsReq=[o];
+  for(const p of paradas){
+    const txt=document.getElementById(p.id)?.value.trim();
+    if(txt){ const g=await geocode(txt); if(g) coordsReq.push(g); }
+  }
+  coordsReq.push(d);
+
+  infoRota.textContent='Calculando rota…';
+  const path=coordsReq.map(c=>`${c.lng},${c.lat}`).join(';');
+  const url=`https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
+  let rota;
+  try{ const r=await fetch(url); const j=await r.json(); if(j.code!=='Ok'){ infoRota.textContent='Não consegui traçar essa rota.'; return;} rota=j.routes[0]; }
+  catch{ infoRota.textContent='Erro ao calcular a rota (verifique a internet).'; return; }
+
+  // limpa rota anterior
+  if(linhaRota) mapa.removeLayer(linhaRota);
+  marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[];
+
+  const coords=rota.geometry.coordinates.map(c=>[c[1],c[0]]);
+  linhaRota=L.polyline(coords,{color:'#0a4da2',weight:6,opacity:.85}).addTo(mapa);
+  rotaCoords=coords; rota_km=rota.distance/1000; rota_horas=rota.duration/3600;
+
+  // marcadores origem/paradas/destino
+  coordsReq.forEach((c,i)=>{
+    let cls='parada', txt='B', emoji='●';
+    if(i===0){ cls='origem'; emoji='A'; } else if(i===coordsReq.length-1){ cls='destino'; emoji='B'; } else { cls='parada'; emoji=String(i); }
+    marcadoresRota.push(L.marker([c.lat,c.lng],{icon:pinIcon(cls,emoji)}).addTo(mapa));
+  });
+  mapa.fitBounds(linhaRota.getBounds(),{padding:[50,50]});
+
+  const h=Math.floor(rota_horas), min=Math.round((rota_horas-h)*60);
+  infoRota.innerHTML=`🛣️ <b>${rota_km.toFixed(0)} km</b> · ⏱️ ~${h}h${String(min).padStart(2,'0')}`;
+  listarPostosNaRota();
+}
+function limparRota(){
+  origem.value=''; destino.value='';
+  paradas.forEach(p=>{ const b=document.getElementById('box_'+p.id); if(b) b.remove(); }); paradas=[];
+  if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
+  marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[];
+  rotaCoords=null; secaoResultado.style.display='none'; infoRota.textContent='';
+}
+
+// ---------- Distância ponto → rota ----------
+function distToRota(p, coords){
+  const kx=111.32*Math.cos(p.lat*Math.PI/180), ky=110.57;
+  const px=p.lng*kx, py=p.lat*ky; let min=Infinity;
+  for(let i=0;i<coords.length-1;i++){
+    const ax=coords[i][1]*kx, ay=coords[i][0]*ky, bx=coords[i+1][1]*kx, by=coords[i+1][0]*ky;
+    const dx=bx-ax, dy=by-ay, len2=dx*dx+dy*dy||1e-9;
+    let t=((px-ax)*dx+(py-ay)*dy)/len2; t=Math.max(0,Math.min(1,t));
+    const dd=Math.hypot(px-(ax+t*dx), py-(ay+t*dy)); if(dd<min) min=dd;
+  }
+  return min;
+}
+
+function listarPostosNaRota(){
+  const raio=parseFloat(document.getElementById('raio').value);
+  const mod=modalidade.value, m=config.modalidades[mod];
+  const dkey=config.dieselTipo, dnome=dkey==='s10'?'S10':'S500';
+  const litrosDiesel=rota_km/m.kml + m.aparelho*rota_horas;
+  const litrosArla=litrosDiesel*config.arlaPct/100;
+
+  secaoResultado.style.display='block';
+  const el=document.getElementById('resultado');
+  let lista=postos.map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
+
+  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto cadastrado dentro de ${raio} km da rota.</div>`; return; }
+
+  lista.forEach(p=>{ if(p[dkey]==null){ p.custo=null; return; } p.custo=litrosDiesel*p[dkey]+(p.arla!=null?litrosArla*p.arla:0); });
+  lista.sort((a,b)=>{ if(a.custo==null&&b.custo==null) return a.dist-b.dist; if(a.custo==null) return 1; if(b.custo==null) return -1; return a.custo-b.custo; });
+  const melhorId=lista.find(p=>p.custo!=null)?.id;
+
+  const resumo=`<div class="resumo-viagem">
+    Modalidade: <b>${modalidade.selectedOptions[0].text}</b><br>
+    Consumo estimado: <b>${litrosDiesel.toFixed(0)} L</b> de diesel${config.arlaPct>0?` + <b>${litrosArla.toFixed(0)} L</b> de arla`:''}
+    ${m.aparelho>0?`<br><small>(inclui aparelho: ${m.aparelho} L/h × ${rota_horas.toFixed(1)}h)</small>`:''}</div>`;
+
+  el.innerHTML = resumo + lista.map(p=>{
+    const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
+    const custoBox = p.custo!=null
+      ? `<div class="custo"><div class="rs">R$ ${p.custo.toFixed(2).replace('.',',')}</div><div class="det">abastecer a viagem toda aqui (${dnome}${p.arla!=null?' + arla':''})</div></div>`
+      : `<div class="custo"><div class="det" style="padding:4px 0">Sem preço de ${dnome} cadastrado</div></div>`;
+    return `<div class="posto-card ${p.id===melhorId?'melhor':''}">
+      ${p.id===melhorId?'<span class="tag-melhor">MAIS BARATO</span>':''}
+      <div class="nome">${p.nome}</div>
+      <div class="dist">${p.ref?p.ref+' · ':''}${p.gr?'🛡️ '+p.gr+' · ':''}${p.dist.toFixed(1)} km da rota</div>
+      <div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>
+      ${custoBox}</div>`;
+  }).join('');
+}
+
+// ---------- Backup ----------
+function exportar(){
+  const blob=new Blob([JSON.stringify(postos,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='postos-blue-transportes.json'; a.click();
+}
+function importar(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=e=>{ try{ const d=JSON.parse(e.target.result); if(!Array.isArray(d)) throw 0;
+      if(confirm('Isso vai substituir os postos atuais por '+d.length+' posto(s). Continuar?')){ postos=d; salvar(); renderMarcadores(); }
+    }catch{ alert('Arquivo inválido.'); } ev.target.value=''; };
+  rd.readAsText(f);
+}
+
+['origem','destino'].forEach(id=>document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') tracarRota(); }));
+
+// ---------- Início ----------
+renderConfig();
+renderMarcadores();
+</script>
