@@ -219,6 +219,16 @@
         </div>
 
         <div class="secao">
+          <h2>📄 Importar lista (CSV da KMM)</h2>
+          <div class="card-form">
+            <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Exporte a lista de postos da KMM em CSV e importe aqui de uma vez. O sistema <b>localiza cada posto no mapa</b> pelo endereço. Os <b>preços você preenche depois</b> (o CSV da KMM não traz preço).</p>
+            <button class="btn-sec" onclick="document.getElementById('csvFile').click()">📄 Escolher arquivo CSV</button>
+            <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="importarCSV(event)" />
+            <div class="status" id="csvStatus"></div>
+          </div>
+        </div>
+
+        <div class="secao">
           <h2>📋 Postos cadastrados (<span id="qtdPostos">0</span>)</h2>
           <div class="lista-todos" id="listaTodos"></div>
         </div>
@@ -348,6 +358,7 @@ function pinIcon(classe,emoji){ return L.divIcon({className:'', html:`<div class
 function renderMarcadores(){
   Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
   postos.forEach(p=>{
+    if(p.lat==null||p.lng==null) return;
     const m=L.marker([p.lat,p.lng],{icon:pinIcon('','⛽')}).addTo(mapa);
     m.bindPopup(`<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.gr?'<br><small>🛡️ '+p.gr+'</small>':''}<br><br>
       S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br><br>
@@ -364,7 +375,7 @@ function atualizarLista(){
     <div class="item">
       <div class="info" onclick="irPara('${p.id}')">
         <div class="nm">${p.nome}</div>
-        <div class="sub">${p.ref||''}${p.gr?' · 🛡️ '+p.gr:''} · S10 ${fmt(p.s10)}</div>
+        <div class="sub">${p.ref||''}${p.lat==null?' · ⚠️ sem local':''}${p.gr?' · 🛡️ '+p.gr:''} · S10 ${fmt(p.s10)}</div>
       </div>
       <div class="acoes">
         <button class="ac ed" onclick="editarPosto('${p.id}')" title="Editar">✏️</button>
@@ -374,7 +385,7 @@ function atualizarLista(){
     : '<div class="vazio">Nenhum posto cadastrado ainda.<br>Busque um CNPJ ou marque no mapa acima.</div>';
   popularPostosSelect();
 }
-function irPara(id){ const p=postos.find(x=>x.id===id); mapa.setView([p.lat,p.lng],14); marcadores[id].openPopup(); }
+function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
 
 // Selecionar um posto cadastrado como ponto de partida
 function popularPostosSelect(){
@@ -421,7 +432,7 @@ function limparFormPosto(){
 function salvarPosto(){
   if(!pNome.value.trim()){ alert('Dê um nome ao posto.'); return; }
   if(!coordNovoPosto){ alert('Defina a localização: busque o CNPJ ou clique em "Marcar/ajustar no mapa".'); return; }
-  const dados={ nome:pNome.value.trim(), ref:pRef.value.trim(), gr:pGr.value.trim(),
+  const dados={ nome:pNome.value.trim(), ref:pRef.value.trim(), gr:pGr.value.trim(), cnpj:(pCnpj.value||'').replace(/\D/g,''),
     lat:coordNovoPosto.lat, lng:coordNovoPosto.lng,
     s10:pS10.value===''?null:parseFloat(pS10.value), s500:pS500.value===''?null:parseFloat(pS500.value), arla:pArla.value===''?null:parseFloat(pArla.value) };
   if(editandoId) Object.assign(postos.find(x=>x.id===editandoId), dados);
@@ -434,7 +445,7 @@ function editarPosto(id){
   const p=postos.find(x=>x.id===id); if(!p) return;
   mapa.closePopup(); mostrarAba('postos');
   editandoId=id; pNome.value=p.nome; pRef.value=p.ref||''; pGr.value=p.gr||'';
-  pS10.value=p.s10??''; pS500.value=p.s500??''; pArla.value=p.arla??''; pCnpj.value=''; cnpjStatus.textContent='';
+  pS10.value=p.s10??''; pS500.value=p.s500??''; pArla.value=p.arla??''; pCnpj.value=p.cnpj||''; cnpjStatus.textContent='';
   definirLocal(p.lat,p.lng);
   document.getElementById('tituloForm').textContent='✏️ Editar posto';
   document.querySelector('.conteudo').scrollTop=0;
@@ -471,6 +482,47 @@ async function geocode(texto){
   const url=`https://nominatim.openstreetmap.org/search?format=json&countrycodes=br,ar,uy,py,cl&limit=1&q=${encodeURIComponent(texto)}`;
   try{ const r=await fetch(url); const d=await r.json(); if(d.length) return {lat:parseFloat(d[0].lat), lng:parseFloat(d[0].lon)}; }catch{}
   return null;
+}
+
+// ---------- Importar CSV (KMM) ----------
+let _lastGeo=0;
+function _norm(s){ return (s||'').toString().normalize('NFD').replace(/[^\x00-\x7f]/g,'').toLowerCase().trim(); }
+async function _geoThrottle(q){
+  const w=1100-(Date.now()-_lastGeo); if(w>0) await new Promise(r=>setTimeout(r,w));
+  _lastGeo=Date.now(); return await geocode(q);
+}
+async function importarCSV(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=async e=>{
+    const linhas=e.target.result.split(/\r?\n/).filter(l=>l.trim());
+    if(linhas.length<2){ csvStatus.textContent='❌ CSV vazio ou sem dados.'; ev.target.value=''; return; }
+    const sep=(linhas[0].match(/;/g)||[]).length >= (linhas[0].match(/,/g)||[]).length ? ';' : ',';
+    const head=linhas[0].split(sep).map(_norm);
+    const col=t=>head.findIndex(h=>h.includes(t));
+    const ci={ nome:col('nome fantasia'), razao:col('razao'), cnpj:col('cnpj'), end:col('endereco'), loc:col('localidade'), cep:col('cep'), tel:col('telefone') };
+    if(ci.nome<0 && ci.razao<0){ csvStatus.textContent='❌ Não achei a coluna de nome do posto no CSV.'; ev.target.value=''; return; }
+    let add=0, pulados=0, semLoc=0; const cache={};
+    for(let i=1;i<linhas.length;i++){
+      const c=linhas[i].split(sep);
+      const gv=idx=> idx>=0 && c[idx]!=null ? c[idx].trim() : '';
+      const nome=gv(ci.nome)||gv(ci.razao); if(!nome) continue;
+      const cnpj=gv(ci.cnpj).replace(/\D/g,'');
+      if(cnpj && postos.some(p=>(p.cnpj||'').replace(/\D/g,'')===cnpj)){ pulados++; continue; }
+      const loc=gv(ci.loc), end=gv(ci.end), cep=gv(ci.cep);
+      csvStatus.textContent=`🔎 Localizando ${i}/${linhas.length-1}: ${nome}…`;
+      const q1=[end,loc,cep].filter(Boolean).join(', '), q2=loc;
+      let geo = q1 ? (cache[q1]!==undefined?cache[q1]:(cache[q1]=await _geoThrottle(q1))) : null;
+      if(!geo && q2) geo = cache[q2]!==undefined?cache[q2]:(cache[q2]=await _geoThrottle(q2));
+      const posto={ id:'p'+Date.now()+'_'+i, nome, ref:loc, gr:'', cnpj, tel:gv(ci.tel), s10:null, s500:null, arla:null, lat:null, lng:null };
+      if(geo){ posto.lat=geo.lat; posto.lng=geo.lng; } else semLoc++;
+      postos.push(posto); add++;
+    }
+    salvar(); renderMarcadores();
+    csvStatus.innerHTML=`✅ Importados <b>${add}</b> posto(s).${pulados?' '+pulados+' já existiam.':''}${semLoc?' ⚠️ '+semLoc+' sem localização (edite p/ marcar no mapa).':''}<br>Agora cadastre os <b>preços</b> de cada posto.`;
+    ev.target.value='';
+  };
+  rd.readAsText(f,'UTF-8');
 }
 
 // ---------- Paradas ----------
@@ -594,7 +646,7 @@ function listarPostosNaRota(){
   const litrosArla=litrosDiesel*config.arlaPct/100;
   secaoResultado.style.display='block';
   const el=document.getElementById('resultado');
-  let lista=postos.map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
+  let lista=postos.filter(p=>p.lat!=null&&p.lng!=null).map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
   if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto cadastrado dentro de ${raio} km da rota.<br>Cadastre postos na aba "⛽ Postos".</div>`; return; }
   lista.forEach(p=>{ if(p[dkey]==null){ p.custo=null; return; } p.custo=litrosDiesel*p[dkey]+(p.arla!=null?litrosArla*p.arla:0); });
   lista.sort((a,b)=>{ if(a.custo==null&&b.custo==null) return a.dist-b.dist; if(a.custo==null) return 1; if(b.custo==null) return -1; return a.custo-b.custo; });
