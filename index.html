@@ -158,7 +158,10 @@
         <div class="secao">
           <div class="card-form">
             <label>Origem</label>
-            <input id="origem" placeholder="Cidade, endereço ou CEP" />
+            <input id="origem" placeholder="Cidade, endereço ou CEP" oninput="origemSel=null" />
+            <select id="origemPostoSel" onchange="usarPostoComoOrigem(this.value)" style="margin-top:6px">
+              <option value="">— ou partir de um posto cadastrado —</option>
+            </select>
             <label>Destino</label>
             <input id="destino" placeholder="Cidade, endereço ou CEP" />
             <div id="paradas"></div>
@@ -319,7 +322,7 @@ function fecharFrota(){ modalFrota.style.display='none'; }
 // ---------- Estado ----------
 let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
-let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='';
+let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null;
 
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
 function fmt(v){ return (v===''||v==null||isNaN(v))?'—':'R$ '+Number(v).toFixed(3).replace('.',','); }
@@ -369,8 +372,24 @@ function atualizarLista(){
       </div>
     </div>`).join('')
     : '<div class="vazio">Nenhum posto cadastrado ainda.<br>Busque um CNPJ ou marque no mapa acima.</div>';
+  popularPostosSelect();
 }
 function irPara(id){ const p=postos.find(x=>x.id===id); mapa.setView([p.lat,p.lng],14); marcadores[id].openPopup(); }
+
+// Selecionar um posto cadastrado como ponto de partida
+function popularPostosSelect(){
+  const sel=document.getElementById('origemPostoSel'); if(!sel) return;
+  const atual=sel.value;
+  sel.innerHTML='<option value="">— ou partir de um posto cadastrado —</option>'+
+    postos.map(p=>`<option value="${p.id}">⛽ ${p.nome}${p.ref?' ('+p.ref+')':''}</option>`).join('');
+  sel.value=atual;
+}
+function usarPostoComoOrigem(id){
+  if(!id){ origemSel=null; return; }
+  const p=postos.find(x=>x.id===id); if(!p) return;
+  origemSel={lat:p.lat,lng:p.lng};
+  origem.value=p.nome;
+}
 
 // ---------- Formulário de posto ----------
 function marcarNoMapa(){
@@ -469,8 +488,9 @@ async function tracarRota(){
   rotaTitulo='';
   infoRota.textContent='Buscando endereços…';
   const oTxt=origem.value.trim(), dTxt=destino.value.trim();
-  if(!oTxt||!dTxt){ infoRota.textContent='Informe origem e destino.'; return; }
-  const o=await geocode(oTxt), d=await geocode(dTxt);
+  if((!oTxt && !origemSel)||!dTxt){ infoRota.textContent='Informe origem e destino.'; return; }
+  const o = origemSel || await geocode(oTxt);
+  const d = await geocode(dTxt);
   if(!o||!d){ infoRota.textContent='Não encontrei um dos endereços. Tente cidade + estado.'; return; }
   const coordsReq=[o];
   for(const p of paradas){ const txt=document.getElementById(p.id)?.value.trim(); if(txt){ const g=await geocode(txt); if(g) coordsReq.push(g); } }
@@ -492,8 +512,7 @@ async function desenharRota(coordsReq){
   rotaCoords=coords; rota_km=rota.distance/1000; rota_horas=rota.duration/3600;
   coordsReq.forEach((c,i)=>{ let cls='parada',emoji=String(i); if(i===0){cls='origem';emoji='A';} else if(i===coordsReq.length-1){cls='destino';emoji='B';} marcadoresRota.push(L.marker([c.lat,c.lng],{icon:pinIcon(cls,emoji)}).addTo(mapa)); });
   mapa.fitBounds(linhaRota.getBounds(),{padding:[50,50]});
-  const h=Math.floor(rota_horas), min=Math.round((rota_horas-h)*60);
-  infoRota.innerHTML=`🛣️ <b>${rota_km.toFixed(0)} km</b> · ⏱️ ~${h}h${String(min).padStart(2,'0')}`;
+  infoRota.innerHTML=`🛣️ <b>${rota_km.toFixed(0)} km</b>`;
   listarPostosNaRota();
   return true;
 }
@@ -599,7 +618,7 @@ function listarPostosNaRota(){
     const custoBox = p.custo!=null
       ? `<div class="custo"><div class="rs">R$ ${p.custo.toFixed(2).replace('.',',')}</div><div class="det">abastecer a viagem toda aqui (${dnome}${p.arla!=null?' + arla':''})</div></div>`
       : `<div class="custo"><div class="det" style="padding:4px 0">Sem preço de ${dnome} cadastrado</div></div>`;
-    return `<div class="posto-card ${p.id===melhorId?'melhor':''}">${p.id===melhorId?'<span class="tag-melhor">MAIS BARATO</span>':''}
+    return `<div class="posto-card">
       <div class="nome">${p.nome}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${p.gr?'🛡️ '+p.gr+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       <div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>${custoBox}</div>`;
