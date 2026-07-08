@@ -244,6 +244,7 @@
             <button class="btn-sec" onclick="document.getElementById('arquivo').click()">⬆️ Importar</button>
           </div>
           <input type="file" id="arquivo" accept=".json" style="display:none" onchange="importar(event)" />
+          <button onclick="limparTodos()" style="width:100%;margin-top:10px;background:#fdeaea;color:#e5484d">🗑️ Excluir TODOS os postos</button>
         </div>
       </div>
 
@@ -482,6 +483,13 @@ function editarPosto(id){
   definirLocal(p.lat,p.lng);
   document.getElementById('tituloForm').textContent='✏️ Editar posto';
   document.querySelector('.conteudo').scrollTop=0;
+}
+function limparTodos(){
+  if(!postos.length){ alert('Não há postos para excluir.'); return; }
+  if(!confirm('Excluir TODOS os '+postos.length+' postos? Isso não pode ser desfeito'+(modoNuvem?' e apaga também da nuvem (para todos).':'.'))) return;
+  if(!confirm('Tem certeza mesmo? Confirme para apagar tudo.')) return;
+  postos=[]; salvar(); renderMarcadores();
+  alert('Todos os postos foram excluídos.');
 }
 function excluirPosto(id){
   if(!confirm('Excluir este posto?')) return;
