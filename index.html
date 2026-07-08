@@ -133,6 +133,14 @@
     #painel{width:100%;min-width:0;height:auto;max-height:54vh;border-right:none;border-bottom:1px solid var(--line)}
     .map-wrap{height:46vh;flex:none}
   }
+
+  /* Modo motorista (quando abre um link compartilhado) */
+  body.motorista .tabs,
+  body.motorista .gear,
+  body.motorista #topo p,
+  body.motorista #syncStatus,
+  body.motorista #secaoRotaForm,
+  body.motorista #resultado .acoes-rota{ display:none !important; }
 </style>
 
 <div id="app">
@@ -159,7 +167,14 @@
     <div class="conteudo">
       <!-- ================= ABA ROTA ================= -->
       <div id="aba-rota">
-        <div class="secao">
+        <div id="bannerMotorista" style="display:none">
+          <div class="secao"><div class="card-form" style="text-align:center">
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px">🚚 Rota de abastecimento</div>
+            <div id="tituloMotorista" style="font-size:16px;font-weight:800;color:var(--brand-800);margin-top:5px"></div>
+            <div style="font-size:12px;color:var(--muted);margin-top:5px">Postos recomendados abaixo — do mais barato ao mais caro</div>
+          </div></div>
+        </div>
+        <div class="secao" id="secaoRotaForm">
           <div class="card-form">
             <label>Origem</label>
             <input id="origem" placeholder="Cidade, endereço ou CEP" oninput="origemSel=null" />
@@ -277,6 +292,21 @@
   </div>
 </div>
 
+<!-- MODAL LINK MOTORISTA -->
+<div class="modal" id="modalLink">
+  <div class="caixa">
+    <h3>🔗 Link para o motorista</h3>
+    <div class="sub" id="linkInfo"></div>
+    <input id="linkInput" readonly onclick="this.select()" style="font-size:12px" />
+    <div class="btn-linha">
+      <button class="btn-sec" id="linkCopiar" onclick="copiarLink()">📋 Copiar link</button>
+      <a id="linkWa" target="_blank" class="btn-primario" style="text-align:center;text-decoration:none;line-height:1.4">📲 Enviar no WhatsApp</a>
+    </div>
+    <div class="btn-linha"><button class="btn-sec" onclick="fecharLink()">Fechar</button></div>
+    <div class="sub" style="margin-top:10px">O motorista abre o link no celular e vê a rota e os postos com preço. Não precisa senha nem app.</div>
+  </div>
+</div>
+
 <!-- MODAL FROTA -->
 <div class="modal" id="modalFrota">
   <div class="caixa">
@@ -337,7 +367,7 @@ function fecharFrota(){ modalFrota.style.display='none'; }
 // ---------- Estado ----------
 let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
-let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null;
+let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, rotaPontos=null;
 
 let modoNuvem=false, _saveTimer=null;
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); if(modoNuvem) salvarNuvem(); }
@@ -634,6 +664,7 @@ async function tracarRota(){
 }
 
 async function desenharRota(coordsReq){
+  rotaPontos=coordsReq;
   if(coordsReq.length<2){ infoRota.textContent='Preciso de origem e destino.'; return false; }
   infoRota.textContent='Calculando rota…';
   const path=coordsReq.map(c=>`${c.lng},${c.lat}`).join(';');
@@ -747,8 +778,10 @@ function listarPostosNaRota(){
   printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, modalidade:modalidade.selectedOptions[0].text,
     litrosDiesel, litrosArla, dnome, economia:comCusto.length>=2?Math.max(...comCusto.map(p=>p.custo))-comCusto[0].custo:0, lista, melhorId };
 
-  const btnPrint=`<button class="btn-sec" style="width:100%;margin-bottom:11px" onclick="imprimirRota()">🖨️ Imprimir / PDF da rota</button>`;
-  el.innerHTML = btnPrint + resumo + economiaHtml + lista.map(p=>{
+  const btnAcoes=`<div class="btn-linha acoes-rota" style="margin-top:0;margin-bottom:11px">
+    <button class="btn-sec" onclick="imprimirRota()">🖨️ Imprimir</button>
+    <button class="btn-primario" onclick="gerarLinkMotorista()">🔗 Link p/ motorista</button></div>`;
+  el.innerHTML = btnAcoes + resumo + economiaHtml + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
     const custoBox = p.custo!=null
       ? `<div class="custo"><div class="rs">R$ ${p.custo.toFixed(2).replace('.',',')}</div><div class="det">abastecer a viagem toda aqui (${dnome}${p.arla!=null?' + arla':''})</div></div>`
@@ -782,6 +815,49 @@ function imprimirRota(){
   win.document.close(); win.focus(); setTimeout(()=>win.print(),300);
 }
 
+// ---------- Link para o motorista ----------
+function gerarLinkMotorista(){
+  if(!rotaPontos || rotaPontos.length<2){ alert('Trace uma rota primeiro.'); return; }
+  const raio=parseFloat(document.getElementById('raio').value);
+  const pts=postos.filter(p=>p.lat!=null && (p.s10!=null||p.s500!=null) && distToRota(p,rotaCoords)<=raio)
+    .map(p=>({n:p.nome, r:p.ref||'', la:+(+p.lat).toFixed(5), lo:+(+p.lng).toFixed(5), a:p.s10, b:p.s500, c:p.arla, h:p.hom||'', d:p.dtNeg||''}));
+  const payload={ v:1, t:rotaTitulo||'', m:modalidade.value, raio, cfg:config,
+    o:rotaPontos.map(c=>[+(+c.lat).toFixed(5),+(+c.lng).toFixed(5)]), p:pts };
+  const enc=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
+  const url=location.origin+location.pathname+'#rota='+enc;
+  linkInput.value=url;
+  linkInfo.innerHTML=`${pts.length} posto(s) com preço nesta rota.`+(url.length>7000?' ⚠️ Link longo — pode ser cortado em alguns apps.':'');
+  linkWa.href='https://wa.me/?text='+encodeURIComponent('⛽ Rota de abastecimento — Blue Transportes:\n'+url);
+  modalLink.style.display='flex';
+  try{ navigator.clipboard.writeText(url); }catch{}
+}
+function copiarLink(){
+  linkInput.select();
+  try{ document.execCommand('copy'); }catch{}
+  try{ navigator.clipboard.writeText(linkInput.value); }catch{}
+  linkCopiar.textContent='✅ Copiado!'; setTimeout(()=>linkCopiar.textContent='📋 Copiar link',1600);
+}
+function fecharLink(){ modalLink.style.display='none'; }
+
+function checarLinkMotorista(){
+  const m=(location.hash||'').match(/[#&]rota=(.+)$/);
+  if(!m) return false;
+  let payload;
+  try{ payload=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1]))))); }catch{ return false; }
+  document.body.classList.add('motorista');
+  if(payload.cfg) config=payload.cfg;
+  if(payload.raio!=null) document.getElementById('raio').value=payload.raio;
+  if(payload.m){ try{ modalidade.value=payload.m; }catch{} }
+  rotaTitulo=payload.t||'Rota do motorista';
+  postos=(payload.p||[]).map((p,i)=>({id:'r'+i, nome:p.n, ref:p.r, lat:p.la, lng:p.lo, s10:p.a, s500:p.b, arla:p.c, hom:p.h, dtNeg:p.d}));
+  renderMarcadores();
+  bannerMotorista.style.display='block';
+  document.getElementById('tituloMotorista').textContent=rotaTitulo;
+  const pontos=(payload.o||[]).map(c=>({lat:c[0],lng:c[1]}));
+  setTimeout(()=>desenharRota(pontos), 350);
+  return true;
+}
+
 // ---------- Backup ----------
 function exportar(){ const blob=new Blob([JSON.stringify(postos,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='postos-blue-transportes.json'; a.click(); }
 function importar(ev){ const f=ev.target.files[0]; if(!f) return; const rd=new FileReader();
@@ -792,5 +868,5 @@ function importar(ev){ const f=ev.target.files[0]; if(!f) return; const rd=new F
 
 // ---------- Início ----------
 renderConfig();
-carregarPostos();
+if(!checarLinkMotorista()) carregarPostos();
 </script>
