@@ -776,66 +776,48 @@ function distToRota(p, coords){
 }
 function listarPostosNaRota(){
   const raio=parseFloat(document.getElementById('raio').value);
-  const mod=modalidade.value, m=config.modalidades[mod];
   const dkey=config.dieselTipo, dnome=dkey==='s10'?'S10':'S500';
-  const litrosDiesel=rota_km/m.kml + m.aparelho*rota_horas;
-  const litrosArla=litrosDiesel*config.arlaPct/100;
   secaoResultado.style.display='block';
   const el=document.getElementById('resultado');
   let lista=postos.filter(p=>p.lat!=null&&p.lng!=null).map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
-  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto cadastrado dentro de ${raio} km da rota.<br>Cadastre postos na aba "⛽ Postos".</div>`; return; }
-  lista.forEach(p=>{ if(p[dkey]==null){ p.custo=null; return; } p.custo=litrosDiesel*p[dkey]+(p.arla!=null?litrosArla*p.arla:0); });
-  lista.sort((a,b)=>{ if(a.custo==null&&b.custo==null) return a.dist-b.dist; if(a.custo==null) return 1; if(b.custo==null) return -1; return a.custo-b.custo; });
-  const melhorId=lista.find(p=>p.custo!=null)?.id;
-  const comCusto=lista.filter(p=>p.custo!=null);
-  let economiaHtml='';
-  if(comCusto.length>=2){ const eco=Math.max(...comCusto.map(p=>p.custo))-comCusto[0].custo; if(eco>0.009) economiaHtml=`<div class="economia">💵 Economia de até <b>R$ ${eco.toFixed(2).replace('.',',')}</b> nesta viagem, abastecendo no mais barato em vez do mais caro do caminho.</div>`; }
+  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto dentro de ${raio} km da rota.<br>Ajuste o raio na ⚙️ engrenagem.</div>`; return; }
+  // ordena pelo preço do diesel escolhido (mais barato primeiro; sem preço vai pro fim)
+  lista.sort((a,b)=>{ const va=a[dkey], vb=b[dkey]; if(va==null&&vb==null) return a.dist-b.dist; if(va==null) return 1; if(vb==null) return -1; return va-vb; });
 
-  const resumo=`<div class="resumo-viagem">
-    Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b><br>
-    Modalidade: <b>${modalidade.selectedOptions[0].text}</b><br>
-    Consumo estimado: <b>${litrosDiesel.toFixed(0)} L</b> de diesel${config.arlaPct>0?` + <b>${litrosArla.toFixed(0)} L</b> de arla`:''}
-    ${m.aparelho>0?`<br><small>(inclui aparelho: ${m.aparelho} L/h × ${rota_horas.toFixed(1)}h)</small>`:''}</div>`;
-
-  printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, modalidade:modalidade.selectedOptions[0].text,
-    litrosDiesel, litrosArla, dnome, economia:comCusto.length>=2?Math.max(...comCusto.map(p=>p.custo))-comCusto[0].custo:0, lista, melhorId };
+  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b></div>`;
+  printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, dnome, lista };
 
   const btnAcoes=`
     <button class="btn-primario" style="width:100%;margin-bottom:8px" onclick="abrirRotaGoogle()">🗺️ Abrir rota no Google Maps</button>
     <div class="btn-linha acoes-rota" style="margin-top:0;margin-bottom:11px">
       <button class="btn-sec" onclick="imprimirRota()">🖨️ Imprimir</button>
       <button class="btn-sec" onclick="gerarLinkMotorista()">🔗 Link p/ motorista</button></div>`;
-  el.innerHTML = btnAcoes + resumo + economiaHtml + lista.map(p=>{
+  el.innerHTML = btnAcoes + resumo + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
-    const custoBox = p.custo!=null
-      ? `<div class="custo"><div class="rs">R$ ${p.custo.toFixed(2).replace('.',',')}</div><div class="det">abastecer a viagem toda aqui (${dnome}${p.arla!=null?' + arla':''})</div></div>`
-      : `<div class="custo"><div class="det" style="padding:4px 0">Sem preço de ${dnome} cadastrado</div></div>`;
     return `<div class="posto-card">
       <div class="nome">${p.nome}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${p.hom?'✅ '+p.hom+' · ':''}${p.dtNeg?'📅 '+p.dtNeg+' · ':''}${p.dist.toFixed(1)} km da rota</div>
-      <div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>${custoBox}</div>`;
+      <div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div></div>`;
   }).join('');
 }
 
 // ---------- Impressão ----------
 function imprimirRota(){
   if(!printData) return; const d=printData;
-  const linhas=d.lista.map(p=>{ const melhor=p.id===d.melhorId; const rs=p.custo!=null?'R$ '+p.custo.toFixed(2).replace('.',','):'—';
-    return `<tr style="${melhor?'background:#e7f7ee;font-weight:700':''}"><td>${melhor?'⭐ ':''}${p.nome}${p.ref?' <small>('+p.ref+')</small>':''}${p.gr?' 🛡️'+p.gr:''}</td>
-      <td style="text-align:center">${p.dist.toFixed(1)} km</td><td style="text-align:right">${fmt(p.s10)}</td><td style="text-align:right">${fmt(p.s500)}</td><td style="text-align:right">${fmt(p.arla)}</td><td style="text-align:right">${rs}</td></tr>`; }).join('');
+  const linhas=d.lista.map(p=>{
+    return `<tr><td>${p.nome}${p.ref?' <small>('+p.ref+')</small>':''}${p.hom?' ✅'+p.hom:''}</td>
+      <td style="text-align:center">${p.dist.toFixed(1)} km</td><td style="text-align:right">${fmt(p.s10)}</td><td style="text-align:right">${fmt(p.s500)}</td><td style="text-align:right">${fmt(p.arla)}</td></tr>`; }).join('');
   const win=window.open('','_blank'); if(!win){ alert('Permita pop-ups para imprimir.'); return; }
   win.document.write(`<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>Rota — Blue Transportes</title>
     <style>body{font-family:Inter,system-ui,Arial,sans-serif;color:#0f1b2d;padding:26px;max-width:820px;margin:auto}
     h1{color:#0a4da2;margin:0 0 2px;font-size:22px}.tag{color:#888;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
     .box{background:#f5f7fb;border-radius:10px;padding:13px 15px;margin-bottom:14px;font-size:14px;line-height:1.7}
-    .eco{background:#e7f7ee;color:#0a6b39;border-radius:10px;padding:11px 15px;margin-bottom:14px;font-size:14px}
     table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;border-bottom:1px solid #e6eaf1;text-align:left}
     th{background:#0a4da2;color:#fff;font-size:11px;text-transform:uppercase}.rod{margin-top:22px;font-size:11px;color:#999}</style></head><body>
     <h1>Blue Transportes</h1><div class="tag">Roteiro de Abastecimento</div>
-    <div class="box"><b>Rota:</b> ${d.rota||'—'}<br><b>Distância/tempo:</b> ${d.info||'—'}<br><b>Modalidade:</b> ${d.modalidade}<br><b>Consumo estimado:</b> ${d.litrosDiesel.toFixed(0)} L de diesel${d.litrosArla>0?' + '+d.litrosArla.toFixed(0)+' L de arla':''}</div>
-    ${d.economia>0.009?`<div class="eco">💵 Economia de até <b>R$ ${d.economia.toFixed(2).replace('.',',')}</b> abastecendo no posto mais barato.</div>`:''}
-    <table><thead><tr><th>Posto</th><th style="text-align:center">Dist.</th><th style="text-align:right">S10</th><th style="text-align:right">S500</th><th style="text-align:right">Arla</th><th style="text-align:right">Custo viagem</th></tr></thead><tbody>${linhas}</tbody></table>
-    <div class="rod">Gerado em ${new Date().toLocaleString('pt-BR')} · ⭐ = mais barato para o ${d.dnome}</div></body></html>`);
+    <div class="box"><b>Rota:</b> ${d.rota||'—'}<br><b>Distância:</b> ${d.info||'—'}</div>
+    <table><thead><tr><th>Posto</th><th style="text-align:center">Dist.</th><th style="text-align:right">S10</th><th style="text-align:right">S500</th><th style="text-align:right">Arla</th></tr></thead><tbody>${linhas}</tbody></table>
+    <div class="rod">Gerado em ${new Date().toLocaleString('pt-BR')} · postos do ${d.dnome} mais barato ao mais caro</div></body></html>`);
   win.document.close(); win.focus(); setTimeout(()=>win.print(),300);
 }
 
