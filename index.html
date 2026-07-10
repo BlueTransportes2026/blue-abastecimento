@@ -5,9 +5,6 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -468,17 +465,12 @@ const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{a
 const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
 L.control.layers({'🗺️ Ruas':ruas, '🛰️ Satélite':satelite}, null, {position:'topright'}).addTo(mapa);
 setTimeout(()=>mapa.invalidateSize(), 200);
-// Agrupamento de pinos (quando afasta o zoom) — com fallback se a lib não carregar
-const clusterGroup = (typeof L.markerClusterGroup==='function')
-  ? L.markerClusterGroup({ maxClusterRadius:45, spiderfyOnMaxZoom:true, showCoverageOnHover:false, chunkedLoading:true })
-  : L.layerGroup();
-mapa.addLayer(clusterGroup);
 
 function pinIcon(classe,emoji){ return L.divIcon({className:'', html:`<div class="pin ${classe}"><span>${emoji}</span></div>`, iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30]}); }
 
 // ---------- Marcadores dos postos salvos ----------
 function renderMarcadores(){
-  clusterGroup.clearLayers(); marcadores={};
+  Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
   const motorista=document.body.classList.contains('motorista');
   const raio=parseFloat(document.getElementById('raio').value)||15;
   postos.forEach(p=>{
@@ -487,7 +479,7 @@ function renderMarcadores(){
     if(filtroUF && getUF(p)!==filtroUF) return;                       // filtro por estado
     if(rotaCoords && distToRota(p,rotaCoords) > raio) return;          // só postos da rota
     const venc=precoVencido(p), opp=ehOportunidade(p);
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')});
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
     const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
     m.bindPopup(motorista
       ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br>${gmaps}`
@@ -497,7 +489,6 @@ function renderMarcadores(){
       ${gmaps}<br><br>
       <a href="#" onclick="editarPosto('${p.id}');return false">✏️ Editar</a> &nbsp;
       <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">🗑️ Excluir</a>`);
-    clusterGroup.addLayer(m);
     marcadores[p.id]=m;
   });
   atualizarLista();
@@ -566,7 +557,7 @@ function renderResumo(){
     ${ufs.length?`<div style="font-size:11px;color:var(--muted);margin-top:10px">Média S10 por estado (mais barato → mais caro):</div>
     <div class="uf-list">${ufs.map(u=>`<span class="uf-chip">${u.uf}: <b>R$ ${u.m.toFixed(2).replace('.',',')}</b> <small>(${u.n})</small></span>`).join('')}</div>`:''}`;
 }
-function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } const m=marcadores[id]; if(m && clusterGroup.zoomToShowLayer && clusterGroup.hasLayer(m)){ clusterGroup.zoomToShowLayer(m, ()=>m.openPopup()); } else { mapa.setView([p.lat,p.lng],14); if(m) m.openPopup(); } }
+function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
 
 // Selecionar um posto cadastrado como ponto de partida
 function popularPostosSelect(){
