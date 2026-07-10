@@ -192,9 +192,8 @@
           <div class="card-form">
             <label>Origem</label>
             <input id="origem" placeholder="Cidade, endereço ou CEP" oninput="origemSel=null" />
-            <select id="origemPostoSel" onchange="usarPostoComoOrigem(this.value)" style="margin-top:6px">
-              <option value="">— ou partir de um posto cadastrado —</option>
-            </select>
+            <input id="origemPostoSel" list="dlPostos" placeholder="🔎 ou buscar um posto de partida (nome ou cidade)…" onchange="escolherPostoOrigem(this.value)" style="margin-top:6px" />
+            <datalist id="dlPostos"></datalist>
             <label>Destino</label>
             <input id="destino" placeholder="Cidade, endereço ou CEP" />
             <div id="paradas"></div>
@@ -596,16 +595,15 @@ function renderResumo(){
 function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
 
 // Selecionar um posto cadastrado como ponto de partida
+let _postoPorLabel={};
 function popularPostosSelect(){
-  const sel=document.getElementById('origemPostoSel'); if(!sel) return;
-  const atual=sel.value;
-  sel.innerHTML='<option value="">— ou partir de um posto cadastrado —</option>'+
-    postos.map(p=>`<option value="${p.id}">⛽ ${p.nome}${p.ref?' ('+p.ref+')':''}</option>`).join('');
-  sel.value=atual;
+  const dl=document.getElementById('dlPostos'); if(!dl) return;
+  _postoPorLabel={};
+  dl.innerHTML=postos.filter(p=>p.lat!=null).map(p=>{ const lbl=(p.nome+(p.ref?' — '+p.ref:'')); _postoPorLabel[lbl]=p; return `<option value="${lbl.replace(/"/g,'&quot;')}"></option>`; }).join('');
 }
-function usarPostoComoOrigem(id){
-  if(!id){ origemSel=null; return; }
-  const p=postos.find(x=>x.id===id); if(!p) return;
+function escolherPostoOrigem(label){
+  const p=_postoPorLabel[label];
+  if(!p){ origemSel=null; return; }
   origemSel={lat:p.lat,lng:p.lng};
   origem.value=p.nome;
 }
