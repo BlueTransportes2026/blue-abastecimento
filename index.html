@@ -200,8 +200,8 @@
             <button class="link-mini" onclick="addParada()">+ Adicionar parada</button>
 
             <div class="filtros-rota">
-              <label><input type="checkbox" id="fHom" onchange="if(rotaCoords) listarPostosNaRota()"> Só homologados</label>
-              <label><input type="checkbox" id="fValido" onchange="if(rotaCoords) listarPostosNaRota()"> Só preço válido</label>
+              <label><input type="checkbox" id="fHom" onchange="aplicarFiltros()"> Só homologados</label>
+              <label><input type="checkbox" id="fValido" onchange="aplicarFiltros()"> Só preço válido</label>
             </div>
 
             <div class="btn-linha">
@@ -423,6 +423,15 @@ function diasDesde(dtNeg){
   return Math.floor((Date.now()-d.getTime())/86400000);
 }
 function precoVencido(p){ const dias=diasDesde(p&&p.dtNeg); return dias!=null && dias>30; }
+// Filtros da rota (aplicados no mapa e na lista da rota)
+function postoPassaFiltro(p){
+  const fHom=document.getElementById('fHom')&&document.getElementById('fHom').checked;
+  const fVal=document.getElementById('fValido')&&document.getElementById('fValido').checked;
+  if(fHom && !(p.hom && _norm(p.hom).includes('homolog') && !_norm(p.hom).includes('nao'))) return false;
+  if(fVal && !((p.s10!=null||p.s500!=null) && !precoVencido(p))) return false;
+  return true;
+}
+function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota(); }
 
 // ---------- Abas ----------
 function mostrarAba(nome){
@@ -446,6 +455,7 @@ function renderMarcadores(){
   Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
   postos.forEach(p=>{
     if(p.lat==null||p.lng==null) return;
+    if(!postoPassaFiltro(p)) return;
     const venc=precoVencido(p);
     const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
     m.bindPopup(`<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>✅ '+p.hom+'</small>':''}${p.dtNeg?'<br><small>📅 preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">⚠️ VENCIDO</b>':'')+'</small>':''}<br><br>
@@ -835,10 +845,9 @@ function listarPostosNaRota(){
   secaoResultado.style.display='block';
   const el=document.getElementById('resultado');
   let lista=postos.filter(p=>p.lat!=null&&p.lng!=null).map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
-  const fHom=document.getElementById('fHom')?.checked, fVal=document.getElementById('fValido')?.checked;
-  if(fHom) lista=lista.filter(p=>p.hom && _norm(p.hom).includes('homolog') && !_norm(p.hom).includes('nao'));
-  if(fVal) lista=lista.filter(p=>(p.s10!=null||p.s500!=null) && !precoVencido(p));
-  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto ${(fHom||fVal)?'(com os filtros ativos) ':''}dentro de ${raio} km da rota.<br>Ajuste o raio (⚙️) ou os filtros.</div>`; return; }
+  const fAtivo=(document.getElementById('fHom')&&document.getElementById('fHom').checked)||(document.getElementById('fValido')&&document.getElementById('fValido').checked);
+  lista=lista.filter(postoPassaFiltro);
+  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto ${fAtivo?'(com os filtros ativos) ':''}dentro de ${raio} km da rota.<br>Ajuste o raio (⚙️) ou os filtros.</div>`; return; }
   // ordena pelo preço do diesel escolhido (mais barato primeiro; sem preço vai pro fim)
   lista.sort((a,b)=>{ const va=a[dkey], vb=b[dkey]; if(va==null&&vb==null) return a.dist-b.dist; if(va==null) return 1; if(vb==null) return -1; return va-vb; });
 
