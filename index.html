@@ -1021,33 +1021,30 @@ function imprimirRota(){
 }
 
 // ---------- Abrir rota no Google Maps ----------
-function abrirRotaGoogle(){
-  if(!rotaPontos || rotaPontos.length<2){ alert('Trace uma rota primeiro.'); return; }
+// monta a URL do Google Maps: origem → postos MARCADOS → destino
+function urlGoogleRota(){
+  if(!rotaPontos || rotaPontos.length<2) return null;
   const o=rotaPontos[0], d=rotaPontos[rotaPontos.length-1];
-  const meio=rotaPontos.slice(1,-1).map(c=>`${c.lat},${c.lng}`).join('|');
-  let url=`https://www.google.com/maps/dir/?api=1&origin=${o.lat},${o.lng}&destination=${d.lat},${d.lng}&travelmode=driving`;
-  if(meio) url+='&waypoints='+encodeURIComponent(meio);
-  window.open(url,'_blank');
+  let pts=postos.filter(p=>p.lat!=null && postosSelecionados.has(p.id))
+    .map(p=>({lat:+p.lat, lng:+p.lng, d0:distKm(p.lat,p.lng,o.lat,o.lng)}))
+    .sort((a,b)=>a.d0-b.d0);
+  const total=pts.length, MAX=9;
+  if(pts.length>MAX){ const step=pts.length/MAX, sel=[]; for(let i=0;i<MAX;i++) sel.push(pts[Math.floor(i*step)]); pts=sel; }
+  const coords=[o, ...pts, d].map(c=>`${(+c.lat).toFixed(6)},${(+c.lng).toFixed(6)}`).join('/');
+  return { url:'https://www.google.com/maps/dir/'+coords, total, usados:pts.length };
+}
+function abrirRotaGoogle(){
+  const r=urlGoogleRota(); if(!r){ alert('Trace uma rota primeiro.'); return; }
+  window.open(r.url,'_blank');
 }
 
 // ---------- Link para o motorista ----------
 function gerarLinkMotorista(){
-  if(!rotaPontos || rotaPontos.length<2){ alert('Trace uma rota primeiro.'); return; }
-  const raio=parseFloat(document.getElementById('raio').value);
-  const o=rotaPontos[0], d=rotaPontos[rotaPontos.length-1];
-  // só os postos MARCADOS, ordenados pela posição ao longo do caminho (distância da origem)
-  let pts=postos.filter(p=>p.lat!=null && postosSelecionados.has(p.id))
-    .map(p=>({lat:+p.lat, lng:+p.lng, d0:distKm(p.lat,p.lng,o.lat,o.lng)}))
-    .sort((a,b)=>a.d0-b.d0);
-  if(!pts.length){ alert('Marque ao menos um posto (as caixinhas na lista) para enviar ao motorista.'); return; }
-  const total=pts.length;
-  // Google Maps aceita ~9 paradas; se tiver mais, pega uma amostra distribuída ao longo da rota
-  const MAX=9;
-  if(pts.length>MAX){ const step=pts.length/MAX, sel=[]; for(let i=0;i<MAX;i++) sel.push(pts[Math.floor(i*step)]); pts=sel; }
-  const coords=[o, ...pts, d].map(c=>`${(+c.lat).toFixed(6)},${(+c.lng).toFixed(6)}`).join('/');
-  const url='https://www.google.com/maps/dir/'+coords;
+  const r=urlGoogleRota(); if(!r){ alert('Trace uma rota primeiro.'); return; }
+  if(!r.usados){ alert('Marque ao menos um posto (as caixinhas na lista) para enviar ao motorista.'); return; }
+  const url=r.url;
   linkInput.value=url;
-  linkInfo.innerHTML=`Rota no Google Maps com <b>${Math.min(total,MAX)}</b> posto(s) marcado(s)${total>MAX?` (de ${total} — o Google mostra até ${MAX})`:''}.`;
+  linkInfo.innerHTML=`Rota no Google Maps com <b>${r.usados}</b> posto(s) marcado(s)${r.total>r.usados?` (de ${r.total} — o Google mostra até 9)`:''}.`;
   linkWa.href='https://wa.me/?text='+encodeURIComponent('⛽ Rota de abastecimento — Blue Transportes:\n'+url);
   linkQr.src='https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=8&data='+encodeURIComponent(url);
   linkQrWrap.style.display='block';
