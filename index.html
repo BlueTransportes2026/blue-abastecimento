@@ -357,7 +357,7 @@
       <a id="linkWa" target="_blank" class="btn-primario" style="text-align:center;text-decoration:none;line-height:1.4">📲 Enviar no WhatsApp</a>
     </div>
     <div class="btn-linha"><button class="btn-sec" onclick="fecharLink()">Fechar</button></div>
-    <div class="sub" style="margin-top:10px">O motorista abre o link no celular e vê a rota e os postos (só localização, <b>sem preços</b>). Não precisa senha nem app.</div>
+    <div class="sub" style="margin-top:10px">O motorista escaneia o QR (ou abre o link) e a rota abre no <b>Google Maps</b> com os postos marcados — só localização, <b>sem preços</b>.</div>
   </div>
 </div>
 
@@ -1028,19 +1028,22 @@ function abrirRotaGoogle(){
 function gerarLinkMotorista(){
   if(!rotaPontos || rotaPontos.length<2){ alert('Trace uma rota primeiro.'); return; }
   const raio=parseFloat(document.getElementById('raio').value);
-  // Só os postos da rota + localização — SEM preços nem litragem
-  const pts=postos.filter(p=>p.lat!=null && postoPassaFiltro(p) && distToRota(p,rotaCoords)<=raio)
-    .map(p=>({n:p.nome, r:p.ref||'', la:+(+p.lat).toFixed(5), lo:+(+p.lng).toFixed(5)}));
-  const payload={ v:1, t:rotaTitulo||'', raio,
-    o:rotaPontos.map(c=>[+(+c.lat).toFixed(5),+(+c.lng).toFixed(5)]), p:pts };
-  const enc=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
-  const url=location.origin+location.pathname+'#rota='+enc;
+  const o=rotaPontos[0], d=rotaPontos[rotaPontos.length-1];
+  // postos da rota, ordenados pela posição ao longo do caminho (distância da origem)
+  let pts=postos.filter(p=>p.lat!=null && postoPassaFiltro(p) && distToRota(p,rotaCoords)<=raio)
+    .map(p=>({lat:+p.lat, lng:+p.lng, d0:distKm(p.lat,p.lng,o.lat,o.lng)}))
+    .sort((a,b)=>a.d0-b.d0);
+  const total=pts.length;
+  // Google Maps aceita ~9 paradas; se tiver mais, pega uma amostra distribuída ao longo da rota
+  const MAX=9;
+  if(pts.length>MAX){ const step=pts.length/MAX, sel=[]; for(let i=0;i<MAX;i++) sel.push(pts[Math.floor(i*step)]); pts=sel; }
+  const coords=[o, ...pts, d].map(c=>`${(+c.lat).toFixed(6)},${(+c.lng).toFixed(6)}`).join('/');
+  const url='https://www.google.com/maps/dir/'+coords;
   linkInput.value=url;
-  linkInfo.innerHTML=`${pts.length} posto(s) nesta rota.`+(url.length>7000?' ⚠️ Link longo — pode ser cortado em alguns apps.':'');
+  linkInfo.innerHTML=`Rota no Google Maps com <b>${Math.min(total,MAX)}</b> posto(s) marcado(s)${total>MAX?` (de ${total} — o Google mostra até ${MAX})`:''}.`;
   linkWa.href='https://wa.me/?text='+encodeURIComponent('⛽ Rota de abastecimento — Blue Transportes:\n'+url);
-  // QR Code (o motorista escaneia e abre a rota)
-  if(url.length<1600){ linkQr.src='https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=8&data='+encodeURIComponent(url); linkQrWrap.style.display='block'; }
-  else { linkQrWrap.style.display='none'; linkInfo.innerHTML+='<br>⚠️ Rota com muitos postos — grande demais para QR. Use o link ou o WhatsApp.'; }
+  linkQr.src='https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=8&data='+encodeURIComponent(url);
+  linkQrWrap.style.display='block';
   modalLink.style.display='flex';
   try{ navigator.clipboard.writeText(url); }catch{}
 }
