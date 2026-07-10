@@ -463,7 +463,23 @@ function mostrarAba(nome){
 const mapa = L.map('mapa').setView([-15.78,-47.93],5);
 const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap', maxZoom:19}).addTo(mapa);
 const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
-L.control.layers({'🗺️ Ruas':ruas, '🛰️ Satélite':satelite}, null, {position:'topright'}).addTo(mapa);
+const satNomes = L.layerGroup([
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}),
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19})
+]);
+const claro   = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO', maxZoom:20, subdomains:'abcd'});
+const escuro  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO', maxZoom:20, subdomains:'abcd'});
+const relevo  = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap', maxZoom:17});
+const rodovias= L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
+L.control.layers({
+  '🗺️ Ruas':ruas,
+  '🛣️ Rodovias':rodovias,
+  '🛰️ Satélite':satelite,
+  '🌍 Satélite + nomes':satNomes,
+  '🌗 Claro':claro,
+  '🌑 Escuro':escuro,
+  '⛰️ Relevo':relevo
+}, null, {position:'topright', collapsed:true}).addTo(mapa);
 setTimeout(()=>mapa.invalidateSize(), 200);
 
 function pinIcon(classe,emoji){ return L.divIcon({className:'', html:`<div class="pin ${classe}"><span>${emoji}</span></div>`, iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30]}); }
