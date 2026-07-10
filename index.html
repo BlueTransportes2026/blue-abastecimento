@@ -423,6 +423,9 @@ let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
 let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, rotaPontos=null;
 let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={}, pontoCentro=null;
+let postosSelecionados=new Set();
+function togglePosto(id, checked){ if(checked) postosSelecionados.add(id); else postosSelecionados.delete(id); }
+function marcarTodosPostos(v){ document.querySelectorAll('#resultado .sel-posto').forEach(cb=>{ cb.checked=v; if(v) postosSelecionados.add(cb.dataset.id); else postosSelecionados.delete(cb.dataset.id); }); }
 
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
 // Lista compartilhada: todos que abrem o site carregam a mesma lista embutida (postos.json)
@@ -945,15 +948,18 @@ function listarPostosNaRota(){
   const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b> · ${lista.length} posto(s)${(!motorista && mediaRota!=null)?`<br>📊 Média ${dnome} na rota: <b>R$ ${mediaRota.toFixed(2).replace('.',',')}</b>`:''}</div>`;
   printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, dnome, lista, motorista };
 
+  if(!motorista) postosSelecionados = new Set(lista.map(p=>p.id));
   const btnAcoes=`
     <button class="btn-primario" style="width:100%;margin-bottom:8px" onclick="abrirRotaGoogle()">🗺️ Abrir rota no Google Maps</button>
     <div class="btn-linha acoes-rota" style="margin-top:0;margin-bottom:11px">
       <button class="btn-sec" onclick="imprimirRota()">🖨️ Imprimir</button>
       <button class="btn-sec" onclick="gerarLinkMotorista()">🔗 Link p/ motorista</button></div>`;
-  el.innerHTML = btnAcoes + resumo + lista.map(p=>{
+  const selCtrl = motorista?'':`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">☑️ Marque os postos que vão no <b>link do motorista</b> · <a onclick="marcarTodosPostos(true)" style="color:var(--brand-700);cursor:pointer;font-weight:600">todos</a> · <a onclick="marcarTodosPostos(false)" style="color:var(--brand-700);cursor:pointer;font-weight:600">nenhum</a></div>`;
+  el.innerHTML = btnAcoes + resumo + selCtrl + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
+    const chk = motorista?'':`<input type="checkbox" class="sel-posto" data-id="${p.id}" ${postosSelecionados.has(p.id)?'checked':''} onchange="togglePosto('${p.id}',this.checked)" title="Incluir no link do motorista" style="width:20px;height:20px;flex:0 0 auto;cursor:pointer">`;
     return `<div class="posto-card">
-      <div class="nome">${(!motorista&&ehOportunidade(p))?'⭐ ':''}${p.nome}</div>
+      <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&ehOportunidade(p))?'⭐ ':''}${p.nome}</span>${chk}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?'✅ '+p.hom+' · ':''}${(!motorista&&p.dtNeg)?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}</div>`;
   }).join('');
@@ -1029,10 +1035,11 @@ function gerarLinkMotorista(){
   if(!rotaPontos || rotaPontos.length<2){ alert('Trace uma rota primeiro.'); return; }
   const raio=parseFloat(document.getElementById('raio').value);
   const o=rotaPontos[0], d=rotaPontos[rotaPontos.length-1];
-  // postos da rota, ordenados pela posição ao longo do caminho (distância da origem)
-  let pts=postos.filter(p=>p.lat!=null && postoPassaFiltro(p) && distToRota(p,rotaCoords)<=raio)
+  // só os postos MARCADOS, ordenados pela posição ao longo do caminho (distância da origem)
+  let pts=postos.filter(p=>p.lat!=null && postosSelecionados.has(p.id))
     .map(p=>({lat:+p.lat, lng:+p.lng, d0:distKm(p.lat,p.lng,o.lat,o.lng)}))
     .sort((a,b)=>a.d0-b.d0);
+  if(!pts.length){ alert('Marque ao menos um posto (as caixinhas na lista) para enviar ao motorista.'); return; }
   const total=pts.length;
   // Google Maps aceita ~9 paradas; se tiver mais, pega uma amostra distribuída ao longo da rota
   const MAX=9;
