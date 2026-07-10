@@ -5,6 +5,9 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -277,6 +280,16 @@
         <div class="secao">
           <h2>📋 Postos cadastrados (<span id="qtdPostos">0</span>)</h2>
           <div id="avisoVencidos" class="aviso-venc" style="display:none"></div>
+          <input id="buscaPosto" placeholder="🔎 Buscar por nome ou cidade" oninput="buscaPosto=this.value; atualizarLista()" style="margin-bottom:8px" />
+          <div class="linha" style="margin-bottom:10px">
+            <select id="filtroUF" onchange="filtroUF=this.value; renderMarcadores()"><option value="">🌎 Todos os estados</option></select>
+            <select id="ordemPostos" onchange="ordemPostos=this.value; atualizarLista()">
+              <option value="nome">↕️ Ordenar: Nome</option>
+              <option value="cidade">↕️ Cidade</option>
+              <option value="preco">↕️ Preço S10</option>
+              <option value="data">↕️ Data do preço</option>
+            </select>
+          </div>
           <div class="lista-todos" id="listaTodos"></div>
         </div>
 
@@ -396,6 +409,7 @@ function fecharFrota(){ modalFrota.style.display='none'; }
 let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
 let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, rotaPontos=null;
+let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={};
 
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
 // Lista compartilhada: todos que abrem o site carregam a mesma lista embutida (postos.json)
@@ -427,6 +441,9 @@ function diasDesde(dtNeg){
   return Math.floor((Date.now()-d.getTime())/86400000);
 }
 function precoVencido(p){ const dias=diasDesde(p&&p.dtNeg); return dias!=null && dias>30; }
+function getUF(p){ return (((p&&p.ref)||'').split(' - ')[1]||'').trim(); }
+// "Melhor oportunidade": preço S10 pelo menos 3% abaixo da média do estado
+function ehOportunidade(p){ if(!p||p.s10==null) return false; const m=ufMedias[getUF(p)]; return !!m && p.s10 <= m*0.97; }
 // Filtros da rota (aplicados no mapa e na lista da rota)
 function postoPassaFiltro(p){
   const fHom=document.getElementById('fHom')&&document.getElementById('fHom').checked;
@@ -451,39 +468,57 @@ const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{a
 const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
 L.control.layers({'🗺️ Ruas':ruas, '🛰️ Satélite':satelite}, null, {position:'topright'}).addTo(mapa);
 setTimeout(()=>mapa.invalidateSize(), 200);
+// Agrupamento de pinos (quando afasta o zoom) — com fallback se a lib não carregar
+const clusterGroup = (typeof L.markerClusterGroup==='function')
+  ? L.markerClusterGroup({ maxClusterRadius:45, spiderfyOnMaxZoom:true, showCoverageOnHover:false, chunkedLoading:true })
+  : L.layerGroup();
+mapa.addLayer(clusterGroup);
 
 function pinIcon(classe,emoji){ return L.divIcon({className:'', html:`<div class="pin ${classe}"><span>${emoji}</span></div>`, iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30]}); }
 
 // ---------- Marcadores dos postos salvos ----------
 function renderMarcadores(){
-  Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
+  clusterGroup.clearLayers(); marcadores={};
   const motorista=document.body.classList.contains('motorista');
+  const raio=parseFloat(document.getElementById('raio').value)||15;
   postos.forEach(p=>{
     if(p.lat==null||p.lng==null) return;
     if(!postoPassaFiltro(p)) return;
-    // quando há rota traçada, mostra no mapa só os postos que estão nela
-    if(rotaCoords && distToRota(p,rotaCoords) > (parseFloat(document.getElementById('raio').value)||15)) return;
-    const venc=precoVencido(p);
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
+    if(filtroUF && getUF(p)!==filtroUF) return;                       // filtro por estado
+    if(rotaCoords && distToRota(p,rotaCoords) > raio) return;          // só postos da rota
+    const venc=precoVencido(p), opp=ehOportunidade(p);
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')});
     const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
     m.bindPopup(motorista
       ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br>${gmaps}`
-      : `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>✅ '+p.hom+'</small>':''}${p.dtNeg?'<br><small>📅 preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">⚠️ VENCIDO</b>':'')+'</small>':''}<br><br>
-      S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br><br>
+      : `<b>${opp?'⭐ ':''}${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>✅ '+p.hom+'</small>':''}${p.dtNeg?'<br><small>📅 preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">⚠️ VENCIDO</b>':'')+'</small>':''}${opp?'<br><small style="color:#0f9d58"><b>⭐ Melhor oportunidade (abaixo da média do estado)</b></small>':''}<br><br>
+      S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br>
+      ${(p.hist&&p.hist.length)?'<br><small><b>📈 Histórico S10:</b></small><br>'+p.hist.map((h,i)=>{const pv=i>0?p.hist[i-1].s10:null;const ar=(pv!=null&&h.s10!=null)?(h.s10>pv?' <span style=\"color:#e5484d\">🔺</span>':(h.s10<pv?' <span style=\"color:#12a150\">🔻</span>':'')):'';return '<small>'+(h.d||'—')+': '+fmt(h.s10)+ar+'</small>';}).join('<br>'):''}<br><br>
       ${gmaps}<br><br>
       <a href="#" onclick="editarPosto('${p.id}');return false">✏️ Editar</a> &nbsp;
       <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">🗑️ Excluir</a>`);
+    clusterGroup.addLayer(m);
     marcadores[p.id]=m;
   });
   atualizarLista();
 }
 function atualizarLista(){
-  qtdPostos.textContent=postos.length;
   const el=document.getElementById('listaTodos');
-  el.innerHTML = postos.length ? postos.map(p=>`
+  let lista=postos.slice();
+  const b=_norm(buscaPosto);
+  if(b) lista=lista.filter(p=>_norm(p.nome).includes(b)||_norm(p.ref).includes(b));
+  if(filtroUF) lista=lista.filter(p=>getUF(p)===filtroUF);
+  lista.sort((a,c)=>{
+    if(ordemPostos==='cidade') return String(a.ref||'').localeCompare(String(c.ref||''));
+    if(ordemPostos==='preco') return (a.s10==null?1e9:a.s10)-(c.s10==null?1e9:c.s10);
+    if(ordemPostos==='data'){ const da=diasDesde(a.dtNeg), dc=diasDesde(c.dtNeg); return (da==null?1e9:da)-(dc==null?1e9:dc); }
+    return String(a.nome||'').localeCompare(String(c.nome||''));
+  });
+  qtdPostos.textContent = (b||filtroUF)? (lista.length+' de '+postos.length) : postos.length;
+  el.innerHTML = lista.length ? lista.map(p=>`
     <div class="item">
       <div class="info" onclick="irPara('${p.id}')">
-        <div class="nm">${p.nome}</div>
+        <div class="nm">${ehOportunidade(p)?'⭐ ':''}${p.nome}</div>
         <div class="sub">${p.ref||''}${p.lat==null?' · ⚠️ sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">⚠️ preço vencido</b>':''}${p.hom?' · ✅ '+p.hom:''} · S10 ${fmt(p.s10)}</div>
       </div>
       <div class="acoes">
@@ -491,7 +526,7 @@ function atualizarLista(){
         <button class="ac del" onclick="excluirPosto('${p.id}')" title="Excluir">🗑️</button>
       </div>
     </div>`).join('')
-    : '<div class="vazio">Nenhum posto cadastrado ainda.<br>Busque um CNPJ ou marque no mapa acima.</div>';
+    : (postos.length? '<div class="vazio">Nenhum posto encontrado com esses filtros.</div>' : '<div class="vazio">Nenhum posto cadastrado ainda.</div>');
   const nv=postos.filter(precoVencido).length;
   const av=document.getElementById('avisoVencidos');
   if(av){ if(nv){ av.style.display='block'; av.innerHTML=`⚠️ <b>${nv}</b> posto(s) com <b>preço vencido</b> (mais de 30 dias sem atualizar) — aparecem com <b style="color:#e5484d">pino vermelho</b> no mapa.`; } else av.style.display='none'; }
@@ -517,8 +552,12 @@ function renderResumo(){
   const s10s=postos.filter(p=>p.s10!=null).map(p=>p.s10);
   const media=s10s.length? s10s.reduce((a,b)=>a+b,0)/s10s.length : null;
   const porUf={};
-  postos.forEach(p=>{ if(p.s10==null) return; const uf=((p.ref||'').split(' - ')[1]||'—').trim()||'—'; (porUf[uf]=porUf[uf]||[]).push(p.s10); });
+  postos.forEach(p=>{ if(p.s10==null) return; const uf=getUF(p); if(!uf) return; (porUf[uf]=porUf[uf]||[]).push(p.s10); });
   const ufs=Object.entries(porUf).map(([uf,arr])=>({uf, m:arr.reduce((a,b)=>a+b,0)/arr.length, n:arr.length})).sort((a,b)=>a.m-b.m);
+  ufMedias={}; ufs.forEach(u=>ufMedias[u.uf]=u.m);
+  const selUF=document.getElementById('filtroUF');
+  if(selUF){ const at=selUF.value; const todas=[...new Set(postos.filter(p=>getUF(p)).map(getUF))].sort();
+    selUF.innerHTML='<option value="">🌎 Todos os estados</option>'+todas.map(u=>`<option value="${u}">${u}</option>`).join(''); selUF.value=at; }
   el.innerHTML=`<div class="resumo-nums">
       <div class="rn"><div class="v">${total}</div><div class="l">postos</div></div>
       <div class="rn"><div class="v" style="color:#e5484d">${venc}</div><div class="l">vencidos</div></div>
@@ -527,7 +566,7 @@ function renderResumo(){
     ${ufs.length?`<div style="font-size:11px;color:var(--muted);margin-top:10px">Média S10 por estado (mais barato → mais caro):</div>
     <div class="uf-list">${ufs.map(u=>`<span class="uf-chip">${u.uf}: <b>R$ ${u.m.toFixed(2).replace('.',',')}</b> <small>(${u.n})</small></span>`).join('')}</div>`:''}`;
 }
-function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
+function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } const m=marcadores[id]; if(m && clusterGroup.zoomToShowLayer && clusterGroup.hasLayer(m)){ clusterGroup.zoomToShowLayer(m, ()=>m.openPopup()); } else { mapa.setView([p.lat,p.lng],14); if(m) m.openPopup(); } }
 
 // Selecionar um posto cadastrado como ponto de partida
 function popularPostosSelect(){
@@ -889,7 +928,7 @@ function listarPostosNaRota(){
   el.innerHTML = btnAcoes + resumo + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
     return `<div class="posto-card">
-      <div class="nome">${p.nome}</div>
+      <div class="nome">${(!motorista&&ehOportunidade(p))?'⭐ ':''}${p.nome}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?'✅ '+p.hom+' · ':''}${(!motorista&&p.dtNeg)?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}</div>`;
   }).join('');
