@@ -200,8 +200,7 @@
             <button class="link-mini" onclick="addParada()">+ Adicionar parada</button>
 
             <div class="filtros-rota">
-              <label><input type="checkbox" id="fHom" onchange="aplicarFiltros()"> Só homologados</label>
-              <label><input type="checkbox" id="fValido" onchange="aplicarFiltros()"> Só preço válido</label>
+              <label><input type="checkbox" id="fValido" onchange="aplicarFiltros()"> Mostrar só postos com preço válido</label>
             </div>
 
             <div class="btn-linha">
@@ -223,6 +222,11 @@
         <div class="secao">
           <h2>📊 Resumo</h2>
           <div class="resumo-card" id="resumoGeral"></div>
+        </div>
+
+        <div class="secao">
+          <h2>📍 Postos sem localização (<span id="qtdSemLocal">0</span>)</h2>
+          <div class="lista-todos" id="listaSemLocal"></div>
         </div>
 
         <div class="secao">
@@ -327,7 +331,7 @@
       <a id="linkWa" target="_blank" class="btn-primario" style="text-align:center;text-decoration:none;line-height:1.4">📲 Enviar no WhatsApp</a>
     </div>
     <div class="btn-linha"><button class="btn-sec" onclick="fecharLink()">Fechar</button></div>
-    <div class="sub" style="margin-top:10px">O motorista abre o link no celular e vê a rota e os postos com preço. Não precisa senha nem app.</div>
+    <div class="sub" style="margin-top:10px">O motorista abre o link no celular e vê a rota e os postos (só localização, <b>sem preços</b>). Não precisa senha nem app.</div>
   </div>
 </div>
 
@@ -453,14 +457,18 @@ function pinIcon(classe,emoji){ return L.divIcon({className:'', html:`<div class
 // ---------- Marcadores dos postos salvos ----------
 function renderMarcadores(){
   Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
+  const motorista=document.body.classList.contains('motorista');
   postos.forEach(p=>{
     if(p.lat==null||p.lng==null) return;
     if(!postoPassaFiltro(p)) return;
     const venc=precoVencido(p);
     const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
-    m.bindPopup(`<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>✅ '+p.hom+'</small>':''}${p.dtNeg?'<br><small>📅 preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">⚠️ VENCIDO</b>':'')+'</small>':''}<br><br>
+    const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
+    m.bindPopup(motorista
+      ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br>${gmaps}`
+      : `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>✅ '+p.hom+'</small>':''}${p.dtNeg?'<br><small>📅 preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">⚠️ VENCIDO</b>':'')+'</small>':''}<br><br>
       S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br><br>
-      <a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a><br><br>
+      ${gmaps}<br><br>
       <a href="#" onclick="editarPosto('${p.id}');return false">✏️ Editar</a> &nbsp;
       <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">🗑️ Excluir</a>`);
     marcadores[p.id]=m;
@@ -486,7 +494,19 @@ function atualizarLista(){
   const av=document.getElementById('avisoVencidos');
   if(av){ if(nv){ av.style.display='block'; av.innerHTML=`⚠️ <b>${nv}</b> posto(s) com <b>preço vencido</b> (mais de 30 dias sem atualizar) — aparecem com <b style="color:#e5484d">pino vermelho</b> no mapa.`; } else av.style.display='none'; }
   renderResumo();
+  renderSemLocal();
   popularPostosSelect();
+}
+function renderSemLocal(){
+  const el=document.getElementById('listaSemLocal'); const q=document.getElementById('qtdSemLocal'); if(!el) return;
+  const semLoc=postos.filter(p=>p.lat==null||p.lng==null);
+  if(q) q.textContent=semLoc.length;
+  el.innerHTML = semLoc.length ? semLoc.map(p=>`
+    <div class="item">
+      <div class="info" onclick="editarPosto('${p.id}')"><div class="nm">${p.nome}</div><div class="sub">${p.ref||''} · toque para localizar no mapa</div></div>
+      <div class="acoes"><button class="ac ed" onclick="editarPosto('${p.id}')" title="Localizar">📍</button></div>
+    </div>`).join('')
+    : '<div class="vazio" style="padding:14px">✅ Todos os postos estão localizados no mapa.</div>';
 }
 function renderResumo(){
   const el=document.getElementById('resumoGeral'); if(!el) return;
@@ -851,10 +871,11 @@ function listarPostosNaRota(){
   // ordena pelo preço do diesel escolhido (mais barato primeiro; sem preço vai pro fim)
   lista.sort((a,b)=>{ const va=a[dkey], vb=b[dkey]; if(va==null&&vb==null) return a.dist-b.dist; if(va==null) return 1; if(vb==null) return -1; return va-vb; });
 
+  const motorista=document.body.classList.contains('motorista');
   const precosRota=lista.filter(p=>p[dkey]!=null).map(p=>p[dkey]);
   const mediaRota=precosRota.length? precosRota.reduce((a,b)=>a+b,0)/precosRota.length : null;
-  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b>${mediaRota!=null?`<br>📊 Média ${dnome} na rota: <b>R$ ${mediaRota.toFixed(2).replace('.',',')}</b> · ${lista.length} posto(s)`:''}</div>`;
-  printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, dnome, lista };
+  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b> · ${lista.length} posto(s)${(!motorista && mediaRota!=null)?`<br>📊 Média ${dnome} na rota: <b>R$ ${mediaRota.toFixed(2).replace('.',',')}</b>`:''}</div>`;
+  printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, dnome, lista, motorista };
 
   const btnAcoes=`
     <button class="btn-primario" style="width:100%;margin-bottom:8px" onclick="abrirRotaGoogle()">🗺️ Abrir rota no Google Maps</button>
@@ -865,8 +886,8 @@ function listarPostosNaRota(){
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
     return `<div class="posto-card">
       <div class="nome">${p.nome}</div>
-      <div class="dist">${p.ref?p.ref+' · ':''}${p.hom?'✅ '+p.hom+' · ':''}${p.dtNeg?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
-      <div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div></div>`;
+      <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?'✅ '+p.hom+' · ':''}${(!motorista&&p.dtNeg)?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
+      ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}</div>`;
   }).join('');
 }
 
@@ -904,9 +925,10 @@ function abrirRotaGoogle(){
 function gerarLinkMotorista(){
   if(!rotaPontos || rotaPontos.length<2){ alert('Trace uma rota primeiro.'); return; }
   const raio=parseFloat(document.getElementById('raio').value);
-  const pts=postos.filter(p=>p.lat!=null && (p.s10!=null||p.s500!=null) && distToRota(p,rotaCoords)<=raio)
-    .map(p=>({n:p.nome, r:p.ref||'', la:+(+p.lat).toFixed(5), lo:+(+p.lng).toFixed(5), a:p.s10, b:p.s500, c:p.arla, h:p.hom||'', d:p.dtNeg||''}));
-  const payload={ v:1, t:rotaTitulo||'', m:modalidade.value, raio, cfg:config,
+  // Só os postos da rota + localização — SEM preços nem litragem
+  const pts=postos.filter(p=>p.lat!=null && postoPassaFiltro(p) && distToRota(p,rotaCoords)<=raio)
+    .map(p=>({n:p.nome, r:p.ref||'', la:+(+p.lat).toFixed(5), lo:+(+p.lng).toFixed(5)}));
+  const payload={ v:1, t:rotaTitulo||'', raio,
     o:rotaPontos.map(c=>[+(+c.lat).toFixed(5),+(+c.lng).toFixed(5)]), p:pts };
   const enc=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
   const url=location.origin+location.pathname+'#rota='+enc;
