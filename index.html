@@ -153,6 +153,7 @@
   body.motorista #topo p,
   body.motorista #syncStatus,
   body.motorista #secaoRotaForm,
+  body.motorista #secaoPerto,
   body.motorista #resultado .acoes-rota{ display:none !important; }
 </style>
 
@@ -211,8 +212,19 @@
           </div>
         </div>
 
+        <div class="secao" id="secaoPerto">
+          <div class="card-form">
+            <label>📍 Ver postos perto de uma cidade</label>
+            <div class="linha">
+              <input id="inpCidade" placeholder="Ex.: Uberlândia MG" onkeydown="if(event.key==='Enter') verPostosPerto()" />
+              <button class="btn-sec" style="flex:0 0 auto" onclick="verPostosPerto()">Ver</button>
+            </div>
+            <div class="status" id="infoPerto"></div>
+          </div>
+        </div>
+
         <div class="secao" id="secaoResultado" style="display:none">
-          <h2>💰 Postos no caminho</h2>
+          <h2 id="tituloResultado">💰 Postos no caminho</h2>
           <div id="resultado"></div>
         </div>
       </div>
@@ -336,6 +348,10 @@
     <h3>🔗 Link para o motorista</h3>
     <div class="sub" id="linkInfo"></div>
     <input id="linkInput" readonly onclick="this.select()" style="font-size:12px" />
+    <div id="linkQrWrap" style="text-align:center;margin:12px 0;display:none">
+      <img id="linkQr" alt="QR Code" style="width:190px;height:190px;border-radius:10px;background:#fff;border:1px solid var(--line)" />
+      <div class="sub" style="margin-top:4px">📱 O motorista escaneia esse QR e o mapa abre no celular</div>
+    </div>
     <div class="btn-linha">
       <button class="btn-sec" id="linkCopiar" onclick="copiarLink()">📋 Copiar link</button>
       <a id="linkWa" target="_blank" class="btn-primario" style="text-align:center;text-decoration:none;line-height:1.4">📲 Enviar no WhatsApp</a>
@@ -406,7 +422,7 @@ function fecharFrota(){ modalFrota.style.display='none'; }
 let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
 let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, rotaPontos=null;
-let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={};
+let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={}, pontoCentro=null;
 
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
 // Lista compartilhada: todos que abrem o site carregam a mesma lista embutida (postos.json)
@@ -494,6 +510,7 @@ function renderMarcadores(){
     if(!postoPassaFiltro(p)) return;
     if(filtroUF && getUF(p)!==filtroUF) return;                       // filtro por estado
     if(rotaCoords && distToRota(p,rotaCoords) > raio) return;          // só postos da rota
+    if(pontoCentro && !rotaCoords && distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng) > 150) return; // só perto da cidade
     const venc=precoVencido(p), opp=ehOportunidade(p);
     const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
     const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
@@ -819,7 +836,7 @@ async function tracarRota(){
 }
 
 async function desenharRota(coordsReq){
-  rotaPontos=coordsReq;
+  rotaPontos=coordsReq; pontoCentro=null;
   if(coordsReq.length<2){ infoRota.textContent='Preciso de origem e destino.'; return false; }
   infoRota.textContent='Calculando rota…';
   const path=coordsReq.map(c=>`${c.lng},${c.lat}`).join(';');
@@ -893,7 +910,7 @@ function limparRota(){
   paradas.forEach(p=>{ const b=document.getElementById('box_'+p.id); if(b) b.remove(); }); paradas=[];
   if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
   marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[];
-  rotaCoords=null; secaoResultado.style.display='none'; infoRota.textContent='';
+  rotaCoords=null; pontoCentro=null; secaoResultado.style.display='none'; infoRota.textContent='';
   renderMarcadores();
 }
 
@@ -913,6 +930,7 @@ function listarPostosNaRota(){
   const raio=parseFloat(document.getElementById('raio').value);
   const dkey=config.dieselTipo, dnome=dkey==='s10'?'S10':'S500';
   secaoResultado.style.display='block';
+  const tit=document.getElementById('tituloResultado'); if(tit) tit.textContent='💰 Postos no caminho';
   const el=document.getElementById('resultado');
   let lista=postos.filter(p=>p.lat!=null&&p.lng!=null).map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
   const fAtivo=(document.getElementById('fHom')&&document.getElementById('fHom').checked)||(document.getElementById('fValido')&&document.getElementById('fValido').checked);
@@ -939,6 +957,41 @@ function listarPostosNaRota(){
       <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?'✅ '+p.hom+' · ':''}${(!motorista&&p.dtNeg)?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}</div>`;
   }).join('');
+}
+
+// ---------- Postos perto de uma cidade ----------
+function distKm(lat1,lng1,lat2,lng2){ const R=6371,r=Math.PI/180; const dLat=(lat2-lat1)*r,dLng=(lng2-lng1)*r; const a=Math.sin(dLat/2)**2+Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
+async function verPostosPerto(){
+  const cidade=(document.getElementById('inpCidade').value||'').trim();
+  const info=document.getElementById('infoPerto');
+  if(!cidade){ info.textContent='Digite uma cidade.'; return; }
+  info.textContent='🔎 Buscando cidade…';
+  const g=await geocode(cidade);
+  if(!g){ info.textContent='Cidade não encontrada. Tente cidade + estado.'; return; }
+  if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
+  marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[]; rotaCoords=null;
+  pontoCentro={lat:g.lat,lng:g.lng}; info.textContent='';
+  mapa.setView([g.lat,g.lng],8);
+  renderMarcadores(); listarPostosPerto(cidade);
+}
+function limparPerto(){ pontoCentro=null; document.getElementById('inpCidade').value=''; secaoResultado.style.display='none'; renderMarcadores(); }
+function listarPostosPerto(cidade){
+  const dkey=config.dieselTipo;
+  const el=document.getElementById('resultado'); secaoResultado.style.display='block';
+  const tit=document.getElementById('tituloResultado'); if(tit) tit.textContent='📍 Postos perto';
+  let lista=postos.filter(p=>p.lat!=null&&p.lng!=null&&postoPassaFiltro(p))
+    .map(p=>({...p, dist:distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng)}))
+    .filter(p=>p.dist<=150).sort((a,b)=>a.dist-b.dist);
+  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto num raio de 150 km de <b>${cidade}</b>.</div>`; return; }
+  el.innerHTML=`<div class="resumo-viagem">📍 <b>${lista.length}</b> posto(s) perto de <b>${cidade}</b> (até 150 km)
+    <button class="btn-sec" style="width:100%;margin-top:8px" onclick="limparPerto()">Limpar</button></div>`
+    + lista.map(p=>{
+      const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
+      return `<div class="posto-card">
+        <div class="nome">${ehOportunidade(p)?'⭐ ':''}${p.nome}</div>
+        <div class="dist">${p.ref?p.ref+' · ':''}${p.dtNeg?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(0)} km de ${cidade}</div>
+        <div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div></div>`;
+    }).join('');
 }
 
 // ---------- Impressão ----------
@@ -983,8 +1036,11 @@ function gerarLinkMotorista(){
   const enc=encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
   const url=location.origin+location.pathname+'#rota='+enc;
   linkInput.value=url;
-  linkInfo.innerHTML=`${pts.length} posto(s) com preço nesta rota.`+(url.length>7000?' ⚠️ Link longo — pode ser cortado em alguns apps.':'');
+  linkInfo.innerHTML=`${pts.length} posto(s) nesta rota.`+(url.length>7000?' ⚠️ Link longo — pode ser cortado em alguns apps.':'');
   linkWa.href='https://wa.me/?text='+encodeURIComponent('⛽ Rota de abastecimento — Blue Transportes:\n'+url);
+  // QR Code (o motorista escaneia e abre a rota)
+  if(url.length<1600){ linkQr.src='https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=8&data='+encodeURIComponent(url); linkQrWrap.style.display='block'; }
+  else { linkQrWrap.style.display='none'; linkInfo.innerHTML+='<br>⚠️ Rota com muitos postos — grande demais para QR. Use o link ou o WhatsApp.'; }
   modalLink.style.display='flex';
   try{ navigator.clipboard.writeText(url); }catch{}
 }
