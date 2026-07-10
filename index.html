@@ -362,7 +362,7 @@
       <div class="linha"><div><span>km/l</span><input id="kml_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div>
       <div><span>Aparelho (L/h)</span><input id="ap_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
     <label style="margin-top:14px">Mostrar postos até <span id="raioLbl">15</span> km da estrada</label>
-    <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords) listarPostosNaRota()" />
+    <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords){ renderMarcadores(); listarPostosNaRota(); }" />
     <div class="btn-linha"><button class="btn-primario" onclick="fecharFrota()">Pronto</button></div>
   </div>
 </div>
@@ -461,6 +461,8 @@ function renderMarcadores(){
   postos.forEach(p=>{
     if(p.lat==null||p.lng==null) return;
     if(!postoPassaFiltro(p)) return;
+    // quando há rota traçada, mostra no mapa só os postos que estão nela
+    if(rotaCoords && distToRota(p,rotaCoords) > (parseFloat(document.getElementById('raio').value)||15)) return;
     const venc=precoVencido(p);
     const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
     const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
@@ -786,6 +788,7 @@ async function desenharRota(coordsReq){
   coordsReq.forEach((c,i)=>{ let cls='parada',emoji=String(i); if(i===0){cls='origem';emoji='A';} else if(i===coordsReq.length-1){cls='destino';emoji='B';} marcadoresRota.push(L.marker([c.lat,c.lng],{icon:pinIcon(cls,emoji)}).addTo(mapa)); });
   mapa.fitBounds(linhaRota.getBounds(),{padding:[50,50]});
   infoRota.innerHTML=`🛣️ <b>${rota_km.toFixed(0)} km</b>`;
+  renderMarcadores();
   listarPostosNaRota();
   return true;
 }
@@ -845,6 +848,7 @@ function limparRota(){
   if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
   marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[];
   rotaCoords=null; secaoResultado.style.display='none'; infoRota.textContent='';
+  renderMarcadores();
 }
 
 // ---------- Distância ponto → rota ----------
