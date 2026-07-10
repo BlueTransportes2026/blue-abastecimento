@@ -424,8 +424,8 @@ let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, pre
 let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, rotaPontos=null;
 let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={}, pontoCentro=null;
 let postosSelecionados=new Set();
-function togglePosto(id, checked){ if(checked) postosSelecionados.add(id); else postosSelecionados.delete(id); }
-function marcarTodosPostos(v){ document.querySelectorAll('#resultado .sel-posto').forEach(cb=>{ cb.checked=v; if(v) postosSelecionados.add(cb.dataset.id); else postosSelecionados.delete(cb.dataset.id); }); }
+function togglePosto(id, checked){ if(checked) postosSelecionados.add(id); else postosSelecionados.delete(id); renderMarcadores(); }
+function marcarTodosPostos(v){ document.querySelectorAll('#resultado .sel-posto').forEach(cb=>{ cb.checked=v; if(v) postosSelecionados.add(cb.dataset.id); else postosSelecionados.delete(cb.dataset.id); }); renderMarcadores(); }
 
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
 // Lista compartilhada: todos que abrem o site carregam a mesma lista embutida (postos.json)
@@ -512,7 +512,7 @@ function renderMarcadores(){
     if(p.lat==null||p.lng==null) return;
     if(!postoPassaFiltro(p)) return;
     if(filtroUF && getUF(p)!==filtroUF) return;                       // filtro por estado
-    if(rotaCoords && distToRota(p,rotaCoords) > raio) return;          // só postos da rota
+    if(rotaCoords){ if(distToRota(p,rotaCoords) > raio) return; if(!motorista && !postosSelecionados.has(p.id)) return; } // só postos da rota e marcados
     if(pontoCentro && !rotaCoords && distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng) > 150) return; // só perto da cidade
     const venc=precoVencido(p), opp=ehOportunidade(p);
     const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
@@ -854,8 +854,8 @@ async function desenharRota(coordsReq){
   coordsReq.forEach((c,i)=>{ let cls='parada',emoji=String(i); if(i===0){cls='origem';emoji='A';} else if(i===coordsReq.length-1){cls='destino';emoji='B';} marcadoresRota.push(L.marker([c.lat,c.lng],{icon:pinIcon(cls,emoji)}).addTo(mapa)); });
   mapa.fitBounds(linhaRota.getBounds(),{padding:[50,50]});
   infoRota.innerHTML=`🛣️ <b>${rota_km.toFixed(0)} km</b>`;
-  renderMarcadores();
   listarPostosNaRota();
+  renderMarcadores();
   return true;
 }
 
