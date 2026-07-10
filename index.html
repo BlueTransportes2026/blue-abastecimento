@@ -125,6 +125,16 @@
   .pin.origem{background:var(--verde)} .pin.destino{background:var(--vermelho)} .pin.parada{background:var(--amarelo)}
   .pin.vencido{background:var(--vermelho)}
   .aviso-venc{background:#fdeaea;border:1px solid #f5b5b7;color:#b42318;font-size:12px;padding:9px 12px;border-radius:10px;margin-bottom:10px;font-weight:600;line-height:1.45}
+  .filtros-rota{display:flex;gap:16px;margin-top:12px;font-size:12.5px}
+  .filtros-rota label{display:flex;align-items:center;gap:6px;margin:0;font-weight:600;color:var(--ink);cursor:pointer}
+  .filtros-rota input{width:auto}
+  .resumo-card{background:linear-gradient(135deg,var(--brand-050),#f3f8ff);border:1px solid #dbe8fb;border-radius:14px;padding:14px}
+  .resumo-nums{display:flex;gap:9px;text-align:center}
+  .resumo-nums .rn{flex:1;background:#fff;border-radius:10px;padding:9px 5px}
+  .resumo-nums .rn .v{font-size:18px;font-weight:800;color:var(--brand-800)}
+  .resumo-nums .rn .l{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+  .uf-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .uf-chip{background:#fff;border:1px solid var(--line);border-radius:20px;padding:3px 9px;font-size:11px}
   .pin.preview{background:var(--accent);animation:pulse 1.4s infinite}
   @keyframes pulse{0%,100%{box-shadow:0 2px 6px rgba(0,0,0,.35)}50%{box-shadow:0 0 0 8px rgba(18,176,216,.25)}}
 
@@ -189,6 +199,11 @@
             <div id="paradas"></div>
             <button class="link-mini" onclick="addParada()">+ Adicionar parada</button>
 
+            <div class="filtros-rota">
+              <label><input type="checkbox" id="fHom" onchange="if(rotaCoords) listarPostosNaRota()"> Só homologados</label>
+              <label><input type="checkbox" id="fValido" onchange="if(rotaCoords) listarPostosNaRota()"> Só preço válido</label>
+            </div>
+
             <div class="btn-linha">
               <button class="btn-primario" onclick="tracarRota()">Traçar rota</button>
               <button class="btn-sec" style="flex:0 0 auto" onclick="limparRota()">Limpar</button>
@@ -205,6 +220,11 @@
 
       <!-- ================= ABA POSTOS ================= -->
       <div id="aba-postos" style="display:none">
+        <div class="secao">
+          <h2>📊 Resumo</h2>
+          <div class="resumo-card" id="resumoGeral"></div>
+        </div>
+
         <div class="secao">
           <h2 id="tituloForm">➕ Cadastrar posto</h2>
           <div class="card-form">
@@ -455,7 +475,25 @@ function atualizarLista(){
   const nv=postos.filter(precoVencido).length;
   const av=document.getElementById('avisoVencidos');
   if(av){ if(nv){ av.style.display='block'; av.innerHTML=`⚠️ <b>${nv}</b> posto(s) com <b>preço vencido</b> (mais de 30 dias sem atualizar) — aparecem com <b style="color:#e5484d">pino vermelho</b> no mapa.`; } else av.style.display='none'; }
+  renderResumo();
   popularPostosSelect();
+}
+function renderResumo(){
+  const el=document.getElementById('resumoGeral'); if(!el) return;
+  const total=postos.filter(p=>p.lat!=null).length;
+  const venc=postos.filter(precoVencido).length;
+  const s10s=postos.filter(p=>p.s10!=null).map(p=>p.s10);
+  const media=s10s.length? s10s.reduce((a,b)=>a+b,0)/s10s.length : null;
+  const porUf={};
+  postos.forEach(p=>{ if(p.s10==null) return; const uf=((p.ref||'').split(' - ')[1]||'—').trim()||'—'; (porUf[uf]=porUf[uf]||[]).push(p.s10); });
+  const ufs=Object.entries(porUf).map(([uf,arr])=>({uf, m:arr.reduce((a,b)=>a+b,0)/arr.length, n:arr.length})).sort((a,b)=>a.m-b.m);
+  el.innerHTML=`<div class="resumo-nums">
+      <div class="rn"><div class="v">${total}</div><div class="l">postos</div></div>
+      <div class="rn"><div class="v" style="color:#e5484d">${venc}</div><div class="l">vencidos</div></div>
+      <div class="rn"><div class="v">${media!=null?'R$ '+media.toFixed(2).replace('.',','):'—'}</div><div class="l">média S10</div></div>
+    </div>
+    ${ufs.length?`<div style="font-size:11px;color:var(--muted);margin-top:10px">Média S10 por estado (mais barato → mais caro):</div>
+    <div class="uf-list">${ufs.map(u=>`<span class="uf-chip">${u.uf}: <b>R$ ${u.m.toFixed(2).replace('.',',')}</b> <small>(${u.n})</small></span>`).join('')}</div>`:''}`;
 }
 function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
 
@@ -797,11 +835,16 @@ function listarPostosNaRota(){
   secaoResultado.style.display='block';
   const el=document.getElementById('resultado');
   let lista=postos.filter(p=>p.lat!=null&&p.lng!=null).map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
-  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto dentro de ${raio} km da rota.<br>Ajuste o raio na ⚙️ engrenagem.</div>`; return; }
+  const fHom=document.getElementById('fHom')?.checked, fVal=document.getElementById('fValido')?.checked;
+  if(fHom) lista=lista.filter(p=>p.hom && _norm(p.hom).includes('homolog') && !_norm(p.hom).includes('nao'));
+  if(fVal) lista=lista.filter(p=>(p.s10!=null||p.s500!=null) && !precoVencido(p));
+  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto ${(fHom||fVal)?'(com os filtros ativos) ':''}dentro de ${raio} km da rota.<br>Ajuste o raio (⚙️) ou os filtros.</div>`; return; }
   // ordena pelo preço do diesel escolhido (mais barato primeiro; sem preço vai pro fim)
   lista.sort((a,b)=>{ const va=a[dkey], vb=b[dkey]; if(va==null&&vb==null) return a.dist-b.dist; if(va==null) return 1; if(vb==null) return -1; return va-vb; });
 
-  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b></div>`;
+  const precosRota=lista.filter(p=>p[dkey]!=null).map(p=>p[dkey]);
+  const mediaRota=precosRota.length? precosRota.reduce((a,b)=>a+b,0)/precosRota.length : null;
+  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b>${mediaRota!=null?`<br>📊 Média ${dnome} na rota: <b>R$ ${mediaRota.toFixed(2).replace('.',',')}</b> · ${lista.length} posto(s)`:''}</div>`;
   printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, dnome, lista };
 
   const btnAcoes=`
