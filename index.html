@@ -150,6 +150,11 @@
   .pin span{transform:rotate(45deg);font-size:14px}
   .pin.origem{background:linear-gradient(135deg,#34d399,var(--verde))} .pin.destino{background:linear-gradient(135deg,#fb7185,var(--vermelho))} .pin.parada{background:linear-gradient(135deg,#fbbf24,var(--amarelo))}
   .pin.vencido{background:linear-gradient(135deg,#fb7185,var(--vermelho))}
+  .pin.cinza{background:linear-gradient(135deg,#b3bdca,#94a3b8)}
+  .legenda{position:absolute;left:12px;bottom:26px;z-index:500;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-radius:12px;padding:9px 12px;font-size:11px;color:var(--ink);box-shadow:var(--sh-md);border:1px solid var(--line)}
+  .legenda .lgt{font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px}
+  .legenda .lin{display:flex;align-items:center;gap:7px;font-weight:600;margin:3px 0}
+  .legenda i{width:13px;height:13px;border-radius:4px;display:inline-block;flex:0 0 auto}
   .aviso-venc{background:#fdeaea;border:1px solid #f5b5b7;color:#b42318;font-size:12px;padding:9px 12px;border-radius:10px;margin-bottom:10px;font-weight:600;line-height:1.45}
   .filtros-rota{display:flex;gap:16px;margin-top:12px;font-size:12.5px}
   .filtros-rota label{display:flex;align-items:center;gap:6px;margin:0;font-weight:600;color:var(--ink);cursor:pointer}
@@ -180,6 +185,7 @@
   body.motorista #syncStatus,
   body.motorista #secaoRotaForm,
   body.motorista #secaoPerto,
+  body.motorista #legenda,
   body.motorista #resultado .acoes-rota{ display:none !important; }
 </style>
 
@@ -364,6 +370,13 @@
 
   <div class="map-wrap">
     <div class="dica-add" id="dicaAdd">Clique no mapa onde fica o posto…</div>
+    <div class="legenda" id="legenda">
+      <div class="lgt">💰 Preço S10</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,hsl(120,72%,52%),hsl(120,72%,40%))"></i> mais barato</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,hsl(60,72%,52%),hsl(60,72%,40%))"></i> médio</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,hsl(0,72%,52%),hsl(0,72%,40%))"></i> mais caro</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,#b3bdca,#94a3b8)"></i> sem preço / vencido</div>
+    </div>
     <div id="mapa"></div>
   </div>
 </div>
@@ -529,13 +542,17 @@ L.control.layers({
 }, null, {position:'topright', collapsed:true}).addTo(mapa);
 setTimeout(()=>mapa.invalidateSize(), 200);
 
-function pinIcon(classe,emoji){ return L.divIcon({className:'', html:`<div class="pin ${classe}"><span>${emoji}</span></div>`, iconSize:[30,30], iconAnchor:[15,30], popupAnchor:[0,-30]}); }
+function pinIcon(classe,emoji,cor){ return L.divIcon({className:'', html:`<div class="pin ${classe}"${cor?` style="background:${cor}"`:''}><span>${emoji}</span></div>`, iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-30]}); }
 
 // ---------- Marcadores dos postos salvos ----------
 function renderMarcadores(){
   Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
   const motorista=document.body.classList.contains('motorista');
   const raio=parseFloat(document.getElementById('raio').value)||15;
+  // faixa de preços (S10) pra colorir os pinos: verde barato → vermelho caro
+  const _pv=postos.filter(p=>p.lat!=null && p.s10!=null && !precoVencido(p)).map(p=>p.s10);
+  const _pmin=_pv.length?Math.min(..._pv):0, _pmax=_pv.length?Math.max(..._pv):0;
+  const corPreco=v=>{ let t=(_pmax<=_pmin)?0:(v-_pmin)/(_pmax-_pmin); t=Math.max(0,Math.min(1,t)); const h=Math.round(120*(1-t)); return `linear-gradient(135deg,hsl(${h},72%,52%),hsl(${h},72%,40%))`; };
   postos.forEach(p=>{
     if(p.lat==null||p.lng==null) return;
     if(!postoPassaFiltro(p)) return;
@@ -543,7 +560,9 @@ function renderMarcadores(){
     if(rotaCoords){ if(distToRota(p,rotaCoords) > raio) return; if(!motorista && !postosSelecionados.has(p.id)) return; } // só postos da rota e marcados
     if(pontoCentro && !rotaCoords && distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng) > 150) return; // só perto da cidade
     const venc=precoVencido(p), opp=ehOportunidade(p);
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(venc?'vencido':'','⛽')}).addTo(mapa);
+    let _cls='', _cor=null;
+    if(venc || p.s10==null){ _cls='cinza'; } else { _cor=corPreco(p.s10); }
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'⛽',_cor)}).addTo(mapa);
     const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
     m.bindPopup(motorista
       ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br>${gmaps}`
