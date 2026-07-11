@@ -97,6 +97,8 @@
   .posto-card.melhor{border-color:var(--verde);box-shadow:0 0 0 2px rgba(16,185,129,.16)}
   .posto-card .nome{font-weight:700;font-size:14.5px;margin-bottom:2px}
   .posto-card .dist{font-size:11px;color:var(--muted);margin-bottom:9px}
+  .gap-info{font-size:11.5px;color:var(--muted);margin-top:9px;padding-top:8px;border-top:1px dashed var(--line);font-weight:600}
+  .gap-info b{color:var(--brand-700)}
   .tag-melhor{position:absolute;top:-10px;right:11px;background:var(--verde);color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:3px 9px;border-radius:20px;box-shadow:0 2px 6px rgba(15,157,88,.35)}
   .precos{display:flex;gap:6px;flex-wrap:wrap}
   .preco{flex:1;min-width:66px;background:var(--bg);border-radius:10px;padding:8px 7px;text-align:center;border:1px solid transparent}
@@ -976,6 +978,13 @@ function listarPostosNaRota(){
   // ordena pelo preço do diesel escolhido (mais barato primeiro; sem preço vai pro fim)
   lista.sort((a,b)=>{ const va=a[dkey], vb=b[dkey]; if(va==null&&vb==null) return a.dist-b.dist; if(va==null) return 1; if(vb==null) return -1; return va-vb; });
 
+  // distância até o próximo posto AO LONGO da rota (pra planejar o tanque)
+  const cum=[0]; for(let i=1;i<rotaCoords.length;i++){ cum[i]=cum[i-1]+distKm(rotaCoords[i-1][0],rotaCoords[i-1][1],rotaCoords[i][0],rotaCoords[i][1]); }
+  const prog=p=>{ let best=Infinity,idx=0; for(let i=0;i<rotaCoords.length;i++){ const dx=p.lat-rotaCoords[i][0], dy=p.lng-rotaCoords[i][1], d=dx*dx+dy*dy; if(d<best){best=d;idx=i;} } return cum[idx]; };
+  lista.forEach(p=>p._prog=prog(p));
+  const ordem=[...lista].sort((a,b)=>a._prog-b._prog);
+  ordem.forEach((p,i)=>{ p._gap = i<ordem.length-1 ? (ordem[i+1]._prog - p._prog) : null; });
+
   const motorista=document.body.classList.contains('motorista');
   const precosRota=lista.filter(p=>p[dkey]!=null).map(p=>p[dkey]);
   const mediaRota=precosRota.length? precosRota.reduce((a,b)=>a+b,0)/precosRota.length : null;
@@ -995,7 +1004,8 @@ function listarPostosNaRota(){
     return `<div class="posto-card">
       <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&ehOportunidade(p))?'⭐ ':''}${p.nome}</span>${chk}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?'✅ '+p.hom+' · ':''}${(!motorista&&p.dtNeg)?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
-      ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}</div>`;
+      ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}
+      ${motorista?'':`<div class="gap-info">${p._gap!=null?(p._gap>300?'🔴 ':'⛽ ')+'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b>'+(p._gap>300?' — trecho longo!':''):'🏁 Último posto da rota'}</div>`}</div>`;
   }).join('');
 }
 
