@@ -120,6 +120,20 @@
   /* Mapa */
   .map-wrap{flex:1;position:relative}
   #mapa{width:100%;height:100%}
+  /* Controles do mapa modernos */
+  .leaflet-bar{border:none!important;box-shadow:var(--sh-md)!important;border-radius:12px!important;overflow:hidden}
+  .leaflet-bar a{background:#fff;color:var(--brand-800)!important;border:none!important;width:36px;height:36px;line-height:36px;font-size:19px;font-weight:600;transition:.15s}
+  .leaflet-bar a:hover{background:var(--brand-050)}
+  .leaflet-control-layers{border:none!important;border-radius:12px!important;box-shadow:var(--sh-md)!important;padding:4px 6px}
+  .leaflet-control-layers-toggle{border-radius:12px!important;width:40px;height:40px}
+  .leaflet-control-layers-expanded{padding:10px 12px!important;font-size:13px}
+  .leaflet-control-layers label{margin:5px 0;font-weight:600;color:var(--ink)}
+  .leaflet-touch .leaflet-control-layers,.leaflet-touch .leaflet-bar{border:none!important}
+  .leaflet-control-attribution{background:rgba(255,255,255,.72)!important;border-radius:8px 0 0 0;font-size:10px;backdrop-filter:blur(4px);color:#7a879c}
+  .leaflet-popup-content-wrapper{border-radius:14px!important;box-shadow:var(--sh-lg)!important;padding:2px 4px}
+  .leaflet-popup-content{font-family:'Inter',system-ui,sans-serif;font-size:13px;line-height:1.5}
+  .leaflet-popup-content a{color:var(--brand-700);font-weight:600}
+  .leaflet-popup-tip{box-shadow:var(--sh-md)}
   .badge-loc{background:var(--bg);border:1px dashed #c3cee0;border-radius:10px;padding:9px 11px;font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:7px}
   .badge-loc.ok{border-style:solid;border-color:#bfe8cf;background:var(--verde-050);color:#0a6b39}
 
@@ -130,10 +144,10 @@
   .modal h3{margin:0 0 4px;font-size:18px}
   .modal .sub{font-size:12px;color:var(--muted);margin-bottom:12px}
 
-  .pin{background:var(--brand-700);width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center}
+  .pin{background:linear-gradient(135deg,var(--brand-500),var(--brand-800));width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 5px 12px rgba(5,32,70,.42);display:flex;align-items:center;justify-content:center}
   .pin span{transform:rotate(45deg);font-size:14px}
-  .pin.origem{background:var(--verde)} .pin.destino{background:var(--vermelho)} .pin.parada{background:var(--amarelo)}
-  .pin.vencido{background:var(--vermelho)}
+  .pin.origem{background:linear-gradient(135deg,#34d399,var(--verde))} .pin.destino{background:linear-gradient(135deg,#fb7185,var(--vermelho))} .pin.parada{background:linear-gradient(135deg,#fbbf24,var(--amarelo))}
+  .pin.vencido{background:linear-gradient(135deg,#fb7185,var(--vermelho))}
   .aviso-venc{background:#fdeaea;border:1px solid #f5b5b7;color:#b42318;font-size:12px;padding:9px 12px;border-radius:10px;margin-bottom:10px;font-weight:600;line-height:1.45}
   .filtros-rota{display:flex;gap:16px;margin-top:12px;font-size:12.5px}
   .filtros-rota label{display:flex;align-items:center;gap:6px;margin:0;font-weight:600;color:var(--ink);cursor:pointer}
@@ -490,7 +504,8 @@ function mostrarAba(nome){
 
 // ---------- Mapa ----------
 const mapa = L.map('mapa').setView([-15.78,-47.93],5);
-const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap', maxZoom:19}).addTo(mapa);
+const moderno = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© CARTO © OpenStreetMap', maxZoom:20, subdomains:'abcd'}).addTo(mapa);
+const ruas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap', maxZoom:19});
 const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
 const satNomes = L.layerGroup([
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}),
@@ -501,6 +516,7 @@ const escuro  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/
 const relevo  = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap', maxZoom:17});
 const rodovias= L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
 L.control.layers({
+  '🎨 Moderno':moderno,
   '🗺️ Ruas':ruas,
   '🛣️ Rodovias':rodovias,
   '🛰️ Satélite':satelite,
@@ -864,7 +880,10 @@ async function desenharRota(coordsReq){
   if(linhaRota) mapa.removeLayer(linhaRota);
   marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[];
   const coords=rota.geometry.coordinates.map(c=>[c[1],c[0]]);
-  linhaRota=L.polyline(coords,{color:'#0a4da2',weight:6,opacity:.85}).addTo(mapa);
+  linhaRota=L.featureGroup([
+    L.polyline(coords,{color:'#ffffff',weight:11,opacity:.95,lineCap:'round',lineJoin:'round'}),
+    L.polyline(coords,{color:'#1366d6',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'})
+  ]).addTo(mapa);
   rotaCoords=coords; rota_km=rota.distance/1000; rota_horas=rota.duration/3600;
   coordsReq.forEach((c,i)=>{ let cls='parada',emoji=String(i); if(i===0){cls='origem';emoji='A';} else if(i===coordsReq.length-1){cls='destino';emoji='B';} marcadoresRota.push(L.marker([c.lat,c.lng],{icon:pinIcon(cls,emoji)}).addTo(mapa)); });
   mapa.fitBounds(linhaRota.getBounds(),{padding:[50,50]});
