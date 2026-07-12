@@ -173,6 +173,8 @@
 
   .dica-add{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--brand-700),var(--brand-500));color:#fff;padding:10px 20px;border-radius:22px;font-size:13px;font-weight:600;z-index:500;box-shadow:var(--sh-lg);display:none}
   .modo-add{cursor:crosshair !important}
+  .admin-only{display:none !important}
+  body.is-admin .admin-only{display:flex !important}
 
   /* Tela de login */
   #loginTela{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;
@@ -393,6 +395,24 @@
   </div>
 </div>
 
+<!-- MODAL USUÁRIOS -->
+<div class="modal" id="modalUsers">
+  <div class="caixa">
+    <h3>👥 Usuários</h3>
+    <div class="sub">Crie e gerencie os acessos da equipe. 👑 = administrador.</div>
+    <div id="listaUsers" class="lista-todos"></div>
+    <label>Criar novo usuário</label>
+    <input id="novoUser" placeholder="nome de usuário" />
+    <div class="linha" style="margin-top:8px;align-items:center">
+      <input id="novaSenha" type="text" placeholder="senha" />
+      <label style="display:flex;align-items:center;gap:5px;flex:0 0 auto;margin:0;font-weight:600;color:var(--ink)"><input type="checkbox" id="novoAdmin" style="width:auto"> admin</label>
+    </div>
+    <div class="btn-linha"><button class="btn-primario" onclick="criarUsuario()">Criar usuário</button></div>
+    <div class="status" id="usersStatus"></div>
+    <div class="btn-linha"><button class="btn-sec" onclick="document.getElementById('modalUsers').style.display='none'">Fechar</button></div>
+  </div>
+</div>
+
 <!-- TELA DE LOGIN -->
 <div id="loginTela">
   <div class="login-box">
@@ -401,9 +421,11 @@
     </div>
     <h2>Roteirizador de Abastecimento</h2>
     <p>Acesso restrito · Blue Transportes</p>
-    <input type="password" id="senhaInput" placeholder="Digite a senha de acesso" onkeydown="if(event.key==='Enter') entrar()" />
-    <div id="senhaErro" style="display:none;color:var(--vermelho);font-size:12px;margin-top:8px;font-weight:600">🔒 Senha incorreta.</div>
+    <input type="text" id="loginUser" placeholder="Usuário" autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('senhaInput').focus()" />
+    <input type="password" id="senhaInput" placeholder="Senha" autocomplete="current-password" style="margin-top:8px" onkeydown="if(event.key==='Enter') entrar()" />
+    <div id="senhaErro" style="display:none;color:var(--vermelho);font-size:12px;margin-top:8px;font-weight:600"></div>
     <button class="btn-primario" style="margin-top:14px" onclick="entrar()">Entrar</button>
+    <div style="margin-top:14px"><a onclick="primeiroAcesso()" style="color:var(--brand-700);font-size:12px;font-weight:700;cursor:pointer">Primeiro acesso? Criar administrador</a></div>
   </div>
 </div>
 
@@ -454,6 +476,7 @@
       <div><span>Aparelho (L/h)</span><input id="ap_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
     <label style="margin-top:14px">Mostrar postos até <span id="raioLbl">15</span> km da estrada</label>
     <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords){ renderMarcadores(); listarPostosNaRota(); }" />
+    <div class="btn-linha admin-only"><button class="btn-sec" onclick="abrirUsuarios()" style="width:100%">👥 Gerenciar usuários</button></div>
     <div class="btn-linha"><button class="btn-sec" onclick="sair()">🔒 Sair</button><button class="btn-primario" onclick="fecharFrota()">Pronto</button></div>
   </div>
 </div>
@@ -1192,24 +1215,61 @@ function importar(ev){ const f=ev.target.files[0]; if(!f) return; const rd=new F
 
 ['origem','destino'].forEach(id=>document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') tracarRota(); }));
 
-// ---------- Senha de acesso ----------
-const SENHA = 'blue2026';   // <<< senha de acesso — me avise se quiser trocar
-function entrar(){
-  if(document.getElementById('senhaInput').value===SENHA){
-    localStorage.setItem('blueAuth',SENHA);
-    document.getElementById('loginTela').style.display='none';
-    renderConfig(); carregarPostos();
-  } else { document.getElementById('senhaErro').style.display='block'; document.getElementById('senhaInput').select(); }
+// ---------- Login com usuários (Cloudflare /auth) ----------
+let authUser=null, authAdmin=false;
+async function authApi(payload){
+  const r=await fetch('/auth',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  return await r.json();
 }
-function sair(){ localStorage.removeItem('blueAuth'); location.reload(); }
+function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin); renderConfig(); carregarPostos(); }
+function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
+async function entrar(){
+  const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('senhaInput').value;
+  const err=document.getElementById('senhaErro'); err.style.display='none';
+  if(!u||!p){ err.textContent='Preencha usuário e senha.'; err.style.display='block'; return; }
+  try{ const j=await authApi({action:'login', user:u, pass:p});
+    if(j.ok){ localStorage.setItem('authToken',j.token); authUser=j.user; authAdmin=j.admin; abrirApp(); }
+    else { err.textContent='🔒 '+(j.error||'Falha no login.'); err.style.display='block'; document.getElementById('senhaInput').select(); }
+  }catch{ err.textContent='⚠️ Servidor de login indisponível (a função /auth ou o banco USERS_KV podem não estar configurados).'; err.style.display='block'; }
+}
+async function primeiroAcesso(){
+  const u=prompt('Nome do usuário ADMINISTRADOR (o primeiro acesso):'); if(!u) return;
+  const p=prompt('Crie uma senha para ele:'); if(!p) return;
+  try{ const j=await authApi({action:'create', user:u.trim(), pass:p});
+    if(j.ok && j.primeiro){ alert('✅ Administrador criado! Agora entre com esse usuário e senha.'); document.getElementById('loginUser').value=u.trim(); document.getElementById('senhaInput').focus(); }
+    else alert('⚠️ '+(j.error||'Não foi possível. Já existe usuário — peça a um admin para criar o seu.'));
+  }catch{ alert('⚠️ Servidor de login indisponível.'); }
+}
+async function sair(){ const t=localStorage.getItem('authToken'); localStorage.removeItem('authToken'); try{ await authApi({action:'logout', token:t}); }catch{} location.reload(); }
+
+// Gerenciar usuários (admin)
+async function abrirUsuarios(){ document.getElementById('modalFrota').style.display='none'; document.getElementById('modalUsers').style.display='flex'; await listarUsuarios(); }
+async function listarUsuarios(){
+  const el=document.getElementById('listaUsers');
+  try{ const j=await authApi({action:'list', token:localStorage.getItem('authToken')});
+    if(!j.ok){ el.innerHTML='<div class="vazio">'+(j.error||'Erro ao listar')+'</div>'; return; }
+    el.innerHTML=(j.users.length? j.users.map(u=>`<div class="item"><div class="info"><div class="nm">${u.user}${u.admin?' 👑':''}</div><div class="sub">${u.admin?'administrador':'usuário'}</div></div><div class="acoes">${u.user===authUser?'':`<button class="ac del" onclick="excluirUsuario('${u.user}')" title="Excluir">🗑️</button>`}</div></div>`).join('') : '<div class="vazio">Nenhum usuário.</div>');
+  }catch{ el.innerHTML='<div class="vazio">Servidor indisponível.</div>'; }
+}
+async function criarUsuario(){
+  const u=document.getElementById('novoUser').value.trim(), p=document.getElementById('novaSenha').value, adm=document.getElementById('novoAdmin').checked;
+  const st=document.getElementById('usersStatus');
+  if(!u||!p){ st.textContent='Preencha usuário e senha.'; return; }
+  const j=await authApi({action:'create', token:localStorage.getItem('authToken'), user:u, pass:p, admin:adm});
+  if(j.ok){ st.textContent='✅ Usuário criado!'; document.getElementById('novoUser').value=''; document.getElementById('novaSenha').value=''; document.getElementById('novoAdmin').checked=false; listarUsuarios(); }
+  else st.textContent='⚠️ '+(j.error||'Erro.');
+}
+async function excluirUsuario(user){
+  if(!confirm('Excluir o usuário "'+user+'"?')) return;
+  const j=await authApi({action:'delete', token:localStorage.getItem('authToken'), user});
+  if(j.ok) listarUsuarios(); else alert(j.error||'Erro.');
+}
 
 // ---------- Início ----------
-if(/[#&]rota=/.test(location.hash||'')){            // link de motorista: entra direto, sem senha
-  renderConfig(); checarLinkMotorista();
-} else if(localStorage.getItem('blueAuth')===SENHA){  // já logado neste navegador
-  document.getElementById('loginTela').style.display='none'; renderConfig(); carregarPostos();
-} else {                                             // pede a senha
-  document.getElementById('loginTela').style.display='flex';
-  setTimeout(()=>{ const s=document.getElementById('senhaInput'); if(s) s.focus(); },120);
-}
+(async function(){
+  if(/[#&]rota=/.test(location.hash||'')){ renderConfig(); checarLinkMotorista(); return; } // motorista: sem login
+  const token=localStorage.getItem('authToken');
+  if(token){ try{ const j=await authApi({action:'me', token}); if(j.ok){ authUser=j.user; authAdmin=j.admin; abrirApp(); return; } }catch{} }
+  mostrarLogin();
+})();
 </script>
