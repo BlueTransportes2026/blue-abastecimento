@@ -118,6 +118,7 @@
   .lista-todos .item .ac{width:30px;height:30px;padding:0;border-radius:8px;background:var(--bg);font-size:14px}
   .lista-todos .item .ac.del:hover{background:#fde8e8}
   .lista-todos .item .ac.ed:hover{background:var(--brand-050)}
+  .lista-todos .item .ac.ok:hover{background:#e7f9f1}
 
   /* Mapa */
   .map-wrap{flex:1;position:relative}
@@ -150,6 +151,7 @@
   .pin span{transform:rotate(45deg);font-size:14px}
   .pin.origem{background:linear-gradient(135deg,#34d399,var(--verde))} .pin.destino{background:linear-gradient(135deg,#fb7185,var(--vermelho))} .pin.parada{background:linear-gradient(135deg,#fbbf24,var(--amarelo))}
   .pin.vencido{background:linear-gradient(135deg,#fb7185,var(--vermelho))}
+  .pin.quase{background:linear-gradient(135deg,#fcd34d,#f59e0b)}
   .pin.cinza{background:linear-gradient(135deg,#b3bdca,#94a3b8)}
   .legenda{position:absolute;left:12px;bottom:26px;z-index:500;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-radius:12px;padding:9px 12px;font-size:11px;color:var(--ink);box-shadow:var(--sh-md);border:1px solid var(--line)}
   .legenda .lgt{font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px}
@@ -171,6 +173,16 @@
 
   .dica-add{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--brand-700),var(--brand-500));color:#fff;padding:10px 20px;border-radius:22px;font-size:13px;font-weight:600;z-index:500;box-shadow:var(--sh-lg);display:none}
   .modo-add{cursor:crosshair !important}
+
+  /* Tela de login */
+  #loginTela{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;
+    background:radial-gradient(900px 500px at 80% -10%,rgba(6,182,212,.35),transparent 60%),linear-gradient(135deg,var(--brand-900),var(--brand-700) 62%,var(--brand-500))}
+  #loginTela .login-box{background:#fff;border-radius:22px;padding:32px 30px;width:370px;max-width:92vw;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:pop .2s ease}
+  #loginTela .login-logo{background:var(--brand-050);border-radius:16px;padding:14px 18px;display:inline-flex;margin-bottom:14px}
+  #loginTela .login-logo img{height:44px;width:auto;max-width:210px;display:block}
+  #loginTela h2{margin:6px 0 3px;font-size:19px;color:var(--brand-800);font-weight:800}
+  #loginTela p{margin:0 0 20px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+  #loginTela input{text-align:center;font-size:15px}
 
   @media (max-width:820px){
     #app{flex-direction:column}
@@ -371,13 +383,27 @@
   <div class="map-wrap">
     <div class="dica-add" id="dicaAdd">Clique no mapa onde fica o posto…</div>
     <div class="legenda" id="legenda">
-      <div class="lgt">💰 Preço S10</div>
-      <div class="lin"><i style="background:linear-gradient(135deg,hsl(120,72%,52%),hsl(120,72%,40%))"></i> mais barato</div>
-      <div class="lin"><i style="background:linear-gradient(135deg,hsl(60,72%,52%),hsl(60,72%,40%))"></i> médio</div>
-      <div class="lin"><i style="background:linear-gradient(135deg,hsl(0,72%,52%),hsl(0,72%,40%))"></i> mais caro</div>
-      <div class="lin"><i style="background:linear-gradient(135deg,#b3bdca,#94a3b8)"></i> sem preço / vencido</div>
+      <div class="lgt">Status do preço</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,var(--brand-500),var(--brand-800))"></i> preço OK</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,#fcd34d,#f59e0b)"></i> quase vencendo (~1 mês)</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,#fb7185,var(--vermelho))"></i> vencido (+30 dias)</div>
+      <div class="lin"><i style="background:linear-gradient(135deg,#b3bdca,#94a3b8)"></i> sem preço</div>
     </div>
     <div id="mapa"></div>
+  </div>
+</div>
+
+<!-- TELA DE LOGIN -->
+<div id="loginTela">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://static.wixstatic.com/media/4373da_8f730a6062a0456090221fdaa9c3268a~mv2.png" alt="Blue Transportes" onerror="this.style.display='none'" />
+    </div>
+    <h2>Roteirizador de Abastecimento</h2>
+    <p>Acesso restrito · Blue Transportes</p>
+    <input type="password" id="senhaInput" placeholder="Digite a senha de acesso" onkeydown="if(event.key==='Enter') entrar()" />
+    <div id="senhaErro" style="display:none;color:var(--vermelho);font-size:12px;margin-top:8px;font-weight:600">🔒 Senha incorreta.</div>
+    <button class="btn-primario" style="margin-top:14px" onclick="entrar()">Entrar</button>
   </div>
 </div>
 
@@ -428,7 +454,7 @@
       <div><span>Aparelho (L/h)</span><input id="ap_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
     <label style="margin-top:14px">Mostrar postos até <span id="raioLbl">15</span> km da estrada</label>
     <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords){ renderMarcadores(); listarPostosNaRota(); }" />
-    <div class="btn-linha"><button class="btn-primario" onclick="fecharFrota()">Pronto</button></div>
+    <div class="btn-linha"><button class="btn-sec" onclick="sair()">🔒 Sair</button><button class="btn-primario" onclick="fecharFrota()">Pronto</button></div>
   </div>
 </div>
 
@@ -473,10 +499,10 @@ async function carregarPostos(){
     const r=await fetch('postos.json?v='+Date.now(),{cache:'no-store'});
     if(r.ok){
       const arr=await r.json();
-      if(Array.isArray(arr) && arr.length){ postos=arr; localStorage.setItem('bluePostos',JSON.stringify(arr)); statusNuvem('shared',arr.length); renderMarcadores(); return; }
+      if(Array.isArray(arr) && arr.length){ postos=arr; localStorage.setItem('bluePostos',JSON.stringify(arr)); aplicarConfirmacoes(); statusNuvem('shared',arr.length); renderMarcadores(); return; }
     }
   }catch{}
-  statusNuvem('local'); renderMarcadores();
+  aplicarConfirmacoes(); statusNuvem('local'); renderMarcadores();
 }
 async function sincronizar(){ statusNuvem('sync'); postos=[]; await carregarPostos(); }
 function statusNuvem(e,n){
@@ -496,6 +522,25 @@ function diasDesde(dtNeg){
   return Math.floor((Date.now()-d.getTime())/86400000);
 }
 function precoVencido(p){ const dias=diasDesde(p&&p.dtNeg); return dias!=null && dias>30; }
+// status do preço: 'ok' (azul) · 'quase' (amarelo, perto de 30 dias) · 'vencido' (vermelho) · 'sem' (cinza)
+function statusPreco(p){
+  if(!p || (p.s10==null && p.s500==null && p.arla==null)) return 'sem';
+  const dias=diasDesde(p.dtNeg);
+  if(dias==null) return 'ok';
+  if(dias>30) return 'vencido';
+  if(dias>=23) return 'quase';
+  return 'ok';
+}
+// "Preço OK": renova a data do preço (o valor não mudou, só foi reconfirmado). Fica salvo neste navegador.
+let confirmacoes = JSON.parse(localStorage.getItem('blueConfirm')||'{}');
+function chaveConf(p){ const c=(p.cnpj||'').replace(/\D/g,''); return c.length>=11?'c'+c:'n'+_norm(p.nome||'')+'|'+_norm(p.ref||''); }
+function aplicarConfirmacoes(){ postos.forEach(p=>{ const d=confirmacoes[chaveConf(p)]; if(d){ const nd=diasDesde(d), od=diasDesde(p.dtNeg); if(nd!=null && (od==null || nd<od)) p.dtNeg=d; } }); }
+function confirmarPreco(id){
+  const p=postos.find(x=>x.id===id); if(!p) return;
+  const h=new Date(); const ds=String(h.getDate()).padStart(2,'0')+'/'+String(h.getMonth()+1).padStart(2,'0')+'/'+h.getFullYear();
+  confirmacoes[chaveConf(p)]=ds; localStorage.setItem('blueConfirm',JSON.stringify(confirmacoes));
+  p.dtNeg=ds; mapa.closePopup(); renderMarcadores(); if(rotaCoords) listarPostosNaRota();
+}
 function getUF(p){ return (((p&&p.ref)||'').split(' - ')[1]||'').trim(); }
 // "Melhor oportunidade": preço S10 pelo menos 3% abaixo da média do estado
 function ehOportunidade(p){ if(!p||p.s10==null) return false; const m=ufMedias[getUF(p)]; return !!m && p.s10 <= m*0.97; }
@@ -549,10 +594,6 @@ function renderMarcadores(){
   Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
   const motorista=document.body.classList.contains('motorista');
   const raio=parseFloat(document.getElementById('raio').value)||15;
-  // faixa de preços (S10) pra colorir os pinos: verde barato → vermelho caro
-  const _pv=postos.filter(p=>p.lat!=null && p.s10!=null && !precoVencido(p)).map(p=>p.s10);
-  const _pmin=_pv.length?Math.min(..._pv):0, _pmax=_pv.length?Math.max(..._pv):0;
-  const corPreco=v=>{ let t=(_pmax<=_pmin)?0:(v-_pmin)/(_pmax-_pmin); t=Math.max(0,Math.min(1,t)); const h=Math.round(120*(1-t)); return `linear-gradient(135deg,hsl(${h},72%,52%),hsl(${h},72%,40%))`; };
   postos.forEach(p=>{
     if(p.lat==null||p.lng==null) return;
     if(!postoPassaFiltro(p)) return;
@@ -560,9 +601,9 @@ function renderMarcadores(){
     if(rotaCoords){ if(distToRota(p,rotaCoords) > raio) return; if(!motorista && !postosSelecionados.has(p.id)) return; } // só postos da rota e marcados
     if(pontoCentro && !rotaCoords && distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng) > 150) return; // só perto da cidade
     const venc=precoVencido(p), opp=ehOportunidade(p);
-    let _cls='', _cor=null;
-    if(venc || p.s10==null){ _cls='cinza'; } else { _cor=corPreco(p.s10); }
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'⛽',_cor)}).addTo(mapa);
+    const _st=statusPreco(p);
+    const _cls=_st==='vencido'?'vencido':_st==='quase'?'quase':_st==='sem'?'cinza':'';
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'⛽')}).addTo(mapa);
     const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
     m.bindPopup(motorista
       ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br>${gmaps}`
@@ -570,6 +611,7 @@ function renderMarcadores(){
       S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br>
       ${(p.hist&&p.hist.length)?'<br><small><b>📈 Histórico S10:</b></small><br>'+p.hist.map((h,i)=>{const pv=i>0?p.hist[i-1].s10:null;const ar=(pv!=null&&h.s10!=null)?(h.s10>pv?' <span style=\"color:#e5484d\">🔺</span>':(h.s10<pv?' <span style=\"color:#12a150\">🔻</span>':'')):'';return '<small>'+(h.d||'—')+': '+fmt(h.s10)+ar+'</small>';}).join('<br>'):''}<br><br>
       ${gmaps}<br><br>
+      <a href="#" style="color:#0f9d58;font-weight:700" onclick="confirmarPreco('${p.id}');return false">✅ Preço OK (renovar data)</a><br><br>
       <a href="#" onclick="editarPosto('${p.id}');return false">✏️ Editar</a> &nbsp;
       <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">🗑️ Excluir</a>`);
     marcadores[p.id]=m;
@@ -596,6 +638,7 @@ function atualizarLista(){
         <div class="sub">${p.ref||''}${p.lat==null?' · ⚠️ sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">⚠️ preço vencido</b>':''}${p.hom?' · ✅ '+p.hom:''} · S10 ${fmt(p.s10)}</div>
       </div>
       <div class="acoes">
+        <button class="ac ok" onclick="confirmarPreco('${p.id}')" title="Marcar preço como OK (renova a data)">✅</button>
         <button class="ac ed" onclick="editarPosto('${p.id}')" title="Editar">✏️</button>
         <button class="ac del" onclick="excluirPosto('${p.id}')" title="Excluir">🗑️</button>
       </div>
@@ -1149,7 +1192,24 @@ function importar(ev){ const f=ev.target.files[0]; if(!f) return; const rd=new F
 
 ['origem','destino'].forEach(id=>document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') tracarRota(); }));
 
+// ---------- Senha de acesso ----------
+const SENHA = 'blue2026';   // <<< senha de acesso — me avise se quiser trocar
+function entrar(){
+  if(document.getElementById('senhaInput').value===SENHA){
+    localStorage.setItem('blueAuth',SENHA);
+    document.getElementById('loginTela').style.display='none';
+    renderConfig(); carregarPostos();
+  } else { document.getElementById('senhaErro').style.display='block'; document.getElementById('senhaInput').select(); }
+}
+function sair(){ localStorage.removeItem('blueAuth'); location.reload(); }
+
 // ---------- Início ----------
-renderConfig();
-if(!checarLinkMotorista()) carregarPostos();
+if(/[#&]rota=/.test(location.hash||'')){            // link de motorista: entra direto, sem senha
+  renderConfig(); checarLinkMotorista();
+} else if(localStorage.getItem('blueAuth')===SENHA){  // já logado neste navegador
+  document.getElementById('loginTela').style.display='none'; renderConfig(); carregarPostos();
+} else {                                             // pede a senha
+  document.getElementById('loginTela').style.display='flex';
+  setTimeout(()=>{ const s=document.getElementById('senhaInput'); if(s) s.focus(); },120);
+}
 </script>
