@@ -11,13 +11,14 @@
 
 <style>
   :root{
-    --brand-900:#052046; --brand-800:#0a3a7a; --brand-700:#0d54ad; --brand-500:#2a7de1;
-    --brand-300:#6ba6ee; --brand-100:#d6e6fb; --brand-050:#eef4fd;
-    --accent:#06b6d4;
-    --verde:#10b981; --verde-050:#e7f9f1; --vermelho:#ef4444; --amarelo:#f59e0b;
-    --ink:#0f1b2d; --muted:#64748b; --line:#e6ecf4; --bg:#eef2f8; --card:#ffffff;
+    --brand-900:#04162f; --brand-800:#093470; --brand-700:#0d54ad; --brand-600:#1667cf; --brand-500:#2a7de1;
+    --brand-400:#4f97ea; --brand-300:#6ba6ee; --brand-100:#d6e6fb; --brand-050:#eef4fd;
+    --accent:#06b6d4; --accent-2:#22d3ee;
+    --verde:#10b981; --verde-050:#e7f9f1; --vermelho:#ef4444; --vermelho-050:#fdecec; --amarelo:#f59e0b; --amarelo-050:#fff5e6;
+    --ink:#0e1a2b; --muted:#6b7a90; --line:#e7edf5; --bg:#eef2f8; --card:#ffffff; --card-2:#f7f9fc;
     --sh-sm:0 1px 2px rgba(15,27,45,.06),0 1px 3px rgba(15,27,45,.04);
-    --sh-md:0 4px 14px rgba(15,27,45,.09); --sh-lg:0 14px 36px rgba(15,27,45,.14); --r:14px;
+    --sh-md:0 6px 18px rgba(15,27,45,.10); --sh-lg:0 18px 44px rgba(15,27,45,.16);
+    --r:16px; --r-sm:12px;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);
@@ -201,6 +202,126 @@
   body.motorista #secaoPerto,
   body.motorista #legenda,
   body.motorista #resultado .acoes-rota{ display:none !important; }
+
+  /* ============================================================
+     REDESIGN v2 — visual mais moderno, dinâmico e bem separado
+     (este bloco vem por último, então tem prioridade no estilo)
+  ============================================================ */
+  body{background:
+    radial-gradient(900px 460px at 102% -10%,rgba(34,211,238,.16),transparent 60%),
+    radial-gradient(760px 520px at -12% 8%,rgba(42,125,225,.14),transparent 58%),
+    var(--bg);}
+
+  /* ---- Sidebar / cabeçalho ---- */
+  #painel{width:428px;min-width:428px;box-shadow:8px 0 40px rgba(9,30,60,.08)}
+  #topo{padding:20px 22px 18px}
+  #topo::before{content:'';position:absolute;left:-30px;bottom:-70px;width:170px;height:170px;border-radius:50%;
+    background:radial-gradient(circle,rgba(42,125,225,.55),transparent 70%);pointer-events:none}
+  #topo .logo-chip{border-radius:14px;padding:9px 15px;box-shadow:0 10px 26px rgba(0,0,0,.28)}
+  #topo p{font-size:11.5px;letter-spacing:.2px;margin-top:12px}
+  #syncStatus.sync{margin-top:12px;font-size:11px;font-weight:700;padding:6px 13px;border-radius:20px}
+  .gear{border-radius:12px}
+
+  /* ---- Abas: controle segmentado (pílula) ---- */
+  .tabs{gap:4px;padding:10px 12px 0;background:transparent;border-bottom:1px solid var(--line)}
+  .tab{flex:1;border-radius:12px 12px 10px 10px;border:none;border-bottom:none;padding:11px 6px 12px;font-size:12px;
+    color:var(--muted);display:flex;align-items:center;justify-content:center;gap:5px;position:relative;transition:.18s}
+  .tab::after{display:none !important}
+  .tab:hover{background:var(--brand-050);color:var(--brand-700)}
+  .tab.ativo{background:linear-gradient(135deg,var(--brand-700),var(--brand-500));color:#fff;
+    box-shadow:0 8px 18px rgba(13,84,173,.32)}
+  .tab.ativo:hover{color:#fff}
+  .tab-badge{background:var(--vermelho);color:#fff;font-size:10px;font-weight:800;min-width:18px;height:18px;
+    border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;
+    box-shadow:0 2px 6px rgba(239,68,68,.45);animation:badgePulse 2s infinite}
+  .tab.ativo .tab-badge{background:#fff;color:var(--vermelho)}
+  @keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+
+  /* ---- Conteúdo / seções (entrada animada) ---- */
+  .conteudo{padding:18px}
+  .secao{animation:fadeUp .38s ease both}
+  .secao:nth-child(2){animation-delay:.04s}.secao:nth-child(3){animation-delay:.08s}.secao:nth-child(4){animation-delay:.12s}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .secao h2{font-size:11.5px;letter-spacing:.8px;color:var(--brand-800);font-weight:800;padding-left:11px;position:relative}
+  .secao h2::before{content:'';position:absolute;left:0;top:1px;bottom:1px;width:4px;border-radius:4px;
+    background:linear-gradient(180deg,var(--brand-500),var(--accent))}
+  .card-form{border-radius:var(--r);padding:17px;box-shadow:var(--sh-sm);border-color:#eef2f8}
+  .card-form:focus-within{box-shadow:var(--sh-md)}
+
+  input,select,textarea{border-radius:12px;padding:12px 13px}
+  .btn-primario,.btn-sec,button{border-radius:12px}
+  .btn-sec{font-weight:700}
+  .link-mini{color:var(--brand-600)}
+
+  /* ---- KPIs / resumo ---- */
+  .resumo-card{border-radius:var(--r);padding:16px}
+  .resumo-nums{gap:10px}
+  .resumo-nums .rn{border-radius:13px;padding:12px 6px;box-shadow:0 2px 8px rgba(15,27,45,.05);position:relative;overflow:hidden}
+  .resumo-nums .rn::after{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,var(--brand-500),var(--accent))}
+  .resumo-nums .rn .v{font-size:20px}
+  .uf-chip{border-radius:20px;padding:4px 11px;box-shadow:0 1px 3px rgba(15,27,45,.05)}
+
+  /* ---- Cards de posto ---- */
+  .posto-card{border-radius:var(--r);padding:14px 15px}
+  .posto-card::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--brand-300);opacity:0;transition:.2s}
+  .posto-card:hover::before{opacity:1}
+  .preco{border-radius:11px;padding:9px 7px}
+  .lista-todos .item{border-radius:13px}
+
+  /* ---- Pílulas de status ---- */
+  .pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.2px}
+  .pill.ok{background:var(--brand-050);color:var(--brand-700)}
+  .pill.venc{background:var(--vermelho-050);color:#c0362c}
+  .pill.quase{background:var(--amarelo-050);color:#a86800}
+  .pill.sem{background:#eef1f6;color:#64748b}
+
+  /* ---- Tela de Pendências ---- */
+  .pend-hero{display:flex;gap:11px}
+  .pend-hero .ph{flex:1;border-radius:15px;padding:15px 12px;text-align:center;color:#fff;position:relative;overflow:hidden;box-shadow:var(--sh-md)}
+  .pend-hero .ph .n{font-size:28px;font-weight:800;line-height:1}
+  .pend-hero .ph .t{font-size:10.5px;font-weight:700;letter-spacing:.4px;margin-top:5px;opacity:.95;text-transform:uppercase}
+  .pend-hero .ph.venc{background:linear-gradient(135deg,#f97362,var(--vermelho))}
+  .pend-hero .ph.quase{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+  .pend-hero .ph.ok{background:linear-gradient(135deg,#34d399,var(--verde))}
+  .pend-card{border:1px solid var(--line);border-left:5px solid var(--vermelho);border-radius:13px;padding:13px 14px;margin-bottom:10px;background:var(--card);box-shadow:var(--sh-sm);transition:.18s}
+  .pend-card:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+  .pend-card.quase{border-left-color:var(--amarelo)}
+  .pend-card .pc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .pend-card .pc-nome{font-weight:800;font-size:14px;color:var(--ink);cursor:pointer;line-height:1.25}
+  .pend-card .pc-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .pend-card .pc-dias{font-size:11px;font-weight:800;white-space:nowrap}
+  .pend-card .pc-acoes{display:flex;gap:7px;margin-top:11px}
+  .pend-card .pc-acoes button{flex:1;padding:9px;font-size:12.5px}
+  .btn-ok{background:var(--verde-050);color:#0a6b39;border:1px solid #bfe8cf}
+  .btn-ok:hover{background:#d6f3e3}
+
+  /* ---- Autonomia do tanque ---- */
+  .aut-grid{display:flex;gap:10px}
+  .aut-out{margin-top:14px;border-radius:14px;padding:14px;background:linear-gradient(135deg,#0b3e86,#1667cf);color:#fff;box-shadow:0 10px 24px rgba(11,62,134,.28)}
+  .aut-out .big{font-size:24px;font-weight:800;line-height:1;display:flex;align-items:baseline;gap:6px}
+  .aut-out .big small{font-size:12px;font-weight:600;opacity:.85}
+  .aut-out .sub{font-size:11.5px;opacity:.9;margin-top:5px}
+  .aut-bar{height:11px;border-radius:8px;background:rgba(255,255,255,.22);margin-top:12px;position:relative;overflow:hidden}
+  .aut-bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:8px;background:linear-gradient(90deg,#5eead4,#22d3ee);transition:width .5s ease}
+  .aut-bar>b{position:absolute;top:-4px;bottom:-4px;width:3px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px rgba(0,0,0,.15)}
+  .aut-leg{display:flex;justify-content:space-between;font-size:10px;opacity:.85;margin-top:6px}
+  .aut-alert{margin-top:11px;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:600;line-height:1.45;display:flex;gap:8px;align-items:flex-start}
+  .aut-alert.bom{background:var(--verde-050);color:#0a6b39;border:1px solid #bfe8cf}
+  .aut-alert.ruim{background:var(--vermelho-050);color:#b42318;border:1px solid #f5b5b7}
+  .gap-info.perigo{color:#b42318}
+  .gap-info.perigo b{color:#b42318}
+  .posto-card.abastecer{border-color:var(--amarelo);box-shadow:0 0 0 2px rgba(245,158,11,.18)}
+  .tag-abastecer{position:absolute;top:-10px;left:11px;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff;font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:20px;box-shadow:0 3px 8px rgba(245,158,11,.4)}
+
+  body.motorista #secaoAutonomia{display:none !important}
+
+  /* ---- Modais / login: leves refinos ---- */
+  .modal .caixa{border-radius:22px}
+  #loginTela .login-box{border-radius:24px}
+
+  @media (max-width:820px){
+    #painel{width:100%;min-width:0}
+  }
 </style>
 
 <div id="app">
@@ -220,8 +341,9 @@
 
     <div class="tabs">
       <button class="tab ativo" id="tab-rota" onclick="mostrarAba('rota')">🧭 Rota</button>
+      <button class="tab" id="tab-pendencias" onclick="mostrarAba('pendencias')">🚨 Pendências<span class="tab-badge" id="badgePend" style="display:none">0</span></button>
       <button class="tab" id="tab-postos" onclick="mostrarAba('postos')">⛽ Postos</button>
-      <button class="tab" id="tab-gerenciadora" onclick="mostrarAba('gerenciadora')">🛡️ Gerenciadora</button>
+      <button class="tab" id="tab-gerenciadora" onclick="mostrarAba('gerenciadora')">🛡️ Gestão</button>
     </div>
 
     <div class="conteudo">
@@ -258,6 +380,18 @@
           </div>
         </div>
 
+        <div class="secao" id="secaoAutonomia">
+          <div class="card-form">
+            <h2 style="margin-top:0;margin-bottom:12px">🛢️ Autonomia do tanque</h2>
+            <div class="aut-grid">
+              <div><label style="margin-top:0">Capacidade (litros)</label><input id="autCap" type="number" step="10" placeholder="Ex.: 600" oninput="salvarAutonomia()" /></div>
+              <div><label style="margin-top:0">Consumo (km/l)</label><input id="autKml" type="number" step="0.1" placeholder="Ex.: 2.6" oninput="salvarAutonomia()" /></div>
+            </div>
+            <div id="autOut"></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">💡 Ao traçar uma rota, marco os postos onde é preciso abastecer para o caminhão <b>nunca ficar sem diesel</b>.</div>
+          </div>
+        </div>
+
         <div class="secao" id="secaoPerto">
           <div class="card-form">
             <label>📍 Ver postos perto de uma cidade</label>
@@ -272,6 +406,26 @@
         <div class="secao" id="secaoResultado" style="display:none">
           <h2 id="tituloResultado">💰 Postos no caminho</h2>
           <div id="resultado"></div>
+        </div>
+      </div>
+
+      <!-- ================= ABA PENDÊNCIAS ================= -->
+      <div id="aba-pendencias" style="display:none">
+        <div class="secao">
+          <h2>🚨 Preços a atualizar</h2>
+          <div class="pend-hero" id="pendHero"></div>
+        </div>
+        <div class="secao">
+          <div class="linha" style="margin-bottom:12px">
+            <select id="pendFiltro" onchange="renderPendencias()">
+              <option value="todos">⚠️ Vencidos + quase</option>
+              <option value="vencido">🔴 Só vencidos</option>
+              <option value="quase">🟡 Só quase vencendo</option>
+              <option value="sem">⚪ Sem preço</option>
+            </select>
+            <select id="pendUF" onchange="renderPendencias()"><option value="">🌎 Todos os estados</option></select>
+          </div>
+          <div id="listaPend"></div>
         </div>
       </div>
 
@@ -579,10 +733,11 @@ function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota
 
 // ---------- Abas ----------
 function mostrarAba(nome){
-  ['rota','postos','gerenciadora'].forEach(n=>{
+  ['rota','pendencias','postos','gerenciadora'].forEach(n=>{
     document.getElementById('aba-'+n).style.display = n===nome?'block':'none';
     document.getElementById('tab-'+n).classList.toggle('ativo', n===nome);
   });
+  if(nome==='pendencias') renderPendencias();
 }
 
 // ---------- Mapa ----------
@@ -673,6 +828,8 @@ function atualizarLista(){
   renderResumo();
   renderSemLocal();
   popularPostosSelect();
+  atualizarBadgePend();
+  if(document.getElementById('aba-pendencias').style.display!=='none') renderPendencias();
 }
 function renderSemLocal(){
   const el=document.getElementById('listaSemLocal'); const q=document.getElementById('qtdSemLocal'); if(!el) return;
@@ -706,7 +863,93 @@ function renderResumo(){
     ${ufs.length?`<div style="font-size:11px;color:var(--muted);margin-top:10px">Média S10 por estado (mais barato → mais caro):</div>
     <div class="uf-list">${ufs.map(u=>`<span class="uf-chip">${u.uf}: <b>R$ ${u.m.toFixed(2).replace('.',',')}</b> <small>(${u.n})</small></span>`).join('')}</div>`:''}`;
 }
-function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
+function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mostrarAba('rota'); mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
+
+// ==================== PAINEL DE PENDÊNCIAS ====================
+function atualizarBadgePend(){
+  const n=postos.filter(p=>{const s=statusPreco(p);return s==='vencido'||s==='quase';}).length;
+  const b=document.getElementById('badgePend'); if(!b) return;
+  b.textContent=n; b.style.display=n?'inline-flex':'none';
+}
+function renderPendencias(){
+  const venc=postos.filter(p=>statusPreco(p)==='vencido').length;
+  const quase=postos.filter(p=>statusPreco(p)==='quase').length;
+  const sem=postos.filter(p=>statusPreco(p)==='sem').length;
+  const hero=document.getElementById('pendHero');
+  if(hero) hero.innerHTML=`
+    <div class="ph venc"><div class="n">${venc}</div><div class="t">Vencidos</div></div>
+    <div class="ph quase"><div class="n">${quase}</div><div class="t">Quase vencendo</div></div>
+    <div class="ph ok"><div class="n">${sem}</div><div class="t">Sem preço</div></div>`;
+  const selUF=document.getElementById('pendUF');
+  if(selUF){ const at=selUF.value; const ufs=[...new Set(postos.filter(p=>getUF(p)).map(getUF))].sort();
+    selUF.innerHTML='<option value="">🌎 Todos os estados</option>'+ufs.map(u=>`<option value="${u}">${u}</option>`).join(''); selUF.value=at; }
+  const tipo=(document.getElementById('pendFiltro')||{}).value||'todos';
+  const uf=selUF?selUF.value:'';
+  let lista=postos.filter(p=>{
+    const st=statusPreco(p);
+    const ok = tipo==='todos' ? (st==='vencido'||st==='quase') : st===tipo;
+    return ok && (!uf||getUF(p)===uf);
+  });
+  lista.sort((a,b)=>{ const da=diasDesde(a.dtNeg), db=diasDesde(b.dtNeg); return (db==null?99999:db)-(da==null?99999:da); });
+  const el=document.getElementById('listaPend');
+  if(!lista.length){ el.innerHTML='<div class="vazio">✅ Nada por aqui — tudo em dia neste filtro!</div>'; return; }
+  el.innerHTML=lista.map(p=>{
+    const st=statusPreco(p), dias=diasDesde(p.dtNeg);
+    let selo, cls='';
+    if(st==='vencido') selo=`<span class="pc-dias" style="color:#c0362c">🔴 há ${dias} dias</span>`;
+    else if(st==='quase'){ cls='quase'; selo=`<span class="pc-dias" style="color:#a86800">🟡 vence em ${Math.max(0,30-dias)} dia(s)</span>`; }
+    else { cls='quase'; selo=`<span class="pc-dias" style="color:#64748b">⚪ sem preço</span>`; }
+    return `<div class="pend-card ${cls}">
+      <div class="pc-top">
+        <div><div class="pc-nome" onclick="irPara('${p.id}')">${p.nome}</div>
+          <div class="pc-sub">${p.ref||'—'}${p.dtNeg?' · 📅 '+p.dtNeg:''} · S10 ${fmt(p.s10)}</div></div>
+        ${selo}
+      </div>
+      <div class="pc-acoes">
+        <button class="btn-ok" onclick="confirmarPreco('${p.id}')" title="O valor não mudou — só renova a data">✅ Preço OK</button>
+        <button class="btn-sec" onclick="editarPosto('${p.id}')">✏️ Atualizar valor</button>
+        <button class="btn-sec" style="flex:0 0 auto" onclick="irPara('${p.id}')" title="Ver no mapa">📍</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== AUTONOMIA DO TANQUE ====================
+let autonomia = JSON.parse(localStorage.getItem('blueAut')||'{}');
+function salvarAutonomia(){
+  autonomia.cap=parseFloat((document.getElementById('autCap')||{}).value)||0;
+  autonomia.kml=parseFloat((document.getElementById('autKml')||{}).value)||0;
+  localStorage.setItem('blueAut',JSON.stringify(autonomia));
+  renderAutonomia();
+  if(rotaCoords) listarPostosNaRota();
+}
+function autonomiaKm(){ const c=autonomia.cap||0, k=autonomia.kml||0; return (c>0&&k>0)? c*k*0.9 : 0; } // 10% de reserva
+function renderAutonomiaInputs(){
+  if(autonomia.cap) document.getElementById('autCap').value=autonomia.cap;
+  if(autonomia.kml) document.getElementById('autKml').value=autonomia.kml;
+  renderAutonomia();
+}
+function renderAutonomia(){
+  const out=document.getElementById('autOut'); if(!out) return;
+  const a=autonomiaKm();
+  if(!a){ out.innerHTML=''; return; }
+  const maiorGap=window._maiorGapRota||0;
+  const excede=maiorGap>a;
+  const pct=maiorGap? Math.min(100, maiorGap/a*100) : 0;
+  let alerta='';
+  if(maiorGap){
+    alerta = excede
+      ? `<div class="aut-alert ruim">⚠️ Há um trecho de <b>${maiorGap.toFixed(0)} km</b> entre postos — <b>maior que sua autonomia</b>. Marquei onde abastecer; leve reserva.</div>`
+      : `<div class="aut-alert bom">✅ Todos os trechos entre postos cabem no tanque. Sem risco de ficar sem diesel.</div>`;
+  }
+  out.innerHTML=`<div class="aut-out">
+    <div class="big">${a.toFixed(0)} <small>km por tanque</small></div>
+    <div class="sub">${autonomia.cap} L × ${autonomia.kml} km/l · já com 10% de reserva</div>
+    ${maiorGap?`<div class="aut-bar"><i style="width:${pct}%${excede?';background:linear-gradient(90deg,#fb7185,#ef4444)':''}"></i></div>
+      <div class="aut-leg"><span>maior trecho: <b>${maiorGap.toFixed(0)} km</b></span><span>tanque: ${a.toFixed(0)} km</span></div>`:''}
+    ${alerta}
+  </div>`;
+}
 
 // Selecionar um posto cadastrado como ponto de partida
 let _postoPorLabel={};
@@ -1069,6 +1312,12 @@ function listarPostosNaRota(){
   lista.forEach(p=>p._prog=prog(p));
   const ordem=[...lista].sort((a,b)=>a._prog-b._prog);
   ordem.forEach((p,i)=>{ p._gap = i<ordem.length-1 ? (ordem[i+1]._prog - p._prog) : null; });
+  // autonomia do tanque: maior trecho entre postos + onde é obrigatório abastecer
+  const aut=autonomiaKm();
+  let maiorGap=0; ordem.forEach(p=>{ if(p._gap!=null && p._gap>maiorGap) maiorGap=p._gap; });
+  window._maiorGapRota=maiorGap;
+  ordem.forEach(p=>{ p._abastecer = aut>0 && p._gap!=null && p._gap>aut; });
+  renderAutonomia();
 
   const motorista=document.body.classList.contains('motorista');
   const precosRota=lista.filter(p=>p[dkey]!=null).map(p=>p[dkey]);
@@ -1086,11 +1335,17 @@ function listarPostosNaRota(){
   el.innerHTML = btnAcoes + resumo + selCtrl + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
     const chk = motorista?'':`<input type="checkbox" class="sel-posto" data-id="${p.id}" ${postosSelecionados.has(p.id)?'checked':''} onchange="togglePosto('${p.id}',this.checked)" title="Incluir no link do motorista" style="width:20px;height:20px;flex:0 0 auto;cursor:pointer">`;
-    return `<div class="posto-card">
+    const gapTxt = p._gap!=null
+      ? (p._abastecer
+          ? '🔴 Próximo posto a <b>'+p._gap.toFixed(0)+' km</b> — além da autonomia!'
+          : (p._gap>300?'🔴 ':'⛽ ')+'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b>'+(p._gap>300?' — trecho longo!':''))
+      : '🏁 Último posto da rota';
+    return `<div class="posto-card${(!motorista&&p._abastecer)?' abastecer':''}">
+      ${(!motorista&&p._abastecer)?'<span class="tag-abastecer">⛽ ABASTECER AQUI</span>':''}
       <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&ehOportunidade(p))?'⭐ ':''}${p.nome}</span>${chk}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?'✅ '+p.hom+' · ':''}${(!motorista&&p.dtNeg)?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}
-      ${motorista?'':`<div class="gap-info">${p._gap!=null?(p._gap>300?'🔴 ':'⛽ ')+'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b>'+(p._gap>300?' — trecho longo!':''):'🏁 Último posto da rota'}</div>`}</div>`;
+      ${motorista?'':`<div class="gap-info${p._abastecer?' perigo':''}">${gapTxt}</div>`}</div>`;
   }).join('');
 }
 
@@ -1221,7 +1476,7 @@ async function authApi(payload){
   const r=await fetch('/auth',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   return await r.json();
 }
-function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin); renderConfig(); carregarPostos(); }
+function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin); renderConfig(); renderAutonomiaInputs(); carregarPostos(); }
 function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
 async function entrar(){
   const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('senhaInput').value;
