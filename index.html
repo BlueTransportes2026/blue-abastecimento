@@ -319,6 +319,31 @@
   .modal .caixa{border-radius:22px}
   #loginTela .login-box{border-radius:24px}
 
+  /* ---- 5 abas: compactar para caber ---- */
+  .tabs{gap:3px;padding:10px 8px 0}
+  .tab{font-size:11px;padding:10px 3px 11px;gap:3px;letter-spacing:-.1px}
+
+  /* ---- Tela inicial (Início) ---- */
+  .home-hero{background:linear-gradient(135deg,var(--brand-900) 0%,var(--brand-700) 65%,var(--brand-500) 130%);color:#fff;border-radius:var(--r);padding:22px 20px;position:relative;overflow:hidden;box-shadow:var(--sh-md)}
+  .home-hero::after{content:'';position:absolute;right:-40px;top:-50px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,.4),transparent 70%);pointer-events:none}
+  .home-hero .hh-oi{font-size:13px;font-weight:700;opacity:.92;position:relative}
+  .home-hero .hh-t{font-size:21px;font-weight:800;margin-top:7px;line-height:1.15;position:relative}
+  .home-hero .hh-s{font-size:12px;opacity:.86;margin-top:6px;position:relative;line-height:1.5}
+  .home-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .home-kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 15px;box-shadow:var(--sh-sm);position:relative;overflow:hidden;transition:.18s}
+  .home-kpi:hover{box-shadow:var(--sh-md);transform:translateY(-1px)}
+  .home-kpi .ic{position:absolute;right:11px;top:11px;font-size:19px;opacity:.45}
+  .home-kpi .v{font-size:25px;font-weight:800;line-height:1}
+  .home-kpi .l{font-size:11px;color:var(--muted);font-weight:600;margin-top:5px}
+  .home-acoes{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .home-card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px 14px;text-align:left;box-shadow:var(--sh-sm);display:flex;flex-direction:column;gap:5px;transition:.18s;color:var(--ink);width:auto}
+  .home-card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--brand-100)}
+  .home-card .ci{font-size:25px;line-height:1}
+  .home-card .ct{font-weight:800;font-size:14.5px}
+  .home-card .cs{font-size:11px;color:var(--muted);font-weight:500;line-height:1.4}
+  .home-card.alerta{border-color:#f3cdcd;background:linear-gradient(180deg,#fff,#fff7f6)}
+  .home-card.alerta .cs{color:#c0362c;font-weight:700}
+
   @media (max-width:820px){
     #painel{width:100%;min-width:0}
   }
@@ -340,15 +365,48 @@
     </div>
 
     <div class="tabs">
-      <button class="tab ativo" id="tab-rota" onclick="mostrarAba('rota')">🧭 Rota</button>
+      <button class="tab ativo" id="tab-inicio" onclick="mostrarAba('inicio')">🏠 Início</button>
+      <button class="tab" id="tab-rota" onclick="mostrarAba('rota')">🧭 Rota</button>
       <button class="tab" id="tab-pendencias" onclick="mostrarAba('pendencias')">🚨 Pendências<span class="tab-badge" id="badgePend" style="display:none">0</span></button>
       <button class="tab" id="tab-postos" onclick="mostrarAba('postos')">⛽ Postos</button>
       <button class="tab" id="tab-gerenciadora" onclick="mostrarAba('gerenciadora')">🛡️ Gestão</button>
     </div>
 
     <div class="conteudo">
+      <!-- ================= ABA INÍCIO ================= -->
+      <div id="aba-inicio">
+        <div class="secao">
+          <div class="home-hero">
+            <div class="hh-oi">👋 Olá<span id="homeUser"></span></div>
+            <div class="hh-t">Roteirizador de Abastecimento</div>
+            <div class="hh-s">Postos com preço acordado, no caminho da sua rota.</div>
+          </div>
+        </div>
+        <div class="secao">
+          <h2>📊 Visão geral</h2>
+          <div class="home-kpis" id="homeKpis"></div>
+        </div>
+        <div class="secao">
+          <h2>⚡ O que você quer fazer?</h2>
+          <div class="home-acoes">
+            <button class="home-card" onclick="mostrarAba('rota')">
+              <div class="ci">🧭</div><div class="ct">Traçar rota</div>
+              <div class="cs">Ver os postos no caminho e enviar ao motorista</div></button>
+            <button class="home-card alerta" onclick="mostrarAba('pendencias')">
+              <div class="ci">🚨</div><div class="ct">Pendências</div>
+              <div class="cs" id="homePendN">Preços a atualizar</div></button>
+            <button class="home-card" onclick="mostrarAba('postos')">
+              <div class="ci">⛽</div><div class="ct">Postos</div>
+              <div class="cs">Cadastrar, importar e ver todos os postos</div></button>
+            <button class="home-card" onclick="mostrarAba('gerenciadora')">
+              <div class="ci">🛡️</div><div class="ct">Gestão</div>
+              <div class="cs">Importar rota da gerenciadora (NOX/Opentech)</div></button>
+          </div>
+        </div>
+      </div>
+
       <!-- ================= ABA ROTA ================= -->
-      <div id="aba-rota">
+      <div id="aba-rota" style="display:none">
         <div id="bannerMotorista" style="display:none">
           <div class="secao"><div class="card-form" style="text-align:center">
             <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px">🚚 Rota de abastecimento</div>
@@ -733,11 +791,12 @@ function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota
 
 // ---------- Abas ----------
 function mostrarAba(nome){
-  ['rota','pendencias','postos','gerenciadora'].forEach(n=>{
+  ['inicio','rota','pendencias','postos','gerenciadora'].forEach(n=>{
     document.getElementById('aba-'+n).style.display = n===nome?'block':'none';
     document.getElementById('tab-'+n).classList.toggle('ativo', n===nome);
   });
   if(nome==='pendencias') renderPendencias();
+  if(nome==='inicio') renderInicio();
 }
 
 // ---------- Mapa ----------
@@ -830,6 +889,7 @@ function atualizarLista(){
   popularPostosSelect();
   atualizarBadgePend();
   if(document.getElementById('aba-pendencias').style.display!=='none') renderPendencias();
+  if(document.getElementById('aba-inicio').style.display!=='none') renderInicio();
 }
 function renderSemLocal(){
   const el=document.getElementById('listaSemLocal'); const q=document.getElementById('qtdSemLocal'); if(!el) return;
@@ -864,6 +924,24 @@ function renderResumo(){
     <div class="uf-list">${ufs.map(u=>`<span class="uf-chip">${u.uf}: <b>R$ ${u.m.toFixed(2).replace('.',',')}</b> <small>(${u.n})</small></span>`).join('')}</div>`:''}`;
 }
 function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mostrarAba('rota'); mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
+
+// ==================== TELA INICIAL ====================
+function renderInicio(){
+  const u=document.getElementById('homeUser'); if(u) u.textContent = (typeof authUser!=='undefined' && authUser)? (', '+authUser) : '';
+  const total=postos.filter(p=>p.lat!=null).length;
+  const venc=postos.filter(p=>statusPreco(p)==='vencido').length;
+  const quase=postos.filter(p=>statusPreco(p)==='quase').length;
+  const s10s=postos.filter(p=>p.s10!=null).map(p=>p.s10);
+  const media=s10s.length? s10s.reduce((a,b)=>a+b,0)/s10s.length : null;
+  const k=document.getElementById('homeKpis');
+  if(k) k.innerHTML=`
+    <div class="home-kpi"><div class="ic">⛽</div><div class="v">${total}</div><div class="l">postos ativos</div></div>
+    <div class="home-kpi"><div class="ic">💰</div><div class="v">${media!=null?'R$ '+media.toFixed(2).replace('.',','):'—'}</div><div class="l">média S10</div></div>
+    <div class="home-kpi"><div class="ic">🔴</div><div class="v" style="color:#e5484d">${venc}</div><div class="l">preços vencidos</div></div>
+    <div class="home-kpi"><div class="ic">🟡</div><div class="v" style="color:#a86800">${quase}</div><div class="l">quase vencendo</div></div>`;
+  const pn=document.getElementById('homePendN');
+  if(pn){ const n=venc+quase; pn.textContent = n? (n+' preço(s) a atualizar') : 'Tudo em dia ✅'; }
+}
 
 // ==================== PAINEL DE PENDÊNCIAS ====================
 function atualizarBadgePend(){
@@ -1449,6 +1527,7 @@ function checarLinkMotorista(){
   let payload;
   try{ payload=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1]))))); }catch{ return false; }
   document.body.classList.add('motorista');
+  mostrarAba('rota');
   if(payload.cfg) config=payload.cfg;
   if(payload.raio!=null) document.getElementById('raio').value=payload.raio;
   if(payload.m){ try{ modalidade.value=payload.m; }catch{} }
@@ -1476,7 +1555,7 @@ async function authApi(payload){
   const r=await fetch('/auth',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   return await r.json();
 }
-function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin); renderConfig(); renderAutonomiaInputs(); carregarPostos(); }
+function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin); renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio'); carregarPostos(); }
 function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
 async function entrar(){
   const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('senhaInput').value;
