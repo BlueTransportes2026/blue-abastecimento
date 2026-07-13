@@ -344,6 +344,15 @@
   .home-card.alerta{border-color:#f3cdcd;background:linear-gradient(180deg,#fff,#fff7f6)}
   .home-card.alerta .cs{color:#c0362c;font-weight:700}
 
+  /* ---- Painel gerencial (gráficos) ---- */
+  .graf-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;box-shadow:var(--sh-sm);margin-bottom:12px}
+  .graf-t{font-size:12px;font-weight:800;color:var(--brand-800);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+  .graf-card svg{display:block;overflow:visible}
+  .graf-leg{font-size:11.5px;color:var(--ink);font-weight:600}
+  .graf-leg div{display:flex;align-items:center;gap:7px;margin:6px 0}
+  .graf-leg i{width:12px;height:12px;border-radius:3px;display:inline-block;flex:0 0 auto}
+  .graf-leg b{margin-left:auto;color:var(--brand-800)}
+
   @media (max-width:820px){
     #painel{width:100%;min-width:0}
   }
@@ -571,8 +580,12 @@
         </div>
       </div>
 
-      <!-- ================= ABA GERENCIADORA ================= -->
+      <!-- ================= ABA GESTÃO ================= -->
       <div id="aba-gerenciadora" style="display:none">
+        <div class="secao">
+          <h2>📊 Painel gerencial</h2>
+          <div id="gestaoDash"></div>
+        </div>
         <div class="secao">
           <h2>🛡️ Importar rota da gerenciadora</h2>
           <div class="card-form">
@@ -797,6 +810,7 @@ function mostrarAba(nome){
   });
   if(nome==='pendencias') renderPendencias();
   if(nome==='inicio') renderInicio();
+  if(nome==='gerenciadora') renderGestao();
 }
 
 // ---------- Mapa ----------
@@ -890,6 +904,7 @@ function atualizarLista(){
   atualizarBadgePend();
   if(document.getElementById('aba-pendencias').style.display!=='none') renderPendencias();
   if(document.getElementById('aba-inicio').style.display!=='none') renderInicio();
+  if(document.getElementById('aba-gerenciadora').style.display!=='none') renderGestao();
 }
 function renderSemLocal(){
   const el=document.getElementById('listaSemLocal'); const q=document.getElementById('qtdSemLocal'); if(!el) return;
@@ -941,6 +956,88 @@ function renderInicio(){
     <div class="home-kpi"><div class="ic">🟡</div><div class="v" style="color:#a86800">${quase}</div><div class="l">quase vencendo</div></div>`;
   const pn=document.getElementById('homePendN');
   if(pn){ const n=venc+quase; pn.textContent = n? (n+' preço(s) a atualizar') : 'Tudo em dia ✅'; }
+}
+
+// ==================== PAINEL GERENCIAL (GRÁFICOS) ====================
+function svgDonut(parts){
+  const total=parts.reduce((a,b)=>a+b.valor,0)||1;
+  const R=52, C=2*Math.PI*R; let off=0;
+  const rings=parts.filter(p=>p.valor>0).map(p=>{ const len=p.valor/total*C;
+    const el=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${p.cor}" stroke-width="20" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 70 70)"/>`;
+    off+=len; return el; }).join('');
+  return `<svg viewBox="0 0 140 140" width="132" height="132" style="flex:0 0 auto">${rings}
+    <text x="70" y="66" text-anchor="middle" font-size="24" font-weight="800" fill="var(--ink)">${total}</text>
+    <text x="70" y="86" text-anchor="middle" font-size="10" fill="var(--muted)">postos</text></svg>`;
+}
+function svgBars(items, cor){
+  if(!items.length) return '<div class="vazio" style="padding:12px">Sem dados.</div>';
+  const max=Math.max(...items.map(i=>i.valor),1);
+  const rowH=27, w=384, lblW=40, barMax=w-lblW-78;
+  const h=items.length*rowH+4;
+  const rows=items.map((it,i)=>{ const y=i*rowH+4, bw=Math.max(3,it.valor/max*barMax);
+    return `<text x="0" y="${y+16}" font-size="11.5" font-weight="800" fill="var(--ink)">${it.label}</text>
+      <rect x="${lblW}" y="${y+5}" width="${bw.toFixed(1)}" height="15" rx="7.5" fill="${cor}"/>
+      <text x="${(lblW+bw+7).toFixed(1)}" y="${y+16}" font-size="11" font-weight="700" fill="var(--muted)">${it.disp!=null?it.disp:it.valor}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${rows}</svg>`;
+}
+function svgLine(pts){
+  if(pts.length<2) return '<div class="vazio" style="padding:14px">Ainda sem histórico suficiente para o gráfico. Ele se preenche conforme os preços vão sendo atualizados ao longo dos meses.</div>';
+  const w=384,h=150,padL=34,padB=22,padT=12;
+  const vs=pts.map(p=>p.v); const min=Math.min(...vs), max=Math.max(...vs), rng=(max-min)||1;
+  const X=i=>padL + i/(pts.length-1)*(w-padL-8);
+  const Y=v=>h-padB - (v-min)/rng*(h-padB-padT);
+  const line=pts.map((p,i)=>`${i?'L':'M'}${X(i).toFixed(1)} ${Y(p.v).toFixed(1)}`).join(' ');
+  const area=line+` L${X(pts.length-1).toFixed(1)} ${h-padB} L${X(0).toFixed(1)} ${h-padB} Z`;
+  const dots=pts.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="3.2" fill="#1667cf"/>`).join('');
+  const labels=pts.map((p,i)=>`<text x="${X(i).toFixed(1)}" y="${h-6}" font-size="9" text-anchor="middle" fill="var(--muted)">${p.lbl}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="var(--line)"/>
+    <line x1="${padL}" y1="${h-padB}" x2="${w-4}" y2="${h-padB}" stroke="var(--line)"/>
+    <path d="${area}" fill="rgba(22,103,207,.12)"/>
+    <path d="${line}" fill="none" stroke="#1667cf" stroke-width="2.6" stroke-linejoin="round"/>
+    ${dots}${labels}
+    <text x="2" y="${padT+8}" font-size="9" fill="var(--muted)">${max.toFixed(2)}</text>
+    <text x="2" y="${h-padB}" font-size="9" fill="var(--muted)">${min.toFixed(2)}</text>
+  </svg>`;
+}
+function renderGestao(){
+  const el=document.getElementById('gestaoDash'); if(!el) return;
+  const total=postos.length;
+  const st={ok:0,quase:0,vencido:0,sem:0};
+  postos.forEach(p=>{ st[statusPreco(p)]++; });
+  const porUf={};
+  postos.forEach(p=>{ const uf=getUF(p); if(!uf) return; (porUf[uf]=porUf[uf]||{n:0,soma:0,cnt:0}); porUf[uf].n++; if(p.s10!=null){ porUf[uf].soma+=p.s10; porUf[uf].cnt++; } });
+  const estados=Object.keys(porUf).length;
+  const ufsN=Object.entries(porUf).map(([uf,o])=>({label:uf,valor:o.n})).sort((a,b)=>b.valor-a.valor).slice(0,8);
+  const ufsMedia=Object.entries(porUf).filter(([,o])=>o.cnt).map(([uf,o])=>({label:uf,valor:o.soma/o.cnt,disp:'R$ '+(o.soma/o.cnt).toFixed(2).replace('.',',')})).sort((a,b)=>a.valor-b.valor).slice(0,8);
+  const s10s=postos.filter(p=>p.s10!=null).map(p=>p.s10);
+  const media=s10s.length? s10s.reduce((a,b)=>a+b,0)/s10s.length : null;
+  const mes={};
+  postos.forEach(p=>(p.hist||[]).forEach(h=>{ if(h.s10==null) return; const m=String(h.d||'').match(/(\d{1,2})\/(\d{4})/); if(!m) return; const key=m[2]+'-'+m[1].padStart(2,'0'); (mes[key]=mes[key]||[]).push(h.s10); }));
+  const meses=Object.keys(mes).sort().slice(-8).map(k=>{ const arr=mes[k]; const v=arr.reduce((a,b)=>a+b,0)/arr.length; const [y,mo]=k.split('-'); return {lbl:mo+'/'+y.slice(2), v}; });
+
+  el.innerHTML = `
+   <div class="resumo-nums" style="margin-bottom:14px">
+     <div class="rn"><div class="v">${total}</div><div class="l">postos</div></div>
+     <div class="rn"><div class="v">${estados}</div><div class="l">estados</div></div>
+     <div class="rn"><div class="v">${media!=null?'R$ '+media.toFixed(2).replace('.',','):'—'}</div><div class="l">média S10</div></div>
+     <div class="rn"><div class="v" style="color:#e5484d">${total?Math.round(st.vencido/total*100):0}%</div><div class="l">vencidos</div></div>
+   </div>
+   <div class="graf-card"><div class="graf-t">🎯 Status dos preços</div>
+     <div style="display:flex;align-items:center;gap:16px">
+       ${svgDonut([{label:'OK',valor:st.ok,cor:'#2a7de1'},{label:'Quase',valor:st.quase,cor:'#f59e0b'},{label:'Vencido',valor:st.vencido,cor:'#ef4444'},{label:'Sem',valor:st.sem,cor:'#94a3b8'}])}
+       <div class="graf-leg" style="flex:1">
+         <div><i style="background:#2a7de1"></i> Preço OK <b>${st.ok}</b></div>
+         <div><i style="background:#f59e0b"></i> Quase vencendo <b>${st.quase}</b></div>
+         <div><i style="background:#ef4444"></i> Vencido <b>${st.vencido}</b></div>
+         <div><i style="background:#94a3b8"></i> Sem preço <b>${st.sem}</b></div>
+       </div>
+     </div></div>
+   <div class="graf-card"><div class="graf-t">📍 Postos por estado <span style="color:var(--muted);font-weight:600">(top 8)</span></div>${svgBars(ufsN,'#2a7de1')}</div>
+   <div class="graf-card"><div class="graf-t">💰 Média do S10 por estado <span style="color:var(--muted);font-weight:600">(mais barato → mais caro)</span></div>${svgBars(ufsMedia,'#10b981')}</div>
+   <div class="graf-card"><div class="graf-t">📈 Evolução da média do S10 <span style="color:var(--muted);font-weight:600">(R$)</span></div>${svgLine(meses)}</div>
+  `;
 }
 
 // ==================== PAINEL DE PENDÊNCIAS ====================
