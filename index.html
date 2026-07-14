@@ -356,31 +356,119 @@
   @media (max-width:820px){
     #painel{width:100%;min-width:0}
   }
+
+  /* ============================================================
+     REDESIGN v3 — layout tipo sistema/TMS (barra superior + menu lateral)
+  ============================================================ */
+  #app{display:flex;flex-direction:column;height:100%;overflow:hidden}
+
+  /* Barra superior */
+  #topbar{height:58px;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:0 16px;
+    background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 4px 16px rgba(15,27,45,.05);z-index:30}
+  .tb-burger{background:none;color:var(--muted);font-size:20px;width:42px;height:42px;border-radius:11px;padding:0}
+  .tb-burger:hover{background:var(--brand-050);color:var(--brand-700)}
+  .tb-title{font-size:17px;font-weight:800;color:var(--ink);letter-spacing:.2px}
+  .tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  #topbar #syncStatus.sync{margin:0;font-size:11px;font-weight:700;padding:7px 13px;border-radius:20px;
+    background:var(--brand-050);color:var(--brand-800);border:1px solid var(--brand-100);cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  #topbar #syncStatus.nuvem{background:var(--verde-050);color:#0a6b39;border-color:#bfe8cf}
+  #topbar #syncStatus.local{background:#fff5e6;color:#a86800;border-color:#ffe0a6}
+  #topbar .gear.tb-btn{position:static;transform:none;background:var(--brand-050);color:var(--brand-800);
+    width:42px;height:42px;border-radius:11px;border:1px solid var(--brand-100);backdrop-filter:none;font-size:17px}
+  #topbar .gear.tb-btn:hover{background:var(--brand-100);transform:none}
+  .tb-user{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--brand-700),var(--brand-500));
+    color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:var(--sh-sm);flex:0 0 auto}
+
+  /* Área principal */
+  #main{flex:1;display:flex;min-height:0}
+
+  /* Barra lateral (navegação) */
+  #navrail{width:214px;flex:0 0 auto;background:linear-gradient(185deg,var(--brand-900),#06182f 75%);
+    color:#c3d2e6;display:flex;flex-direction:column;padding:14px 12px;gap:4px;overflow-y:auto;transition:width .2s ease;z-index:10}
+  #navrail::-webkit-scrollbar{width:6px}
+  #navrail::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:6px}
+  .nav-top{display:flex;align-items:center;justify-content:center;padding:6px 6px 16px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.09)}
+  .nav-logo{background:#fff;border-radius:12px;padding:8px 12px;display:flex;align-items:center;justify-content:center;min-height:42px;box-shadow:0 6px 16px rgba(0,0,0,.28)}
+  .nav-logo img{height:28px;width:auto;max-width:150px;display:block}
+  .nav-logo span{font-size:22px}
+  .nav-item{display:flex;align-items:center;gap:12px;width:100%;background:none;color:#b4c4da;font-weight:700;font-size:13.5px;
+    padding:12px 13px;border-radius:12px;text-align:left;position:relative;transition:.15s}
+  .nav-item:hover{background:rgba(255,255,255,.09);color:#fff}
+  .nav-item.ativo{background:linear-gradient(135deg,var(--brand-600),var(--brand-500));color:#fff;box-shadow:0 8px 20px rgba(13,84,173,.4)}
+  .nav-item .ni-ic{font-size:17px;width:22px;text-align:center;flex:0 0 auto}
+  .nav-item .ni-tx{white-space:nowrap;overflow:hidden}
+  .nav-item .tab-badge{margin-left:auto;position:static}
+  .nav-spacer{flex:1;min-height:12px}
+  .nav-sair{color:#8ea4c0}
+  .nav-sair:hover{background:rgba(239,68,68,.16);color:#fecaca}
+
+  /* Menu recolhido (só ícones) */
+  #app.rail-min #navrail{width:70px;padding:14px 9px}
+  #app.rail-min .nav-item{justify-content:center;padding:12px 0;gap:0}
+  #app.rail-min .ni-tx{display:none}
+  #app.rail-min .nav-item .tab-badge{position:absolute;top:5px;right:8px;margin:0;min-width:16px;height:16px;font-size:9px}
+  #app.rail-min .nav-logo{padding:8px}
+  #app.rail-min .nav-logo img{max-width:36px}
+
+  /* Painel de conteúdo (agora sem cabeçalho próprio) */
+  #painel{width:396px;min-width:396px;height:auto;display:flex;flex-direction:column;
+    background:var(--card);border-right:1px solid var(--line);box-shadow:none}
+  #painel .conteudo{flex:1;overflow-y:auto}
+  .map-wrap{flex:1;min-width:0}
+
+  /* Modo motorista: sem menu/topo, só a rota + mapa */
+  body.motorista #navrail{display:none}
+  body.motorista #topbar .tb-right,
+  body.motorista #topbar .tb-burger{display:none}
+
+  @media (max-width:820px){
+    #main{flex-direction:column}
+    #navrail{width:100%;flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:8px 10px;gap:6px;border-right:none;border-bottom:1px solid rgba(255,255,255,.1)}
+    #navrail .nav-top{display:none}
+    .nav-item{flex-direction:column;gap:3px;font-size:10px;padding:8px 12px;flex:0 0 auto}
+    .nav-item .ni-ic{font-size:19px}
+    .nav-item .ni-tx{display:block}
+    .nav-item .tab-badge{position:absolute;top:2px;right:6px;margin:0}
+    .nav-spacer,.nav-sair{display:none}
+    #painel{width:100%;min-width:0;max-height:48vh}
+    .map-wrap{height:44vh;flex:none}
+    #app.rail-min .ni-tx{display:block}
+    #app.rail-min #navrail{width:100%}
+  }
 </style>
 
 <div id="app">
-  <aside id="painel">
-    <div id="topo">
-      <button class="gear" onclick="abrirFrota()" title="Frota e consumo">⚙️</button>
-      <div class="marca">
-        <div class="logo-chip">
+  <!-- ===== Barra superior ===== -->
+  <header id="topbar">
+    <button class="tb-burger" onclick="toggleRail()" title="Recolher/expandir menu">☰</button>
+    <div class="tb-title" id="tbTitulo">Início</div>
+    <div class="tb-right">
+      <div id="syncStatus" class="sync local" onclick="sincronizar()" title="Clique para atualizar da nuvem">💾 Só neste computador</div>
+      <button class="gear tb-btn" onclick="abrirFrota()" title="Configurações">⚙️</button>
+      <div class="tb-user" id="tbUser" title="Usuário logado">U</div>
+    </div>
+  </header>
+
+  <div id="main">
+    <!-- ===== Barra lateral de navegação ===== -->
+    <nav id="navrail">
+      <div class="nav-top">
+        <div class="nav-logo">
           <img src="https://static.wixstatic.com/media/4373da_8f730a6062a0456090221fdaa9c3268a~mv2.png" alt="Blue Transportes"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='inline'" />
-          <span class="fallbackB" style="display:none">Blue Transportes</span>
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+          <span>⛽</span>
         </div>
       </div>
-      <p>⛽ Roteirizador de Abastecimento · Brasil &amp; Mercosul</p>
-      <div id="syncStatus" class="sync local" onclick="sincronizar()" title="Clique para atualizar da nuvem">💾 Só neste computador</div>
-    </div>
+      <button class="nav-item ativo" id="nav-inicio" onclick="mostrarAba('inicio')"><span class="ni-ic">🏠</span><span class="ni-tx">Início</span></button>
+      <button class="nav-item" id="nav-rota" onclick="mostrarAba('rota')"><span class="ni-ic">🧭</span><span class="ni-tx">Rota</span></button>
+      <button class="nav-item" id="nav-pendencias" onclick="mostrarAba('pendencias')"><span class="ni-ic">🚨</span><span class="ni-tx">Pendências</span><span class="tab-badge" id="badgePend" style="display:none">0</span></button>
+      <button class="nav-item" id="nav-postos" onclick="mostrarAba('postos')"><span class="ni-ic">⛽</span><span class="ni-tx">Postos</span></button>
+      <button class="nav-item" id="nav-gerenciadora" onclick="mostrarAba('gerenciadora')"><span class="ni-ic">🛡️</span><span class="ni-tx">Gestão</span></button>
+      <div class="nav-spacer"></div>
+      <button class="nav-item nav-sair" onclick="sair()"><span class="ni-ic">🔒</span><span class="ni-tx">Sair</span></button>
+    </nav>
 
-    <div class="tabs">
-      <button class="tab ativo" id="tab-inicio" onclick="mostrarAba('inicio')">🏠 Início</button>
-      <button class="tab" id="tab-rota" onclick="mostrarAba('rota')">🧭 Rota</button>
-      <button class="tab" id="tab-pendencias" onclick="mostrarAba('pendencias')">🚨 Pendências<span class="tab-badge" id="badgePend" style="display:none">0</span></button>
-      <button class="tab" id="tab-postos" onclick="mostrarAba('postos')">⛽ Postos</button>
-      <button class="tab" id="tab-gerenciadora" onclick="mostrarAba('gerenciadora')">🛡️ Gestão</button>
-    </div>
-
+    <aside id="painel">
     <div class="conteudo">
       <!-- ================= ABA INÍCIO ================= -->
       <div id="aba-inicio">
@@ -618,6 +706,7 @@
     </div>
     <div id="mapa"></div>
   </div>
+  </div><!-- /#main -->
 </div>
 
 <!-- MODAL USUÁRIOS -->
@@ -835,15 +924,19 @@ function postoPassaFiltro(p){
 function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota(); }
 
 // ---------- Abas ----------
+const _tituloAba={inicio:'Início',rota:'Rota',pendencias:'Pendências',postos:'Postos',gerenciadora:'Gestão'};
 function mostrarAba(nome){
   ['inicio','rota','pendencias','postos','gerenciadora'].forEach(n=>{
     document.getElementById('aba-'+n).style.display = n===nome?'block':'none';
-    document.getElementById('tab-'+n).classList.toggle('ativo', n===nome);
+    const nav=document.getElementById('nav-'+n); if(nav) nav.classList.toggle('ativo', n===nome);
   });
+  const tt=document.getElementById('tbTitulo'); if(tt&&_tituloAba[nome]) tt.textContent=_tituloAba[nome];
+  document.querySelector('.conteudo').scrollTop=0;
   if(nome==='pendencias') renderPendencias();
   if(nome==='inicio') renderInicio();
   if(nome==='gerenciadora') renderGestao();
 }
+function toggleRail(){ document.getElementById('app').classList.toggle('rail-min'); setTimeout(()=>{ try{ mapa.invalidateSize(); }catch(e){} },220); }
 
 // ---------- Mapa ----------
 const mapa = L.map('mapa').setView([-15.78,-47.93],5);
@@ -1690,7 +1783,9 @@ async function authApi(payload){
   const r=await fetch('/auth',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   return await r.json();
 }
-function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin); renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio'); carregarPostos(); }
+function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin);
+  const tu=document.getElementById('tbUser'); if(tu) tu.textContent=(authUser||'U').trim().slice(0,1).toUpperCase();
+  renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio'); carregarPostos(); }
 function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
 async function entrar(){
   const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('senhaInput').value;
