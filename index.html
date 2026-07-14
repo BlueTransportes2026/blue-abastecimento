@@ -741,21 +741,53 @@ function togglePosto(id, checked){ if(checked) postosSelecionados.add(id); else 
 function marcarTodosPostos(v){ document.querySelectorAll('#resultado .sel-posto').forEach(cb=>{ cb.checked=v; if(v) postosSelecionados.add(cb.dataset.id); else postosSelecionados.delete(cb.dataset.id); }); renderMarcadores(); }
 
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
-// Lista compartilhada: todos que abrem o site carregam a mesma lista embutida (postos.json)
+
+// ---------- Banco compartilhado na nuvem (Cloudflare /postos + POSTOS_KV) ----------
+let _nuvemAtiva=false;
+function tokenAuth(){ return localStorage.getItem('authToken'); }
+async function postosApi(payload){
+  const r=await fetch('/postos',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  return await r.json();
+}
+async function buscarEmbutida(){
+  try{ const r=await fetch('postos.json?v='+Date.now(),{cache:'no-store'}); if(r.ok){ const a=await r.json(); if(Array.isArray(a)) return a; } }catch{}
+  return null;
+}
+// empurra alterações para a nuvem (só se o banco estiver ligado)
+async function nuvemUpsert(p){ if(!_nuvemAtiva||!p) return; try{ await postosApi({action:'upsert', token:tokenAuth(), posto:p}); }catch{} }
+async function nuvemDelete(id){ if(!_nuvemAtiva||!id) return; try{ await postosApi({action:'delete', token:tokenAuth(), id}); }catch{} }
+async function nuvemSalvarTudo(){ if(!_nuvemAtiva) return; try{ await postosApi({action:'save', token:tokenAuth(), postos}); }catch{} }
+
 async function carregarPostos(){
-  try{
-    const r=await fetch('postos.json?v='+Date.now(),{cache:'no-store'});
-    if(r.ok){
-      const arr=await r.json();
-      if(Array.isArray(arr) && arr.length){ postos=arr; localStorage.setItem('bluePostos',JSON.stringify(arr)); aplicarConfirmacoes(); statusNuvem('shared',arr.length); renderMarcadores(); return; }
-    }
-  }catch{}
-  aplicarConfirmacoes(); statusNuvem('local'); renderMarcadores();
+  const token=tokenAuth();
+  // 1) tenta o BANCO COMPARTILHADO (nuvem)
+  if(token){
+    try{
+      const j=await postosApi({action:'list', token});
+      if(j && j.ok){
+        _nuvemAtiva=true;
+        if(j.postos && j.postos.length){ postos=j.postos; salvar(); statusNuvem('nuvem', postos.length, j.updatedAt); renderMarcadores(); return; }
+        // banco ainda vazio (nunca semeado) → semeia com a lista embutida, uma única vez
+        if(!j.seeded){
+          const seed=await buscarEmbutida();
+          if(seed && seed.length){ const s=await postosApi({action:'seed', token, postos:seed}); if(s&&s.ok){ postos=s.postos||seed; salvar(); statusNuvem('nuvem', postos.length, s.updatedAt); renderMarcadores(); return; } }
+        }
+        postos=(j.postos||[]); salvar(); statusNuvem('nuvem', postos.length, j.updatedAt); renderMarcadores(); return;
+      }
+    }catch{}
+  }
+  // 2) fallback (sem nuvem): lista embutida + local
+  _nuvemAtiva=false;
+  const arr=await buscarEmbutida();
+  if(arr && arr.length){ postos=arr; salvar(); aplicarConfirmacoes(); statusNuvem('shared',arr.length); renderMarcadores(); return; }
+  // 3) último recurso: o que estiver salvo neste navegador
+  postos=JSON.parse(localStorage.getItem('bluePostos')||'[]'); aplicarConfirmacoes(); statusNuvem('local'); renderMarcadores();
 }
 async function sincronizar(){ statusNuvem('sync'); postos=[]; await carregarPostos(); }
-function statusNuvem(e,n){
+function statusNuvem(e,n,ts){
   const el=document.getElementById('syncStatus'); if(!el) return;
-  if(e==='shared'){ el.className='sync nuvem'; el.innerHTML='🌐 Lista compartilhada · '+(n||postos.length)+' postos'; }
+  if(e==='nuvem'){ el.className='sync nuvem'; el.innerHTML='☁️ Banco compartilhado · '+(n!=null?n:postos.length)+' postos'; el.title='Todos veem a mesma lista. Toque para atualizar.'; }
+  else if(e==='shared'){ el.className='sync nuvem'; el.innerHTML='🌐 Lista compartilhada · '+(n||postos.length)+' postos'; }
   else if(e==='sync'){ el.className='sync'; el.innerHTML='🔄 Atualizando…'; }
   else { el.className='sync local'; el.innerHTML='💾 Lista local (toque para atualizar)'; }
 }
@@ -787,7 +819,7 @@ function confirmarPreco(id){
   const p=postos.find(x=>x.id===id); if(!p) return;
   const h=new Date(); const ds=String(h.getDate()).padStart(2,'0')+'/'+String(h.getMonth()+1).padStart(2,'0')+'/'+h.getFullYear();
   confirmacoes[chaveConf(p)]=ds; localStorage.setItem('blueConfirm',JSON.stringify(confirmacoes));
-  p.dtNeg=ds; mapa.closePopup(); renderMarcadores(); if(rotaCoords) listarPostosNaRota();
+  p.dtNeg=ds; salvar(); nuvemUpsert(p); mapa.closePopup(); renderMarcadores(); if(rotaCoords) listarPostosNaRota();
 }
 function getUF(p){ return (((p&&p.ref)||'').split(' - ')[1]||'').trim(); }
 // "Melhor oportunidade": preço S10 pelo menos 3% abaixo da média do estado
@@ -1179,11 +1211,12 @@ function salvarPosto(){
   const dados={ nome:pNome.value.trim(), ref:pRef.value.trim(), gr:pGr.value.trim(), cnpj:(pCnpj.value||'').replace(/\D/g,''),
     lat:coordNovoPosto.lat, lng:coordNovoPosto.lng,
     s10:pS10.value===''?null:parseFloat(pS10.value), s500:pS500.value===''?null:parseFloat(pS500.value), arla:pArla.value===''?null:parseFloat(pArla.value) };
-  if(editandoId) Object.assign(postos.find(x=>x.id===editandoId), dados);
-  else { dados.id='p'+Date.now(); postos.push(dados); }
-  salvar(); renderMarcadores(); limparFormPosto();
+  let obj;
+  if(editandoId){ obj=postos.find(x=>x.id===editandoId); Object.assign(obj, dados); }
+  else { dados.id='p'+Date.now(); postos.push(dados); obj=dados; }
+  salvar(); nuvemUpsert(obj); renderMarcadores(); limparFormPosto();
   if(rotaCoords) listarPostosNaRota();
-  alert('Posto salvo! ✅');
+  alert('Posto salvo! ✅' + (_nuvemAtiva?' Todos da equipe já veem.':''));
 }
 function editarPosto(id){
   const p=postos.find(x=>x.id===id); if(!p) return;
@@ -1196,14 +1229,18 @@ function editarPosto(id){
 }
 function limparTodos(){
   if(!postos.length){ alert('Não há postos para excluir.'); return; }
-  if(!confirm('Excluir TODOS os '+postos.length+' postos desta sessão? (A lista compartilhada volta ao recarregar a página.)')) return;
+  if(_nuvemAtiva && !authAdmin){ alert('🔒 Apenas um administrador pode apagar a lista compartilhada.'); return; }
+  const aviso = _nuvemAtiva
+    ? 'Excluir TODOS os '+postos.length+' postos do BANCO COMPARTILHADO? Isso apaga para TODA a equipe e não dá pra desfazer.'
+    : 'Excluir TODOS os '+postos.length+' postos?';
+  if(!confirm(aviso)) return;
   if(!confirm('Tem certeza mesmo? Confirme para apagar tudo.')) return;
-  postos=[]; salvar(); renderMarcadores();
+  postos=[]; salvar(); nuvemSalvarTudo(); renderMarcadores();
   alert('Todos os postos foram excluídos.');
 }
 function excluirPosto(id){
-  if(!confirm('Excluir este posto?')) return;
-  postos=postos.filter(x=>x.id!==id); salvar(); renderMarcadores();
+  if(!confirm('Excluir este posto?'+(_nuvemAtiva?' (some para toda a equipe)':''))) return;
+  postos=postos.filter(x=>x.id!==id); salvar(); nuvemDelete(id); renderMarcadores();
   if(editandoId===id) limparFormPosto();
   if(rotaCoords) listarPostosNaRota();
 }
@@ -1346,7 +1383,8 @@ async function processarLinhas(rows){
     if(g){ geocodar[i].p.lat=g.lat; geocodar[i].p.lng=g.lng; } else semLoc++;
   }
   salvar(); renderMarcadores();
-  csvStatus.innerHTML=`✅ Importados <b>${add}</b> e atualizados <b>${upd}</b> posto(s).${semLoc?' ⚠️ '+semLoc+' sem localização.':''}`;
+  if(_nuvemAtiva){ csvStatus.textContent='☁️ Salvando no banco compartilhado…'; await nuvemSalvarTudo(); }
+  csvStatus.innerHTML=`✅ Importados <b>${add}</b> e atualizados <b>${upd}</b> posto(s).${semLoc?' ⚠️ '+semLoc+' sem localização.':''}${_nuvemAtiva?' <b>Toda a equipe já vê.</b>':''}`;
 }
 
 // ---------- Paradas ----------
@@ -1641,7 +1679,7 @@ function checarLinkMotorista(){
 // ---------- Backup ----------
 function exportar(){ const blob=new Blob([JSON.stringify(postos,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='postos-blue-transportes.json'; a.click(); }
 function importar(ev){ const f=ev.target.files[0]; if(!f) return; const rd=new FileReader();
-  rd.onload=e=>{ try{ const d=JSON.parse(e.target.result); if(!Array.isArray(d)) throw 0; if(confirm('Substituir os postos atuais por '+d.length+' posto(s)?')){ postos=d; salvar(); renderMarcadores(); } }catch{ alert('Arquivo inválido.'); } ev.target.value=''; };
+  rd.onload=e=>{ try{ const d=JSON.parse(e.target.result); if(!Array.isArray(d)) throw 0; if(confirm('Substituir os postos atuais por '+d.length+' posto(s)?'+(_nuvemAtiva?' (vale para toda a equipe)':''))){ postos=d; salvar(); nuvemSalvarTudo(); renderMarcadores(); } }catch{ alert('Arquivo inválido.'); } ev.target.value=''; };
   rd.readAsText(f); }
 
 ['origem','destino'].forEach(id=>document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') tracarRota(); }));
