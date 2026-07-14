@@ -92,5 +92,34 @@ export async function onRequest(context) {
     return json({ ok: true, ...(await meta()) });
   }
 
+  // ---- Integração com planilha do Google (link salvo no KV) ----
+  const isAdmin = () => !!(sess && sess.admin);
+
+  if (action === 'getcfg') {
+    return json({ ok: true, sheetUrl: (await kv.get('cfg_sheet')) || '' });
+  }
+  if (action === 'setcfg') {
+    if (!isAdmin()) return json({ error: 'Apenas administrador pode configurar a planilha.' }, 403);
+    await kv.put('cfg_sheet', (body.sheetUrl || '').trim());
+    return json({ ok: true });
+  }
+  if (action === 'fetchsheet') {
+    const url = (body.url || (await kv.get('cfg_sheet')) || '').trim();
+    if (!url) return json({ error: 'Nenhuma planilha configurada. Cole o link e salve.' }, 400);
+    if (!/^https:\/\/(docs\.google\.com|drive\.google\.com|www\.googleapis\.com)\//i.test(url))
+      return json({ error: 'O link não parece ser de uma planilha do Google.' }, 400);
+    let csv;
+    try {
+      const r = await fetch(url, { redirect: 'follow' });
+      if (!r.ok) return json({ error: 'Não consegui ler a planilha (código ' + r.status + '). Confira se ela está publicada na web.' }, 502);
+      csv = await r.text();
+    } catch (e) {
+      return json({ error: 'Falha ao acessar a planilha do Google.' }, 502);
+    }
+    if (/^\s*<(!doctype|html)/i.test(csv))
+      return json({ error: 'A planilha não está publicada como CSV. Use Arquivo → Compartilhar → Publicar na web → formato CSV.' }, 400);
+    return json({ ok: true, csv });
+  }
+
   return json({ error: 'Ação inválida.' }, 400);
 }

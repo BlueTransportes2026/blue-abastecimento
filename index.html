@@ -176,6 +176,8 @@
   .modo-add{cursor:crosshair !important}
   .admin-only{display:none !important}
   body.is-admin .admin-only{display:flex !important}
+  .admin-only-block{display:none}
+  body.is-admin .admin-only-block{display:block}
 
   /* Tela de login */
   #loginTela{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;
@@ -632,11 +634,22 @@
         </div>
 
         <div class="secao">
-          <h2>📄 Importar lista (CSV da KMM)</h2>
+          <h2>🔄 Atualizar postos e preços</h2>
+          <div class="card-form admin-only-block" style="margin-bottom:12px">
+            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">📊 Planilha do Google <span style="color:var(--verde);font-size:11px">recomendado</span></div>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Mantenha os preços numa planilha do Google publicada. O site puxa dela e atualiza <b>para toda a equipe</b>, sozinho.</p>
+            <input id="sheetUrl" placeholder="Cole o link da planilha (…/pub?output=csv)" />
+            <div class="btn-linha">
+              <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">💾 Salvar link</button>
+              <button class="btn-primario" onclick="sincronizarPlanilha()">🔄 Sincronizar agora</button>
+            </div>
+            <div class="status" id="sheetStatus"></div>
+          </div>
           <div class="card-form">
-            <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px;line-height:1.5">Exporte a lista de postos da KMM em CSV e importe aqui de uma vez. O sistema <b>localiza cada posto no mapa</b> pelo endereço. Os <b>preços você preenche depois</b> (o CSV da KMM não traz preço).</p>
-            <button class="btn-sec" onclick="document.getElementById('csvFile').click()">📄 Escolher arquivo CSV</button>
-            <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="importarCSV(event)" />
+            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">📄 Ou importar um arquivo (CSV / Excel)</div>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Exporte a lista da KMM e importe aqui. O sistema <b>localiza cada posto no mapa</b> pelo endereço.</p>
+            <button class="btn-sec" onclick="document.getElementById('csvFile').click()">📄 Escolher arquivo</button>
+            <input type="file" id="csvFile" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="importarCSV(event)" />
             <div class="status" id="csvStatus"></div>
           </div>
         </div>
@@ -846,6 +859,36 @@ async function buscarEmbutida(){
 async function nuvemUpsert(p){ if(!_nuvemAtiva||!p) return; try{ await postosApi({action:'upsert', token:tokenAuth(), posto:p}); }catch{} }
 async function nuvemDelete(id){ if(!_nuvemAtiva||!id) return; try{ await postosApi({action:'delete', token:tokenAuth(), id}); }catch{} }
 async function nuvemSalvarTudo(){ if(!_nuvemAtiva) return; try{ await postosApi({action:'save', token:tokenAuth(), postos}); }catch{} }
+
+// ---------- Sincronização com planilha do Google ----------
+async function carregarCfgPlanilha(){
+  if(!authAdmin || !_nuvemAtiva) return;
+  try{ const j=await postosApi({action:'getcfg', token:tokenAuth()}); if(j&&j.ok){ const el=document.getElementById('sheetUrl'); if(el) el.value=j.sheetUrl||''; } }catch{}
+}
+async function salvarLinkPlanilha(){
+  const st=document.getElementById('sheetStatus');
+  const url=(document.getElementById('sheetUrl').value||'').trim();
+  if(!_nuvemAtiva){ st.textContent='⚠️ Ligue o banco compartilhado antes (selo ☁️ no topo).'; return; }
+  st.textContent='💾 Salvando link…';
+  try{ const j=await postosApi({action:'setcfg', token:tokenAuth(), sheetUrl:url});
+    st.textContent = (j&&j.ok) ? '✅ Link salvo! Agora clique em "Sincronizar agora".' : '⚠️ '+((j&&j.error)||'Erro ao salvar.');
+  }catch{ st.textContent='⚠️ Servidor indisponível.'; }
+}
+async function sincronizarPlanilha(silencioso){
+  const st=document.getElementById('sheetStatus');
+  if(!_nuvemAtiva){ if(st&&!silencioso) st.textContent='⚠️ Ligue o banco compartilhado antes (selo ☁️ no topo).'; return; }
+  if(st&&!silencioso) st.textContent='🔎 Lendo a planilha do Google…';
+  let j;
+  try{ j=await postosApi({action:'fetchsheet', token:tokenAuth()}); }catch{ if(st&&!silencioso) st.textContent='⚠️ Servidor indisponível.'; return; }
+  if(!j||!j.ok){ if(st&&!silencioso) st.textContent='⚠️ '+((j&&j.error)||'Não consegui ler a planilha.'); return; }
+  const linha1=(j.csv.split('\n')[0]||'');
+  const sep=(linha1.match(/;/g)||[]).length >= (linha1.match(/,/g)||[]).length ? ';' : ',';
+  const rows=_parseCSV(j.csv, sep);
+  if(st&&!silencioso) st.textContent='📥 Atualizando postos a partir da planilha…';
+  await processarLinhas(rows);
+  const resumo=document.getElementById('csvStatus').innerHTML;
+  if(st) st.innerHTML = resumo || '✅ Sincronizado com a planilha!';
+}
 
 async function carregarPostos(){
   const token=tokenAuth();
@@ -1785,7 +1828,8 @@ async function authApi(payload){
 }
 function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin);
   const tu=document.getElementById('tbUser'); if(tu) tu.textContent=(authUser||'U').trim().slice(0,1).toUpperCase();
-  renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio'); carregarPostos(); }
+  renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio');
+  carregarPostos().then(()=>{ carregarCfgPlanilha(); if(authAdmin) sincronizarPlanilha(true); }); }
 function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
 async function entrar(){
   const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('senhaInput').value;
