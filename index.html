@@ -636,9 +636,9 @@
         <div class="secao">
           <h2>🔄 Atualizar postos e preços</h2>
           <div class="card-form admin-only-block" style="margin-bottom:12px">
-            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">📊 Planilha do Google <span style="color:var(--verde);font-size:11px">recomendado</span></div>
-            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Mantenha os preços numa planilha do Google publicada. O site puxa dela e atualiza <b>para toda a equipe</b>, sozinho.</p>
-            <input id="sheetUrl" placeholder="Cole o link da planilha (…/pub?output=csv)" />
+            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">🔄 Atualizar preços automaticamente</div>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Puxa a lista de preços e atualiza <b>para toda a equipe</b>. Usa a <b>planilha do Google</b> (se você colar o link abaixo) ou, se não houver, o <b>arquivo do sistema</b> (<code>Postos-Blue-Transportes-PLANILHA.csv</code>) publicado junto com o site. Roda sozinho quando um admin entra.</p>
+            <input id="sheetUrl" placeholder="(opcional) link da planilha do Google …/pub?output=csv" />
             <div class="btn-linha">
               <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">💾 Salvar link</button>
               <button class="btn-primario" onclick="sincronizarPlanilha()">🔄 Sincronizar agora</button>
@@ -874,20 +874,34 @@ async function salvarLinkPlanilha(){
     st.textContent = (j&&j.ok) ? '✅ Link salvo! Agora clique em "Sincronizar agora".' : '⚠️ '+((j&&j.error)||'Erro ao salvar.');
   }catch{ st.textContent='⚠️ Servidor indisponível.'; }
 }
+// Busca o CSV de preços: 1º a planilha do Google (se configurada), 2º o arquivo publicado junto com o site
+async function lerCsvFonte(){
+  try{
+    const j=await postosApi({action:'fetchsheet', token:tokenAuth()});
+    if(j && j.ok && j.csv) return { csv:j.csv, fonte:'planilha do Google' };
+  }catch{}
+  try{
+    const r=await fetch('Postos-Blue-Transportes-PLANILHA.csv?v='+Date.now(),{cache:'no-store'});
+    if(r.ok){
+      const t=await r.text();
+      if(t && !/^\s*<(!doctype|html)/i.test(t)) return { csv:t, fonte:'arquivo do sistema' };
+    }
+  }catch{}
+  return null;
+}
 async function sincronizarPlanilha(silencioso){
   const st=document.getElementById('sheetStatus');
   if(!_nuvemAtiva){ if(st&&!silencioso) st.textContent='⚠️ Ligue o banco compartilhado antes (selo ☁️ no topo).'; return; }
-  if(st&&!silencioso) st.textContent='🔎 Lendo a planilha do Google…';
-  let j;
-  try{ j=await postosApi({action:'fetchsheet', token:tokenAuth()}); }catch{ if(st&&!silencioso) st.textContent='⚠️ Servidor indisponível.'; return; }
-  if(!j||!j.ok){ if(st&&!silencioso) st.textContent='⚠️ '+((j&&j.error)||'Não consegui ler a planilha.'); return; }
-  const linha1=(j.csv.split('\n')[0]||'');
+  if(st&&!silencioso) st.textContent='🔎 Buscando a lista de preços…';
+  const fonte=await lerCsvFonte();
+  if(!fonte){ if(st&&!silencioso) st.textContent='⚠️ Não encontrei nenhuma lista de preços (nem planilha do Google, nem arquivo do sistema).'; return; }
+  const linha1=(fonte.csv.split('\n')[0]||'');
   const sep=(linha1.match(/;/g)||[]).length >= (linha1.match(/,/g)||[]).length ? ';' : ',';
-  const rows=_parseCSV(j.csv, sep);
-  if(st&&!silencioso) st.textContent='📥 Atualizando postos a partir da planilha…';
+  const rows=_parseCSV(fonte.csv, sep);
+  if(st&&!silencioso) st.textContent='📥 Atualizando postos ('+fonte.fonte+')…';
   await processarLinhas(rows);
   const resumo=document.getElementById('csvStatus').innerHTML;
-  if(st) st.innerHTML = resumo || '✅ Sincronizado com a planilha!';
+  if(st) st.innerHTML = (resumo||'✅ Atualizado!') + ' <small style="color:var(--muted)">· fonte: '+fonte.fonte+'</small>';
 }
 
 async function carregarPostos(){
