@@ -437,16 +437,212 @@
     #app.rail-min .ni-tx{display:block}
     #app.rail-min #navrail{width:100%}
   }
+
+  /* ============================================================
+     v4 — IDENTIDADE CORPORATIVA
+     Paleta sóbria, ícones SVG, bordas finas, sem emojis.
+  ============================================================ */
+  :root{
+    --nav:#0f1b2e; --nav-2:#16243b;
+    --ink:#111827; --ink-2:#374151; --muted:#6b7280; --muted-2:#9ca3af;
+    --line:#e5e7eb; --line-2:#eef1f5; --bg:#f6f7f9; --card:#ffffff;
+    --ac:#1d4ed8; --ac-2:#2563eb; --ac-soft:#eff4ff; --ac-line:#d3e0fd;
+    --ok:#047857; --ok-soft:#ecfdf5; --warn:#b45309; --warn-soft:#fffbeb; --dang:#b91c1c; --dang-soft:#fef2f2;
+    --r:10px; --r-lg:12px;
+    --sh-sm:0 1px 2px rgba(16,24,40,.05);
+    --sh-md:0 4px 12px rgba(16,24,40,.08);
+    --sh-lg:0 12px 32px rgba(16,24,40,.12);
+  }
+  body{background:var(--bg)}
+  html,body{font-size:14px;color:var(--ink)}
+
+  /* ---- Ícones ---- */
+  .ic{width:18px;height:18px;flex:0 0 auto;stroke-width:1.75;vertical-align:-3px}
+  .ic-sm{width:15px;height:15px}
+  .ic-lg{width:22px;height:22px}
+
+  /* ---- Barra superior ---- */
+  #topbar{height:56px;background:var(--card);border-bottom:1px solid var(--line);box-shadow:none;padding:0 18px;gap:12px}
+  .tb-burger{width:34px;height:34px;border-radius:8px;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:0}
+  .tb-burger:hover{background:var(--line-2);color:var(--ink)}
+  .tb-title{font-size:15px;font-weight:650;color:var(--ink);letter-spacing:-.01em}
+  .tb-right{gap:8px}
+  #topbar #syncStatus.sync{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:7px;letter-spacing:0;
+    background:var(--line-2);color:var(--muted);border:1px solid var(--line)}
+  #topbar #syncStatus.nuvem{background:var(--ok-soft);color:var(--ok);border-color:#a7f3d0}
+  #topbar #syncStatus.local{background:var(--warn-soft);color:var(--warn);border-color:#fde68a}
+  #topbar .gear.tb-btn{width:34px;height:34px;border-radius:8px;background:transparent;border:1px solid var(--line);
+    color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:0}
+  #topbar .gear.tb-btn:hover{background:var(--line-2);color:var(--ink);border-color:var(--line)}
+  .tb-user{width:32px;height:32px;font-size:12.5px;font-weight:650;background:var(--ac);box-shadow:none}
+
+  /* ---- Menu lateral ---- */
+  #navrail{width:224px;background:var(--nav);padding:16px 12px;gap:2px;border-right:1px solid rgba(255,255,255,.06)}
+  .nav-top{padding:4px 6px 16px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);justify-content:flex-start}
+  .nav-logo{background:#fff;border-radius:8px;padding:7px 11px;min-height:38px;box-shadow:none}
+  .nav-logo img{height:24px}
+  .nav-sec{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#5b6b85;padding:14px 12px 6px}
+  .nav-item{gap:11px;font-size:13.5px;font-weight:550;padding:9px 12px;border-radius:8px;color:#aab6c9;letter-spacing:-.005em}
+  .nav-item:hover{background:rgba(255,255,255,.07);color:#fff}
+  .nav-item.ativo{background:var(--ac);color:#fff;box-shadow:none;font-weight:650}
+  .nav-item .ic{opacity:.9}
+  .nav-item.ativo .ic{opacity:1}
+  .nav-item .tab-badge{background:#ef4444;color:#fff;font-size:10.5px;font-weight:700;min-width:20px;height:19px;
+    border-radius:6px;box-shadow:none;animation:none;padding:0 6px}
+  .nav-item.ativo .tab-badge{background:rgba(255,255,255,.22);color:#fff}
+  .nav-sair{color:#7f8ea6;margin-top:2px}
+  .nav-sair:hover{background:rgba(239,68,68,.14);color:#fca5a5}
+  #app.rail-min #navrail{width:64px;padding:16px 8px}
+  #app.rail-min .nav-sec{display:none}
+
+  /* ---- Painel / conteúdo ---- */
+  #painel{width:404px;min-width:404px;border-right:1px solid var(--line)}
+  .conteudo{padding:20px}
+  .secao{margin-bottom:26px;animation:none}
+  .secao h2{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    padding-left:0;margin:0 0 10px;display:flex;align-items:center;gap:7px}
+  .secao h2::before{display:none}
+  .secao h2 .ic{width:15px;height:15px;color:var(--muted-2)}
+  .card-form{border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;box-shadow:none;background:var(--card)}
+  .card-form:focus-within{box-shadow:none;border-color:var(--line)}
+  .cfg-lbl{font-size:13px;font-weight:650;color:var(--ink);display:flex;align-items:center;gap:7px}
+
+  label{font-size:12px;font-weight:600;color:var(--ink-2);margin:12px 0 5px;letter-spacing:0}
+  input,select,textarea{border:1px solid #d7dce4;border-radius:8px;padding:9px 11px;font-size:13.5px;background:#fff}
+  input:focus,select:focus,textarea:focus{border-color:var(--ac-2);box-shadow:0 0 0 3px rgba(37,99,235,.12);background:#fff}
+  input::placeholder{color:#a3adba}
+
+  button{border-radius:8px;font-size:13.5px;font-weight:600;padding:9px 14px;display:inline-flex;align-items:center;
+    justify-content:center;gap:7px;transition:.14s}
+  .btn-primario{background:var(--ac);box-shadow:none}
+  .btn-primario:hover{background:#1a43b8;transform:none;box-shadow:none}
+  .btn-sec{background:#fff;color:var(--ink-2);border:1px solid #d7dce4;font-weight:600}
+  .btn-sec:hover{background:var(--line-2);border-color:#c9d1dc}
+  .link-mini{color:var(--ac-2);font-weight:600;font-size:12.5px}
+
+  /* ---- Cartões / listas ---- */
+  .home-hero{background:linear-gradient(120deg,var(--nav),#1e3a6d);border-radius:var(--r-lg);padding:22px;box-shadow:none}
+  .home-hero::after{display:none}
+  .home-hero .hh-oi{font-size:12.5px;font-weight:500;opacity:.7;letter-spacing:0}
+  .home-hero .hh-t{font-size:20px;font-weight:680;margin-top:5px;letter-spacing:-.02em}
+  .home-hero .hh-s{font-size:12.5px;opacity:.72;margin-top:5px}
+  .home-kpis{gap:12px}
+  .home-kpi{border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;box-shadow:none;transition:.14s}
+  .home-kpi:hover{border-color:#cfd6e0;transform:none;box-shadow:var(--sh-sm)}
+  .home-kpi .ic{position:absolute;right:13px;top:13px;color:var(--muted-2);width:17px;height:17px;opacity:1}
+  .home-kpi .v{font-size:23px;font-weight:680;letter-spacing:-.02em;color:var(--ink)}
+  .home-kpi .l{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:4px}
+  .home-acoes{gap:12px}
+  .home-card{border:1px solid var(--line);border-radius:var(--r-lg);padding:15px;box-shadow:none;gap:8px}
+  .home-card:hover{transform:none;border-color:var(--ac-line);background:var(--ac-soft)}
+  .home-card .ci{color:var(--ac);display:flex}
+  .home-card .ci .ic{width:20px;height:20px}
+  .home-card .ct{font-size:13.5px;font-weight:650;letter-spacing:-.01em}
+  .home-card .cs{font-size:11.5px;color:var(--muted);line-height:1.45;font-weight:450}
+  .home-card.alerta{border-color:var(--line);background:var(--card)}
+  .home-card.alerta:hover{border-color:#fecaca;background:var(--dang-soft)}
+  .home-card.alerta .ci{color:var(--dang)}
+  .home-card.alerta .cs{color:var(--dang);font-weight:600}
+
+  .resumo-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg)}
+  .resumo-nums .rn{border:1px solid var(--line);border-radius:var(--r);box-shadow:none;background:var(--card)}
+  .resumo-nums .rn::after{display:none}
+  .resumo-nums .rn .v{font-size:19px;font-weight:680;color:var(--ink)}
+  .resumo-nums .rn .l{font-size:10px;color:var(--muted);letter-spacing:.05em;font-weight:600}
+  .uf-chip{background:var(--card);border:1px solid var(--line);border-radius:6px;box-shadow:none;font-size:11px;padding:3px 8px}
+
+  .posto-card{border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:none;padding:14px}
+  .posto-card:hover{box-shadow:var(--sh-sm);transform:none;border-color:#cfd6e0}
+  .posto-card::before{display:none}
+  .posto-card .nome{font-size:13.5px;font-weight:650;letter-spacing:-.01em}
+  .posto-card .dist{font-size:11.5px;color:var(--muted)}
+  .preco{background:var(--line-2);border-radius:8px;border:1px solid transparent}
+  .preco .lbl{font-size:9.5px;letter-spacing:.06em;font-weight:650;color:var(--muted)}
+  .preco .val{font-size:13.5px;font-weight:680;color:var(--ink)}
+  .preco.destaque{background:var(--ac-soft);border-color:var(--ac-line)}
+  .preco.destaque .val{color:var(--ac)}
+  .gap-info{font-size:11.5px;color:var(--muted);font-weight:500;border-top:1px solid var(--line-2)}
+  .gap-info b{color:var(--ink-2);font-weight:650}
+  .tag-melhor,.tag-abastecer{border-radius:6px;font-size:9.5px;letter-spacing:.04em;box-shadow:none;font-weight:700;background:var(--ac)}
+  .tag-abastecer{background:var(--warn)}
+
+  .lista-todos .item{border:1px solid var(--line);border-radius:var(--r);box-shadow:none}
+  .lista-todos .item:hover{border-color:#cfd6e0;box-shadow:none;background:#fcfdfe}
+  .lista-todos .item .nm{font-size:13px;font-weight:600}
+  .lista-todos .item .sub{font-size:11px;color:var(--muted)}
+  .lista-todos .item .ac{width:30px;height:30px;border-radius:7px;background:transparent;border:1px solid var(--line);color:var(--muted);padding:0}
+  .lista-todos .item .ac:hover{background:var(--line-2);color:var(--ink)}
+
+  .vazio{background:var(--card);border:1px dashed #d7dce4;border-radius:var(--r-lg);color:var(--muted);font-size:12.5px}
+  .aviso{background:var(--warn-soft);border:1px solid #fde68a;color:#7c4a03;border-radius:var(--r-lg);font-size:12px}
+  .aviso-venc{background:var(--dang-soft);border:1px solid #fecaca;color:var(--dang);border-radius:var(--r);font-weight:600}
+  .status{font-size:12px;color:var(--muted)}
+  .resumo-viagem{background:var(--ac-soft);border:1px solid var(--ac-line);border-radius:var(--r-lg);color:#1e3a8a;font-size:12.5px}
+
+  /* Pendências */
+  .pend-hero{gap:12px}
+  .pend-hero .ph{border-radius:var(--r-lg);box-shadow:none;padding:14px 12px;border:1px solid transparent}
+  .pend-hero .ph .n{font-size:24px;font-weight:680}
+  .pend-hero .ph .t{font-size:10px;letter-spacing:.06em;font-weight:650;opacity:.9}
+  .pend-hero .ph.venc{background:var(--dang-soft);color:var(--dang);border-color:#fecaca}
+  .pend-hero .ph.quase{background:var(--warn-soft);color:var(--warn);border-color:#fde68a}
+  .pend-hero .ph.ok{background:var(--line-2);color:var(--muted);border-color:var(--line)}
+  .pend-card{border:1px solid var(--line);border-left:3px solid var(--dang);border-radius:var(--r);box-shadow:none}
+  .pend-card:hover{box-shadow:var(--sh-sm);transform:none}
+  .pend-card.quase{border-left-color:var(--warn)}
+  .pend-card .pc-nome{font-size:13px;font-weight:650}
+  .pend-card .pc-sub{font-size:11.5px}
+  .pend-card .pc-dias{font-size:11px;font-weight:650}
+  .btn-ok{background:var(--ok-soft);color:var(--ok);border:1px solid #a7f3d0;font-weight:600}
+  .btn-ok:hover{background:#d1fae5}
+
+  /* Autonomia */
+  .aut-out{background:var(--nav);border-radius:var(--r-lg);box-shadow:none;padding:15px}
+  .aut-out .big{font-size:21px;font-weight:680;letter-spacing:-.02em}
+  .aut-out .sub{font-size:11.5px;opacity:.65}
+  .aut-bar>i{background:#60a5fa}
+  .aut-alert{border-radius:var(--r);font-size:11.5px;font-weight:550}
+  .aut-alert.bom{background:var(--ok-soft);color:var(--ok);border-color:#a7f3d0}
+  .aut-alert.ruim{background:var(--dang-soft);color:var(--dang);border-color:#fecaca}
+
+  /* Gráficos */
+  .graf-card{border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:none;padding:16px}
+  .graf-t{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .graf-leg{font-size:12px;font-weight:500;color:var(--ink-2)}
+  .graf-leg b{color:var(--ink);font-weight:680}
+  .graf-leg i{border-radius:3px;width:10px;height:10px}
+
+  /* Mapa / legenda */
+  .legenda{border-radius:var(--r-lg);border:1px solid var(--line);box-shadow:var(--sh-md);background:rgba(255,255,255,.96);padding:10px 12px}
+  .legenda .lgt{font-size:9.5px;letter-spacing:.07em;color:var(--muted);font-weight:700}
+  .legenda .lin{font-size:11px;font-weight:500;color:var(--ink-2)}
+  .legenda i{border-radius:3px;width:11px;height:11px}
+  .leaflet-bar a{color:var(--ink-2)!important}
+  .dica-add{background:var(--ac);border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:var(--sh-md)}
+
+  /* Modais / login */
+  .modal .caixa{border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh-lg)}
+  .modal h3{font-size:16px;font-weight:680;letter-spacing:-.01em}
+  .modal .sub{font-size:12px;color:var(--muted)}
+  .cfg-mod{background:var(--line-2);border:1px solid var(--line);border-radius:var(--r)}
+  #loginTela{background:var(--nav)}
+  #loginTela .login-box{border-radius:var(--r-lg);padding:30px 28px;box-shadow:var(--sh-lg)}
+  #loginTela h2{font-size:17px;font-weight:680;color:var(--ink);letter-spacing:-.01em}
+  #loginTela p{font-size:10.5px;letter-spacing:.1em;color:var(--muted)}
+  #loginTela .login-logo{background:var(--line-2);border-radius:8px}
+  .filtros-rota label{font-size:12px;font-weight:550;color:var(--ink-2)}
+  .badge-loc{border-radius:var(--r);font-size:11.5px;border:1px dashed #d7dce4;background:var(--line-2)}
+  .badge-loc.ok{background:var(--ok-soft);border-color:#a7f3d0;color:var(--ok)}
 </style>
 
 <div id="app">
   <!-- ===== Barra superior ===== -->
   <header id="topbar">
-    <button class="tb-burger" onclick="toggleRail()" title="Recolher/expandir menu">☰</button>
+    <button class="tb-burger" onclick="toggleRail()" title="Recolher / expandir menu" data-ic="menu"></button>
     <div class="tb-title" id="tbTitulo">Início</div>
     <div class="tb-right">
-      <div id="syncStatus" class="sync local" onclick="sincronizar()" title="Clique para atualizar da nuvem">💾 Só neste computador</div>
-      <button class="gear tb-btn" onclick="abrirFrota()" title="Configurações">⚙️</button>
+      <div id="syncStatus" class="sync local" onclick="sincronizar()" title="Clique para atualizar">Somente neste computador</div>
+      <button class="gear tb-btn" onclick="abrirFrota()" title="Configurações" data-ic="settings"></button>
       <div class="tb-user" id="tbUser" title="Usuário logado">U</div>
     </div>
   </header>
@@ -458,16 +654,23 @@
         <div class="nav-logo">
           <img src="https://static.wixstatic.com/media/4373da_8f730a6062a0456090221fdaa9c3268a~mv2.png" alt="Blue Transportes"
                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <span>⛽</span>
+          <span style="font-size:14px;font-weight:800;color:var(--nav);letter-spacing:.04em">BLUE</span>
         </div>
       </div>
-      <button class="nav-item ativo" id="nav-inicio" onclick="mostrarAba('inicio')"><span class="ni-ic">🏠</span><span class="ni-tx">Início</span></button>
-      <button class="nav-item" id="nav-rota" onclick="mostrarAba('rota')"><span class="ni-ic">🧭</span><span class="ni-tx">Rota</span></button>
-      <button class="nav-item" id="nav-pendencias" onclick="mostrarAba('pendencias')"><span class="ni-ic">🚨</span><span class="ni-tx">Pendências</span><span class="tab-badge" id="badgePend" style="display:none">0</span></button>
-      <button class="nav-item" id="nav-postos" onclick="mostrarAba('postos')"><span class="ni-ic">⛽</span><span class="ni-tx">Postos</span></button>
-      <button class="nav-item" id="nav-gerenciadora" onclick="mostrarAba('gerenciadora')"><span class="ni-ic">🛡️</span><span class="ni-tx">Gestão</span></button>
+      <button class="nav-item ativo" id="nav-inicio" onclick="mostrarAba('inicio')" data-ic="home"><span class="ni-tx">Início</span></button>
+
+      <div class="nav-sec">Operação</div>
+      <button class="nav-item" id="nav-rota" onclick="mostrarAba('rota')" data-ic="route"><span class="ni-tx">Roteirização</span></button>
+      <button class="nav-item" id="nav-pendencias" onclick="mostrarAba('pendencias')" data-ic="alert"><span class="ni-tx">Pendências</span><span class="tab-badge" id="badgePend" style="display:none">0</span></button>
+
+      <div class="nav-sec">Cadastro</div>
+      <button class="nav-item" id="nav-postos" onclick="mostrarAba('postos')" data-ic="fuel"><span class="ni-tx">Postos</span></button>
+
+      <div class="nav-sec">Análise</div>
+      <button class="nav-item" id="nav-gerenciadora" onclick="mostrarAba('gerenciadora')" data-ic="chart"><span class="ni-tx">Indicadores</span></button>
+
       <div class="nav-spacer"></div>
-      <button class="nav-item nav-sair" onclick="sair()"><span class="ni-ic">🔒</span><span class="ni-tx">Sair</span></button>
+      <button class="nav-item nav-sair" onclick="sair()" data-ic="logout"><span class="ni-tx">Sair</span></button>
     </nav>
 
     <aside id="painel">
@@ -476,30 +679,30 @@
       <div id="aba-inicio">
         <div class="secao">
           <div class="home-hero">
-            <div class="hh-oi">👋 Olá<span id="homeUser"></span></div>
+            <div class="hh-oi">Bem-vindo<span id="homeUser"></span></div>
             <div class="hh-t">Roteirizador de Abastecimento</div>
-            <div class="hh-s">Postos com preço acordado, no caminho da sua rota.</div>
+            <div class="hh-s">Postos com preço negociado ao longo da sua rota.</div>
           </div>
         </div>
         <div class="secao">
-          <h2>📊 Visão geral</h2>
+          <h2 data-ic="chart">Visão geral</h2>
           <div class="home-kpis" id="homeKpis"></div>
         </div>
         <div class="secao">
-          <h2>⚡ O que você quer fazer?</h2>
+          <h2 data-ic="zap">Acesso rápido</h2>
           <div class="home-acoes">
             <button class="home-card" onclick="mostrarAba('rota')">
-              <div class="ci">🧭</div><div class="ct">Traçar rota</div>
-              <div class="cs">Ver os postos no caminho e enviar ao motorista</div></button>
+              <div class="ci" data-ic="route"></div><div class="ct">Traçar rota</div>
+              <div class="cs">Postos no caminho e envio ao motorista</div></button>
             <button class="home-card alerta" onclick="mostrarAba('pendencias')">
-              <div class="ci">🚨</div><div class="ct">Pendências</div>
+              <div class="ci" data-ic="alert"></div><div class="ct">Pendências</div>
               <div class="cs" id="homePendN">Preços a atualizar</div></button>
             <button class="home-card" onclick="mostrarAba('postos')">
-              <div class="ci">⛽</div><div class="ct">Postos</div>
-              <div class="cs">Cadastrar, importar e ver todos os postos</div></button>
+              <div class="ci" data-ic="fuel"></div><div class="ct">Postos</div>
+              <div class="cs">Cadastro, importação e lista completa</div></button>
             <button class="home-card" onclick="mostrarAba('gerenciadora')">
-              <div class="ci">🛡️</div><div class="ct">Gestão</div>
-              <div class="cs">Importar rota da gerenciadora (NOX/Opentech)</div></button>
+              <div class="ci" data-ic="chart"></div><div class="ct">Indicadores</div>
+              <div class="cs">Painel gerencial e rotas da gerenciadora</div></button>
           </div>
         </div>
       </div>
@@ -508,7 +711,7 @@
       <div id="aba-rota" style="display:none">
         <div id="bannerMotorista" style="display:none">
           <div class="secao"><div class="card-form" style="text-align:center">
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px">🚚 Rota de abastecimento</div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px">Rota de abastecimento</div>
             <div id="tituloMotorista" style="font-size:16px;font-weight:800;color:var(--brand-800);margin-top:5px"></div>
             <div style="font-size:12px;color:var(--muted);margin-top:5px">Postos recomendados abaixo — do mais barato ao mais caro</div>
           </div></div>
@@ -517,11 +720,11 @@
           <div class="card-form">
             <label>Origem</label>
             <input id="origem" placeholder="Cidade, endereço ou CEP" oninput="origemSel=null" />
-            <input id="origemPostoSel" list="dlPostos" placeholder="🔎 ou buscar um posto de partida (nome ou cidade)…" onchange="escolherPostoOrigem(this.value)" style="margin-top:6px" />
+            <input id="origemPostoSel" list="dlPostos" placeholder="ou buscar um posto de partida (nome ou cidade)…" onchange="escolherPostoOrigem(this.value)" style="margin-top:6px" />
             <datalist id="dlPostos"></datalist>
             <label>Destino</label>
             <input id="destino" placeholder="Cidade, endereço ou CEP" oninput="destinoSel=null" />
-            <input id="destinoPostoSel" list="dlPostos" placeholder="🔎 ou buscar um posto de destino (nome ou cidade)…" onchange="escolherPostoDestino(this.value)" style="margin-top:6px" />
+            <input id="destinoPostoSel" list="dlPostos" placeholder="ou buscar um posto de destino (nome ou cidade)…" onchange="escolherPostoDestino(this.value)" style="margin-top:6px" />
             <div id="paradas"></div>
             <button class="link-mini" onclick="addParada()">+ Adicionar parada</button>
 
@@ -539,19 +742,19 @@
 
         <div class="secao" id="secaoAutonomia">
           <div class="card-form">
-            <h2 style="margin-top:0;margin-bottom:12px">🛢️ Autonomia do tanque</h2>
+            <h2 data-ic="gauge" style="margin-top:0;margin-bottom:12px">Autonomia do tanque</h2>
             <div class="aut-grid">
               <div><label style="margin-top:0">Capacidade (litros)</label><input id="autCap" type="number" step="10" placeholder="Ex.: 600" oninput="salvarAutonomia()" /></div>
               <div><label style="margin-top:0">Consumo (km/l)</label><input id="autKml" type="number" step="0.1" placeholder="Ex.: 2.6" oninput="salvarAutonomia()" /></div>
             </div>
             <div id="autOut"></div>
-            <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">💡 Ao traçar uma rota, marco os postos onde é preciso abastecer para o caminhão <b>nunca ficar sem diesel</b>.</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5">Ao traçar uma rota, marco os postos onde é preciso abastecer para o caminhão <b>nunca ficar sem diesel</b>.</div>
           </div>
         </div>
 
         <div class="secao" id="secaoPerto">
           <div class="card-form">
-            <label>📍 Ver postos perto de uma cidade</label>
+            <label>Ver postos perto de uma cidade</label>
             <div class="linha">
               <input id="inpCidade" placeholder="Ex.: Uberlândia MG" onkeydown="if(event.key==='Enter') verPostosPerto()" />
               <button class="btn-sec" style="flex:0 0 auto" onclick="verPostosPerto()">Ver</button>
@@ -561,7 +764,7 @@
         </div>
 
         <div class="secao" id="secaoResultado" style="display:none">
-          <h2 id="tituloResultado">💰 Postos no caminho</h2>
+          <h2 id="tituloResultado" data-ic="fuel">Postos no caminho</h2>
           <div id="resultado"></div>
         </div>
       </div>
@@ -569,18 +772,18 @@
       <!-- ================= ABA PENDÊNCIAS ================= -->
       <div id="aba-pendencias" style="display:none">
         <div class="secao">
-          <h2>🚨 Preços a atualizar</h2>
+          <h2 data-ic="alert">Preços a atualizar</h2>
           <div class="pend-hero" id="pendHero"></div>
         </div>
         <div class="secao">
           <div class="linha" style="margin-bottom:12px">
             <select id="pendFiltro" onchange="renderPendencias()">
-              <option value="todos">⚠️ Vencidos + quase</option>
-              <option value="vencido">🔴 Só vencidos</option>
-              <option value="quase">🟡 Só quase vencendo</option>
-              <option value="sem">⚪ Sem preço</option>
+              <option value="todos">Vencidos + a vencer</option>
+              <option value="vencido">Somente vencidos</option>
+              <option value="quase">Somente a vencer</option>
+              <option value="sem">Sem preço</option>
             </select>
-            <select id="pendUF" onchange="renderPendencias()"><option value="">🌎 Todos os estados</option></select>
+            <select id="pendUF" onchange="renderPendencias()"><option value="">Todos os estados</option></select>
           </div>
           <div id="listaPend"></div>
         </div>
@@ -589,22 +792,22 @@
       <!-- ================= ABA POSTOS ================= -->
       <div id="aba-postos" style="display:none">
         <div class="secao">
-          <h2>📊 Resumo</h2>
+          <h2 data-ic="chart">Resumo</h2>
           <div class="resumo-card" id="resumoGeral"></div>
         </div>
 
         <div class="secao">
-          <h2>📍 Postos sem localização (<span id="qtdSemLocal">0</span>)</h2>
+          <h2 data-ic="pin">Postos sem localização (<span id="qtdSemLocal">0</span>)</h2>
           <div class="lista-todos" id="listaSemLocal"></div>
         </div>
 
         <div class="secao">
-          <h2 id="tituloForm">➕ Cadastrar posto</h2>
+          <h2 id="tituloForm" data-ic="plus">Cadastrar posto</h2>
           <div class="card-form">
             <label>Buscar por CNPJ (preenche automático)</label>
             <div class="linha">
               <input id="pCnpj" placeholder="00.000.000/0000-00" inputmode="numeric" />
-              <button class="btn-sec" style="flex:0 0 auto" onclick="buscarCnpj()">🔎 Buscar</button>
+              <button class="btn-sec" style="flex:0 0 auto" onclick="buscarCnpj()">Buscar</button>
             </div>
             <div class="status" id="cnpjStatus"></div>
 
@@ -623,8 +826,8 @@
             <input id="pArla" type="number" step="0.001" placeholder="3,50" />
 
             <label>Localização no mapa</label>
-            <div class="badge-loc" id="badgeLoc">📍 Nenhum local definido — busque o CNPJ ou marque no mapa</div>
-            <button class="btn-sec" style="margin-top:8px" onclick="marcarNoMapa()">📍 Marcar/ajustar no mapa</button>
+            <div class="badge-loc" id="badgeLoc">Nenhum local definido — busque o CNPJ ou marque no mapa</div>
+            <button class="btn-sec" style="margin-top:8px" onclick="marcarNoMapa()">Marcar/ajustar no mapa</button>
 
             <div class="btn-linha">
               <button class="btn-primario" onclick="salvarPosto()">Salvar posto</button>
@@ -634,37 +837,37 @@
         </div>
 
         <div class="secao">
-          <h2>🔄 Atualizar postos e preços</h2>
+          <h2 data-ic="refresh">Atualizar postos e preços</h2>
           <div class="card-form admin-only-block" style="margin-bottom:12px">
-            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">🔄 Atualizar preços automaticamente</div>
+            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">Atualizar preços automaticamente</div>
             <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Puxa a lista de preços e atualiza <b>para toda a equipe</b>. Usa a <b>planilha do Google</b> (se você colar o link abaixo) ou, se não houver, o <b>arquivo do sistema</b> (<code>Postos-Blue-Transportes-PLANILHA.csv</code>) publicado junto com o site. Roda sozinho quando um admin entra.</p>
             <input id="sheetUrl" placeholder="(opcional) link da planilha do Google …/pub?output=csv" />
             <div class="btn-linha">
-              <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">💾 Salvar link</button>
-              <button class="btn-primario" onclick="sincronizarPlanilha()">🔄 Sincronizar agora</button>
+              <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">Salvar link</button>
+              <button class="btn-primario" onclick="sincronizarPlanilha()">Sincronizar agora</button>
             </div>
             <div class="status" id="sheetStatus"></div>
           </div>
           <div class="card-form">
-            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">📄 Ou importar um arquivo (CSV / Excel)</div>
+            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">Ou importar um arquivo (CSV / Excel)</div>
             <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Exporte a lista da KMM e importe aqui. O sistema <b>localiza cada posto no mapa</b> pelo endereço.</p>
-            <button class="btn-sec" onclick="document.getElementById('csvFile').click()">📄 Escolher arquivo</button>
+            <button class="btn-sec" onclick="document.getElementById('csvFile').click()">Escolher arquivo</button>
             <input type="file" id="csvFile" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="importarCSV(event)" />
             <div class="status" id="csvStatus"></div>
           </div>
         </div>
 
         <div class="secao">
-          <h2>📋 Postos cadastrados (<span id="qtdPostos">0</span>)</h2>
+          <h2 data-ic="list">Postos cadastrados (<span id="qtdPostos">0</span>)</h2>
           <div id="avisoVencidos" class="aviso-venc" style="display:none"></div>
-          <input id="buscaPosto" placeholder="🔎 Buscar por nome ou cidade" oninput="buscaPosto=this.value; atualizarLista()" style="margin-bottom:8px" />
+          <input id="buscaPosto" placeholder="Buscar por nome ou cidade" oninput="buscaPosto=this.value; atualizarLista()" style="margin-bottom:8px" />
           <div class="linha" style="margin-bottom:10px">
-            <select id="filtroUF" onchange="filtroUF=this.value; renderMarcadores()"><option value="">🌎 Todos os estados</option></select>
+            <select id="filtroUF" onchange="filtroUF=this.value; renderMarcadores()"><option value="">Todos os estados</option></select>
             <select id="ordemPostos" onchange="ordemPostos=this.value; atualizarLista()">
-              <option value="nome">↕️ Ordenar: Nome</option>
-              <option value="cidade">↕️ Cidade</option>
-              <option value="preco">↕️ Preço S10</option>
-              <option value="data">↕️ Data do preço</option>
+              <option value="nome">Ordenar por: Nome</option>
+              <option value="cidade">Ordenar por: Cidade</option>
+              <option value="preco">Ordenar por: Preço S10</option>
+              <option value="data">Ordenar por: Data do preço</option>
             </select>
           </div>
           <div class="lista-todos" id="listaTodos"></div>
@@ -673,28 +876,28 @@
         <div class="aviso">
           Backup dos postos deste computador:
           <div class="btn-linha">
-            <button class="btn-sec" onclick="exportar()">⬇️ Exportar</button>
-            <button class="btn-sec" onclick="document.getElementById('arquivo').click()">⬆️ Importar</button>
+            <button class="btn-sec" onclick="exportar()">Exportar</button>
+            <button class="btn-sec" onclick="document.getElementById('arquivo').click()">Importar</button>
           </div>
           <input type="file" id="arquivo" accept=".json" style="display:none" onchange="importar(event)" />
-          <button onclick="limparTodos()" style="width:100%;margin-top:10px;background:#fdeaea;color:#e5484d">🗑️ Excluir TODOS os postos</button>
+          <button onclick="limparTodos()" style="width:100%;margin-top:10px;background:#fdeaea;color:#e5484d">Excluir TODOS os postos</button>
         </div>
       </div>
 
       <!-- ================= ABA GESTÃO ================= -->
       <div id="aba-gerenciadora" style="display:none">
         <div class="secao">
-          <h2>📊 Painel gerencial</h2>
+          <h2 data-ic="chart">Painel gerencial</h2>
           <div id="gestaoDash"></div>
         </div>
         <div class="secao">
-          <h2>🛡️ Importar rota da gerenciadora</h2>
+          <h2 data-ic="shield">Importar rota da gerenciadora</h2>
           <div class="card-form">
             <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.5">Cole abaixo <b>uma</b> destas opções:</p>
             <ul style="font-size:12px;color:var(--muted);margin:0 0 10px;padding-left:18px;line-height:1.7">
-              <li>🔗 o <b>link da NOX</b> (noxgr.srv.br/...)</li>
-              <li>🗺️ um <b>link do Google Maps</b> com a rota</li>
-              <li>📝 as <b>cidades do trajeto</b>, uma por linha (JBS/Opentech)</li>
+              <li>o <b>link da NOX</b> (noxgr.srv.br/...)</li>
+              <li>um <b>link do Google Maps</b> com a rota</li>
+              <li>as <b>cidades do trajeto</b>, uma por linha (JBS/Opentech)</li>
             </ul>
             <textarea id="impText" rows="5" placeholder="Cole o link aqui...&#10;&#10;ou as cidades:&#10;Itupeva SP&#10;Campinas SP&#10;Cordeirópolis SP"></textarea>
             <button class="btn-primario" style="margin-top:10px" onclick="importarRota()">Importar e traçar rota</button>
@@ -702,7 +905,7 @@
           </div>
         </div>
         <div class="aviso">
-          💡 A leitura automática do link da NOX precisa da função publicada no Cloudflare (arquivo <code>functions/nox.js</code>). Sem ela, você pode colar o link do Google Maps ou as cidades.
+          A leitura automática do link da NOX precisa da função publicada no Cloudflare (arquivo <code>functions/nox.js</code>). Sem ela, você pode colar o link do Google Maps ou as cidades.
         </div>
       </div>
     </div>
@@ -725,8 +928,8 @@
 <!-- MODAL USUÁRIOS -->
 <div class="modal" id="modalUsers">
   <div class="caixa">
-    <h3>👥 Usuários</h3>
-    <div class="sub">Crie e gerencie os acessos da equipe. 👑 = administrador.</div>
+    <h3>Usuários</h3>
+    <div class="sub">Crie e gerencie os acessos da equipe.</div>
     <div id="listaUsers" class="lista-todos"></div>
     <label>Criar novo usuário</label>
     <input id="novoUser" placeholder="nome de usuário" />
@@ -759,16 +962,16 @@
 <!-- MODAL LINK MOTORISTA -->
 <div class="modal" id="modalLink">
   <div class="caixa">
-    <h3>🔗 Link para o motorista</h3>
+    <h3>Link para o motorista</h3>
     <div class="sub" id="linkInfo"></div>
     <input id="linkInput" readonly onclick="this.select()" style="font-size:12px" />
     <div id="linkQrWrap" style="text-align:center;margin:12px 0;display:none">
       <img id="linkQr" alt="QR Code" style="width:190px;height:190px;border-radius:10px;background:#fff;border:1px solid var(--line)" />
-      <div class="sub" style="margin-top:4px">📱 O motorista escaneia esse QR e o mapa abre no celular</div>
+      <div class="sub" style="margin-top:4px">O motorista escaneia esse QR e o mapa abre no celular</div>
     </div>
     <div class="btn-linha">
-      <button class="btn-sec" id="linkCopiar" onclick="copiarLink()">📋 Copiar link</button>
-      <a id="linkWa" target="_blank" class="btn-primario" style="text-align:center;text-decoration:none;line-height:1.4">📲 Enviar no WhatsApp</a>
+      <button class="btn-sec" id="linkCopiar" onclick="copiarLink()">Copiar link</button>
+      <a id="linkWa" target="_blank" class="btn-primario" style="text-align:center;text-decoration:none;line-height:1.4">Enviar no WhatsApp</a>
     </div>
     <div class="btn-linha"><button class="btn-sec" onclick="fecharLink()">Fechar</button></div>
     <div class="sub" style="margin-top:10px">O motorista escaneia o QR (ou abre o link) e a rota abre no <b>Google Maps</b> com os postos marcados — só localização, <b>sem preços</b>.</div>
@@ -778,13 +981,13 @@
 <!-- MODAL FROTA -->
 <div class="modal" id="modalFrota">
   <div class="caixa">
-    <h3>🚛 Frota e consumo</h3>
+    <h3>Frota e consumo</h3>
     <div class="sub">Usado para calcular litros e custo da viagem por modalidade.</div>
     <label>Modalidade da carga (padrão)</label>
     <select id="modalidade" onchange="if(rotaCoords) listarPostosNaRota()">
-      <option value="seca">🚛 Carga seca (Sider)</option>
-      <option value="container">📦 Container refrigerado</option>
-      <option value="frigo">❄️ Carreta frigorífica</option>
+      <option value="seca">Carga seca (Sider)</option>
+      <option value="container">Container refrigerado</option>
+      <option value="frigo">Carreta frigorífica</option>
     </select>
     <div class="linha" style="margin-top:8px">
       <div><label>Diesel do caminhão</label>
@@ -792,19 +995,19 @@
       </div>
       <div><label>Arla (% do diesel)</label><input id="cfgArla" type="number" step="0.5" onchange="salvarConfig()" /></div>
     </div>
-    <div class="cfg-mod"><div class="cfg-lbl">🚛 Carga seca</div>
+    <div class="cfg-mod"><div class="cfg-lbl">Carga seca</div>
       <div class="linha"><div><span>km/l</span><input id="kml_seca" type="number" step="0.1" onchange="salvarConfig()" /></div>
       <div><span>Aparelho (L/h)</span><input id="ap_seca" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
-    <div class="cfg-mod"><div class="cfg-lbl">📦 Container refrigerado</div>
+    <div class="cfg-mod"><div class="cfg-lbl">Container refrigerado</div>
       <div class="linha"><div><span>km/l</span><input id="kml_container" type="number" step="0.1" onchange="salvarConfig()" /></div>
       <div><span>Aparelho (L/h)</span><input id="ap_container" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
-    <div class="cfg-mod"><div class="cfg-lbl">❄️ Carreta frigorífica</div>
+    <div class="cfg-mod"><div class="cfg-lbl">Carreta frigorífica</div>
       <div class="linha"><div><span>km/l</span><input id="kml_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div>
       <div><span>Aparelho (L/h)</span><input id="ap_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
     <label style="margin-top:14px">Mostrar postos até <span id="raioLbl">15</span> km da estrada</label>
     <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords){ renderMarcadores(); listarPostosNaRota(); }" />
-    <div class="btn-linha admin-only"><button class="btn-sec" onclick="abrirUsuarios()" style="width:100%">👥 Gerenciar usuários</button></div>
-    <div class="btn-linha"><button class="btn-sec" onclick="sair()">🔒 Sair</button><button class="btn-primario" onclick="fecharFrota()">Pronto</button></div>
+    <div class="btn-linha admin-only"><button class="btn-sec" onclick="abrirUsuarios()" style="width:100%">Gerenciar usuários</button></div>
+    <div class="btn-linha"><button class="btn-sec" onclick="sair()">Sair</button><button class="btn-primario" onclick="fecharFrota()">Pronto</button></div>
   </div>
 </div>
 
@@ -815,6 +1018,46 @@
    Rotas: OSRM · Busca: Nominatim · CNPJ: BrasilAPI
    Dados: localStorage
 ========================================================= */
+
+// ---------- Ícones (SVG, estilo corporativo) ----------
+const ICONS={
+  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M10 21v-6h4v6"/>',
+  route:'<circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="5" r="2.5"/><path d="M8.5 19H14a4 4 0 0 0 0-8h-4a4 4 0 0 1 0-8h5.5"/>',
+  alert:'<path d="M10.3 3.9 1.9 18a2 2 0 0 0 1.7 3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/>',
+  fuel:'<path d="M3 22h11"/><path d="M4 9h9"/><path d="M13 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M13 12h3a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9.5L18 6"/>',
+  chart:'<path d="M3 3v16.5A1.5 1.5 0 0 0 4.5 21H21"/><path d="M7 15l3.5-4 3 2.5L20 7"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+  settings:'<circle cx="12" cy="12" r="2.8"/><path d="M19.1 14.6a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.2a1.6 1.6 0 0 0-1-1.4 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.2a1.6 1.6 0 0 0 1.4-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 1 1.4 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z"/>',
+  menu:'<path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  pin:'<path d="M20 10.5c0 5.5-8 12-8 12s-8-6.5-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10.5" r="2.8"/>',
+  refresh:'<path d="M21 12a9 9 0 0 1-15.5 6.2L3 15.8"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8.2"/><path d="M21 3.5v4.7h-4.7"/><path d="M3 20.5v-4.7h4.7"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m8 8 4-4 4 4"/><path d="M12 4v12"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m8 12 4 4 4-4"/><path d="M12 16V4"/>',
+  check:'<path d="m5 13 4.5 4.5L19 7"/>',
+  edit:'<path d="M11 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-6"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
+  trash:'<path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/>',
+  plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
+  printer:'<path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  truck:'<path d="M14 17V6a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1"/><path d="M14 9h4l4 4v4a1 1 0 0 1-1 1h-1"/><circle cx="6.5" cy="18" r="2.2"/><circle cx="17.5" cy="18" r="2.2"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/>',
+  gauge:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M13.4 10.6 19 5"/><path d="M20.7 17a9 9 0 1 0-17.4 0"/>',
+  shield:'<path d="M12 22s8-3.5 8-10V5.5L12 2 4 5.5V12c0 6.5 8 10 8 10Z"/>',
+  database:'<ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>',
+  lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  dollar:'<path d="M12 2v20"/><path d="M17 6.5c0-1.9-2.2-3-5-3s-5 1.1-5 3c0 4.5 10 2.5 10 7 0 1.9-2.2 3-5 3s-5-1.1-5-3"/>',
+  file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/>',
+  zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7Z"/>'
+};
+function ic(n,cls){ return '<svg class="ic '+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[n]||'')+'</svg>'; }
+// injeta ícones nos elementos com data-ic
+function pintarIcones(){ document.querySelectorAll('[data-ic]').forEach(el=>{ if(el.dataset.icDone) return; el.insertAdjacentHTML('afterbegin', ic(el.dataset.ic)); el.dataset.icDone='1'; }); }
 
 // ---------- Config frota ----------
 const configPadrao = { dieselTipo:'s10', arlaPct:5,
@@ -868,11 +1111,11 @@ async function carregarCfgPlanilha(){
 async function salvarLinkPlanilha(){
   const st=document.getElementById('sheetStatus');
   const url=(document.getElementById('sheetUrl').value||'').trim();
-  if(!_nuvemAtiva){ st.textContent='⚠️ Ligue o banco compartilhado antes (selo ☁️ no topo).'; return; }
-  st.textContent='💾 Salvando link…';
+  if(!_nuvemAtiva){ st.textContent='Ligue o banco compartilhado antes (selo no topo).'; return; }
+  st.textContent='Salvando link…';
   try{ const j=await postosApi({action:'setcfg', token:tokenAuth(), sheetUrl:url});
-    st.textContent = (j&&j.ok) ? '✅ Link salvo! Agora clique em "Sincronizar agora".' : '⚠️ '+((j&&j.error)||'Erro ao salvar.');
-  }catch{ st.textContent='⚠️ Servidor indisponível.'; }
+    st.textContent = (j&&j.ok) ? 'Link salvo! Agora clique em "Sincronizar agora".' : ''+((j&&j.error)||'Erro ao salvar.');
+  }catch{ st.textContent='Servidor indisponível.'; }
 }
 // Busca o CSV de preços: 1º a planilha do Google (se configurada), 2º o arquivo publicado junto com o site
 async function lerCsvFonte(){
@@ -891,17 +1134,17 @@ async function lerCsvFonte(){
 }
 async function sincronizarPlanilha(silencioso){
   const st=document.getElementById('sheetStatus');
-  if(!_nuvemAtiva){ if(st&&!silencioso) st.textContent='⚠️ Ligue o banco compartilhado antes (selo ☁️ no topo).'; return; }
-  if(st&&!silencioso) st.textContent='🔎 Buscando a lista de preços…';
+  if(!_nuvemAtiva){ if(st&&!silencioso) st.textContent='Ligue o banco compartilhado antes (selo no topo).'; return; }
+  if(st&&!silencioso) st.textContent='Buscando a lista de preços…';
   const fonte=await lerCsvFonte();
-  if(!fonte){ if(st&&!silencioso) st.textContent='⚠️ Não encontrei nenhuma lista de preços (nem planilha do Google, nem arquivo do sistema).'; return; }
+  if(!fonte){ if(st&&!silencioso) st.textContent='Não encontrei nenhuma lista de preços (nem planilha do Google, nem arquivo do sistema).'; return; }
   const linha1=(fonte.csv.split('\n')[0]||'');
   const sep=(linha1.match(/;/g)||[]).length >= (linha1.match(/,/g)||[]).length ? ';' : ',';
   const rows=_parseCSV(fonte.csv, sep);
-  if(st&&!silencioso) st.textContent='📥 Atualizando postos ('+fonte.fonte+')…';
+  if(st&&!silencioso) st.textContent='Atualizando postos ('+fonte.fonte+')…';
   await processarLinhas(rows);
   const resumo=document.getElementById('csvStatus').innerHTML;
-  if(st) st.innerHTML = (resumo||'✅ Atualizado!') + ' <small style="color:var(--muted)">· fonte: '+fonte.fonte+'</small>';
+  if(st) st.innerHTML = (resumo||'Atualizado!') + ' <small style="color:var(--muted)">· fonte: '+fonte.fonte+'</small>';
 }
 
 async function carregarPostos(){
@@ -932,10 +1175,10 @@ async function carregarPostos(){
 async function sincronizar(){ statusNuvem('sync'); postos=[]; await carregarPostos(); }
 function statusNuvem(e,n,ts){
   const el=document.getElementById('syncStatus'); if(!el) return;
-  if(e==='nuvem'){ el.className='sync nuvem'; el.innerHTML='☁️ Banco compartilhado · '+(n!=null?n:postos.length)+' postos'; el.title='Todos veem a mesma lista. Toque para atualizar.'; }
-  else if(e==='shared'){ el.className='sync nuvem'; el.innerHTML='🌐 Lista compartilhada · '+(n||postos.length)+' postos'; }
-  else if(e==='sync'){ el.className='sync'; el.innerHTML='🔄 Atualizando…'; }
-  else { el.className='sync local'; el.innerHTML='💾 Lista local (toque para atualizar)'; }
+  if(e==='nuvem'){ el.className='sync nuvem'; el.innerHTML=ic('database','ic-sm')+' Base compartilhada · '+(n!=null?n:postos.length)+' postos'; el.title='Todos veem a mesma lista. Clique para atualizar.'; }
+  else if(e==='shared'){ el.className='sync nuvem'; el.innerHTML=ic('database','ic-sm')+' Lista compartilhada · '+(n||postos.length)+' postos'; }
+  else if(e==='sync'){ el.className='sync'; el.innerHTML=ic('refresh','ic-sm')+' Atualizando…'; }
+  else { el.className='sync local'; el.innerHTML=ic('database','ic-sm')+' Somente neste computador'; }
 }
 function fmt(v){ return (v===''||v==null||isNaN(v))?'—':'R$ '+Number(v).toFixed(3).replace('.',','); }
 // Controle de preço vencido: dtNeg no formato dd/mm/aaaa
@@ -981,7 +1224,7 @@ function postoPassaFiltro(p){
 function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota(); }
 
 // ---------- Abas ----------
-const _tituloAba={inicio:'Início',rota:'Rota',pendencias:'Pendências',postos:'Postos',gerenciadora:'Gestão'};
+const _tituloAba={inicio:'Início',rota:'Roteirização',pendencias:'Pendências',postos:'Postos',gerenciadora:'Indicadores'};
 function mostrarAba(nome){
   ['inicio','rota','pendencias','postos','gerenciadora'].forEach(n=>{
     document.getElementById('aba-'+n).style.display = n===nome?'block':'none';
@@ -1009,14 +1252,14 @@ const escuro  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/
 const relevo  = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap', maxZoom:17});
 const rodovias= L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri', maxZoom:19});
 L.control.layers({
-  '🎨 Moderno':moderno,
-  '🗺️ Ruas':ruas,
-  '🛣️ Rodovias':rodovias,
-  '🛰️ Satélite':satelite,
-  '🌍 Satélite + nomes':satNomes,
-  '🌗 Claro':claro,
-  '🌑 Escuro':escuro,
-  '⛰️ Relevo':relevo
+  'Padrão':moderno,
+  'Ruas':ruas,
+  'Rodovias':rodovias,
+  'Satélite':satelite,
+  'Satélite + nomes':satNomes,
+  'Claro':claro,
+  'Escuro':escuro,
+  'Relevo':relevo
 }, null, {position:'topright', collapsed:true}).addTo(mapa);
 setTimeout(()=>mapa.invalidateSize(), 200);
 
@@ -1036,17 +1279,17 @@ function renderMarcadores(){
     const venc=precoVencido(p), opp=ehOportunidade(p);
     const _st=statusPreco(p);
     const _cls=_st==='vencido'?'vencido':_st==='quase'?'quase':_st==='sem'?'cinza':'';
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'⛽')}).addTo(mapa);
-    const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>🗺️ Abrir no Google Maps</b></a>`;
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'')}).addTo(mapa);
+    const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>Abrir no Google Maps</b></a>`;
     m.bindPopup(motorista
       ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br>${gmaps}`
-      : `<b>${opp?'⭐ ':''}${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>✅ '+p.hom+'</small>':''}${p.dtNeg?'<br><small>📅 preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">⚠️ VENCIDO</b>':'')+'</small>':''}${opp?'<br><small style="color:#0f9d58"><b>⭐ Melhor oportunidade (abaixo da média do estado)</b></small>':''}<br><br>
+      : `<b>${opp?'':''}${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>'+p.hom+'</small>':''}${p.dtNeg?'<br><small>preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">VENCIDO</b>':'')+'</small>':''}${opp?'<br><small style="color:#0f9d58"><b>Melhor oportunidade (abaixo da média do estado)</b></small>':''}<br><br>
       S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br>
-      ${(p.hist&&p.hist.length)?'<br><small><b>📈 Histórico S10:</b></small><br>'+p.hist.map((h,i)=>{const pv=i>0?p.hist[i-1].s10:null;const ar=(pv!=null&&h.s10!=null)?(h.s10>pv?' <span style=\"color:#e5484d\">🔺</span>':(h.s10<pv?' <span style=\"color:#12a150\">🔻</span>':'')):'';return '<small>'+(h.d||'—')+': '+fmt(h.s10)+ar+'</small>';}).join('<br>'):''}<br><br>
+      ${(p.hist&&p.hist.length)?'<br><small><b>Histórico S10:</b></small><br>'+p.hist.map((h,i)=>{const pv=i>0?p.hist[i-1].s10:null;const ar=(pv!=null&&h.s10!=null)?(h.s10>pv?' <span style=\"color:#b91c1c\">▲</span>':(h.s10<pv?' <span style=\"color:#047857\">▼</span>':'')):'';return '<small>'+(h.d||'—')+': '+fmt(h.s10)+ar+'</small>';}).join('<br>'):''}<br><br>
       ${gmaps}<br><br>
-      <a href="#" style="color:#0f9d58;font-weight:700" onclick="confirmarPreco('${p.id}');return false">✅ Preço OK (renovar data)</a><br><br>
-      <a href="#" onclick="editarPosto('${p.id}');return false">✏️ Editar</a> &nbsp;
-      <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">🗑️ Excluir</a>`);
+      <a href="#" style="color:#0f9d58;font-weight:700" onclick="confirmarPreco('${p.id}');return false">Preço OK (renovar data)</a><br><br>
+      <a href="#" onclick="editarPosto('${p.id}');return false">Editar</a> &nbsp;
+      <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">Excluir</a>`);
     marcadores[p.id]=m;
   });
   atualizarLista();
@@ -1067,19 +1310,19 @@ function atualizarLista(){
   el.innerHTML = lista.length ? lista.map(p=>`
     <div class="item">
       <div class="info" onclick="irPara('${p.id}')">
-        <div class="nm">${ehOportunidade(p)?'⭐ ':''}${p.nome}</div>
-        <div class="sub">${p.ref||''}${p.lat==null?' · ⚠️ sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">⚠️ preço vencido</b>':''}${p.hom?' · ✅ '+p.hom:''} · S10 ${fmt(p.s10)}</div>
+        <div class="nm">${ehOportunidade(p)?'':''}${p.nome}</div>
+        <div class="sub">${p.ref||''}${p.lat==null?' · sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">preço vencido</b>':''}${p.hom?' · '+p.hom:''} · S10 ${fmt(p.s10)}</div>
       </div>
       <div class="acoes">
-        <button class="ac ok" onclick="confirmarPreco('${p.id}')" title="Marcar preço como OK (renova a data)">✅</button>
-        <button class="ac ed" onclick="editarPosto('${p.id}')" title="Editar">✏️</button>
-        <button class="ac del" onclick="excluirPosto('${p.id}')" title="Excluir">🗑️</button>
+        <button class="ac ok" onclick="confirmarPreco('${p.id}')" title="Marcar preço como OK (renova a data)">${ic('check','ic-sm')}</button>
+        <button class="ac ed" onclick="editarPosto('${p.id}')" title="Editar">${ic('edit','ic-sm')}</button>
+        <button class="ac del" onclick="excluirPosto('${p.id}')" title="Excluir">${ic('trash','ic-sm')}</button>
       </div>
     </div>`).join('')
     : (postos.length? '<div class="vazio">Nenhum posto encontrado com esses filtros.</div>' : '<div class="vazio">Nenhum posto cadastrado ainda.</div>');
   const nv=postos.filter(precoVencido).length;
   const av=document.getElementById('avisoVencidos');
-  if(av){ if(nv){ av.style.display='block'; av.innerHTML=`⚠️ <b>${nv}</b> posto(s) com <b>preço vencido</b> (mais de 30 dias sem atualizar) — aparecem com <b style="color:#e5484d">pino vermelho</b> no mapa.`; } else av.style.display='none'; }
+  if(av){ if(nv){ av.style.display='block'; av.innerHTML=`<b>${nv}</b> posto(s) com <b>preço vencido</b> (mais de 30 dias sem atualizar) — aparecem com <b style="color:#e5484d">pino vermelho</b> no mapa.`; } else av.style.display='none'; }
   renderResumo();
   renderSemLocal();
   popularPostosSelect();
@@ -1095,9 +1338,9 @@ function renderSemLocal(){
   el.innerHTML = semLoc.length ? semLoc.map(p=>`
     <div class="item">
       <div class="info" onclick="editarPosto('${p.id}')"><div class="nm">${p.nome}</div><div class="sub">${p.ref||''} · toque para localizar no mapa</div></div>
-      <div class="acoes"><button class="ac ed" onclick="editarPosto('${p.id}')" title="Localizar">📍</button></div>
+      <div class="acoes"><button class="ac ed" onclick="editarPosto('${p.id}')" title="Localizar">${ic('pin','ic-sm')}</button></div>
     </div>`).join('')
-    : '<div class="vazio" style="padding:14px">✅ Todos os postos estão localizados no mapa.</div>';
+    : '<div class="vazio" style="padding:14px">Todos os postos estão localizados no mapa.</div>';
 }
 function renderResumo(){
   const el=document.getElementById('resumoGeral'); if(!el) return;
@@ -1111,7 +1354,7 @@ function renderResumo(){
   ufMedias={}; ufs.forEach(u=>ufMedias[u.uf]=u.m);
   const selUF=document.getElementById('filtroUF');
   if(selUF){ const at=selUF.value; const todas=[...new Set(postos.filter(p=>getUF(p)).map(getUF))].sort();
-    selUF.innerHTML='<option value="">🌎 Todos os estados</option>'+todas.map(u=>`<option value="${u}">${u}</option>`).join(''); selUF.value=at; }
+    selUF.innerHTML='<option value="">Todos os estados</option>'+todas.map(u=>`<option value="${u}">${u}</option>`).join(''); selUF.value=at; }
   el.innerHTML=`<div class="resumo-nums">
       <div class="rn"><div class="v">${total}</div><div class="l">postos</div></div>
       <div class="rn"><div class="v" style="color:#e5484d">${venc}</div><div class="l">vencidos</div></div>
@@ -1120,7 +1363,7 @@ function renderResumo(){
     ${ufs.length?`<div style="font-size:11px;color:var(--muted);margin-top:10px">Média S10 por estado (mais barato → mais caro):</div>
     <div class="uf-list">${ufs.map(u=>`<span class="uf-chip">${u.uf}: <b>R$ ${u.m.toFixed(2).replace('.',',')}</b> <small>(${u.n})</small></span>`).join('')}</div>`:''}`;
 }
-function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em ✏️ para editar e marcar no mapa.'); return; } mostrarAba('rota'); mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
+function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em para editar e marcar no mapa.'); return; } mostrarAba('rota'); mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
 
 // ==================== TELA INICIAL ====================
 function renderInicio(){
@@ -1132,12 +1375,12 @@ function renderInicio(){
   const media=s10s.length? s10s.reduce((a,b)=>a+b,0)/s10s.length : null;
   const k=document.getElementById('homeKpis');
   if(k) k.innerHTML=`
-    <div class="home-kpi"><div class="ic">⛽</div><div class="v">${total}</div><div class="l">postos ativos</div></div>
-    <div class="home-kpi"><div class="ic">💰</div><div class="v">${media!=null?'R$ '+media.toFixed(2).replace('.',','):'—'}</div><div class="l">média S10</div></div>
-    <div class="home-kpi"><div class="ic">🔴</div><div class="v" style="color:#e5484d">${venc}</div><div class="l">preços vencidos</div></div>
-    <div class="home-kpi"><div class="ic">🟡</div><div class="v" style="color:#a86800">${quase}</div><div class="l">quase vencendo</div></div>`;
+    <div class="home-kpi">${ic('fuel')}<div class="v">${total}</div><div class="l">postos ativos</div></div>
+    <div class="home-kpi">${ic('dollar')}<div class="v">${media!=null?'R$ '+media.toFixed(2).replace('.',','):'—'}</div><div class="l">média S10</div></div>
+    <div class="home-kpi">${ic('alert')}<div class="v" style="color:var(--dang)">${venc}</div><div class="l">preços vencidos</div></div>
+    <div class="home-kpi">${ic('calendar')}<div class="v" style="color:var(--warn)">${quase}</div><div class="l">quase vencendo</div></div>`;
   const pn=document.getElementById('homePendN');
-  if(pn){ const n=venc+quase; pn.textContent = n? (n+' preço(s) a atualizar') : 'Tudo em dia ✅'; }
+  if(pn){ const n=venc+quase; pn.textContent = n? (n+' preço(s) a atualizar') : 'Tudo em dia'; }
 }
 
 // ==================== PAINEL GERENCIAL (GRÁFICOS) ====================
@@ -1206,7 +1449,7 @@ function renderGestao(){
      <div class="rn"><div class="v">${media!=null?'R$ '+media.toFixed(2).replace('.',','):'—'}</div><div class="l">média S10</div></div>
      <div class="rn"><div class="v" style="color:#e5484d">${total?Math.round(st.vencido/total*100):0}%</div><div class="l">vencidos</div></div>
    </div>
-   <div class="graf-card"><div class="graf-t">🎯 Status dos preços</div>
+   <div class="graf-card"><div class="graf-t">Status dos preços</div>
      <div style="display:flex;align-items:center;gap:16px">
        ${svgDonut([{label:'OK',valor:st.ok,cor:'#2a7de1'},{label:'Quase',valor:st.quase,cor:'#f59e0b'},{label:'Vencido',valor:st.vencido,cor:'#ef4444'},{label:'Sem',valor:st.sem,cor:'#94a3b8'}])}
        <div class="graf-leg" style="flex:1">
@@ -1216,9 +1459,9 @@ function renderGestao(){
          <div><i style="background:#94a3b8"></i> Sem preço <b>${st.sem}</b></div>
        </div>
      </div></div>
-   <div class="graf-card"><div class="graf-t">📍 Postos por estado <span style="color:var(--muted);font-weight:600">(top 8)</span></div>${svgBars(ufsN,'#2a7de1')}</div>
-   <div class="graf-card"><div class="graf-t">💰 Média do S10 por estado <span style="color:var(--muted);font-weight:600">(mais barato → mais caro)</span></div>${svgBars(ufsMedia,'#10b981')}</div>
-   <div class="graf-card"><div class="graf-t">📈 Evolução da média do S10 <span style="color:var(--muted);font-weight:600">(R$)</span></div>${svgLine(meses)}</div>
+   <div class="graf-card"><div class="graf-t">Postos por estado <span style="color:var(--muted-2);font-weight:600;text-transform:none;letter-spacing:0">· top 8</span></div>${svgBars(ufsN,'#1d4ed8')}</div>
+   <div class="graf-card"><div class="graf-t">Média do S10 por estado <span style="color:var(--muted-2);font-weight:600;text-transform:none;letter-spacing:0">· do menor ao maior</span></div>${svgBars(ufsMedia,'#047857')}</div>
+   <div class="graf-card"><div class="graf-t">Evolução da média do S10 <span style="color:var(--muted-2);font-weight:600;text-transform:none;letter-spacing:0">· R$</span></div>${svgLine(meses)}</div>
   `;
 }
 
@@ -1239,7 +1482,7 @@ function renderPendencias(){
     <div class="ph ok"><div class="n">${sem}</div><div class="t">Sem preço</div></div>`;
   const selUF=document.getElementById('pendUF');
   if(selUF){ const at=selUF.value; const ufs=[...new Set(postos.filter(p=>getUF(p)).map(getUF))].sort();
-    selUF.innerHTML='<option value="">🌎 Todos os estados</option>'+ufs.map(u=>`<option value="${u}">${u}</option>`).join(''); selUF.value=at; }
+    selUF.innerHTML='<option value="">Todos os estados</option>'+ufs.map(u=>`<option value="${u}">${u}</option>`).join(''); selUF.value=at; }
   const tipo=(document.getElementById('pendFiltro')||{}).value||'todos';
   const uf=selUF?selUF.value:'';
   let lista=postos.filter(p=>{
@@ -1249,23 +1492,23 @@ function renderPendencias(){
   });
   lista.sort((a,b)=>{ const da=diasDesde(a.dtNeg), db=diasDesde(b.dtNeg); return (db==null?99999:db)-(da==null?99999:da); });
   const el=document.getElementById('listaPend');
-  if(!lista.length){ el.innerHTML='<div class="vazio">✅ Nada por aqui — tudo em dia neste filtro!</div>'; return; }
+  if(!lista.length){ el.innerHTML='<div class="vazio">Nada por aqui — tudo em dia neste filtro.</div>'; return; }
   el.innerHTML=lista.map(p=>{
     const st=statusPreco(p), dias=diasDesde(p.dtNeg);
     let selo, cls='';
-    if(st==='vencido') selo=`<span class="pc-dias" style="color:#c0362c">🔴 há ${dias} dias</span>`;
-    else if(st==='quase'){ cls='quase'; selo=`<span class="pc-dias" style="color:#a86800">🟡 vence em ${Math.max(0,30-dias)} dia(s)</span>`; }
-    else { cls='quase'; selo=`<span class="pc-dias" style="color:#64748b">⚪ sem preço</span>`; }
+    if(st==='vencido') selo=`<span class="pc-dias" style="color:var(--dang)">Vencido há ${dias} dias</span>`;
+    else if(st==='quase'){ cls='quase'; selo=`<span class="pc-dias" style="color:var(--warn)">Vence em ${Math.max(0,30-dias)} dia(s)</span>`; }
+    else { cls='quase'; selo=`<span class="pc-dias" style="color:var(--muted)">Sem preço</span>`; }
     return `<div class="pend-card ${cls}">
       <div class="pc-top">
         <div><div class="pc-nome" onclick="irPara('${p.id}')">${p.nome}</div>
-          <div class="pc-sub">${p.ref||'—'}${p.dtNeg?' · 📅 '+p.dtNeg:''} · S10 ${fmt(p.s10)}</div></div>
+          <div class="pc-sub">${p.ref||'—'}${p.dtNeg?' · '+p.dtNeg:''} · S10 ${fmt(p.s10)}</div></div>
         ${selo}
       </div>
       <div class="pc-acoes">
-        <button class="btn-ok" onclick="confirmarPreco('${p.id}')" title="O valor não mudou — só renova a data">✅ Preço OK</button>
-        <button class="btn-sec" onclick="editarPosto('${p.id}')">✏️ Atualizar valor</button>
-        <button class="btn-sec" style="flex:0 0 auto" onclick="irPara('${p.id}')" title="Ver no mapa">📍</button>
+        <button class="btn-ok" onclick="confirmarPreco('${p.id}')" title="O valor não mudou — apenas renova a data">${ic('check','ic-sm')}Preço OK</button>
+        <button class="btn-sec" onclick="editarPosto('${p.id}')">${ic('edit','ic-sm')}Atualizar</button>
+        <button class="btn-sec" style="flex:0 0 auto" onclick="irPara('${p.id}')" title="Ver no mapa">${ic('pin','ic-sm')}</button>
       </div>
     </div>`;
   }).join('');
@@ -1296,8 +1539,8 @@ function renderAutonomia(){
   let alerta='';
   if(maiorGap){
     alerta = excede
-      ? `<div class="aut-alert ruim">⚠️ Há um trecho de <b>${maiorGap.toFixed(0)} km</b> entre postos — <b>maior que sua autonomia</b>. Marquei onde abastecer; leve reserva.</div>`
-      : `<div class="aut-alert bom">✅ Todos os trechos entre postos cabem no tanque. Sem risco de ficar sem diesel.</div>`;
+      ? `<div class="aut-alert ruim">Há um trecho de <b>${maiorGap.toFixed(0)} km</b> entre postos — <b>maior que sua autonomia</b>. Marquei onde abastecer; leve reserva.</div>`
+      : `<div class="aut-alert bom">Todos os trechos entre postos cabem no tanque. Sem risco de ficar sem diesel.</div>`;
   }
   out.innerHTML=`<div class="aut-out">
     <div class="big">${a.toFixed(0)} <small>km por tanque</small></div>
@@ -1341,10 +1584,10 @@ mapa.on('click', e=>{
 function definirLocal(lat,lng){
   coordNovoPosto={lat,lng};
   if(previewMarker) mapa.removeLayer(previewMarker);
-  previewMarker=L.marker([lat,lng],{icon:pinIcon('preview','⛽')}).addTo(mapa);
+  previewMarker=L.marker([lat,lng],{icon:pinIcon('preview','')}).addTo(mapa);
   mapa.setView([lat,lng], Math.max(mapa.getZoom(),13));
   const b=document.getElementById('badgeLoc');
-  b.className='badge-loc ok'; b.innerHTML=`✅ Local definido: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  b.className='badge-loc ok'; b.innerHTML=`Local definido: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
 }
 function limparPreview(){ if(previewMarker){ mapa.removeLayer(previewMarker); previewMarker=null; } }
 
@@ -1352,8 +1595,8 @@ function limparFormPosto(){
   editandoId=null; coordNovoPosto=null; limparPreview();
   pCnpj.value=''; pNome.value=''; pRef.value=''; pGr.value=''; pS10.value=''; pS500.value=''; pArla.value='';
   cnpjStatus.textContent='';
-  const b=document.getElementById('badgeLoc'); b.className='badge-loc'; b.innerHTML='📍 Nenhum local definido — busque o CNPJ ou marque no mapa';
-  document.getElementById('tituloForm').textContent='➕ Cadastrar posto';
+  const b=document.getElementById('badgeLoc'); b.className='badge-loc'; b.innerHTML='Nenhum local definido — busque o CNPJ ou marque no mapa';
+  document.getElementById('tituloForm').innerHTML=ic('plus')+'Cadastrar posto';
 }
 function salvarPosto(){
   if(!pNome.value.trim()){ alert('Dê um nome ao posto.'); return; }
@@ -1366,7 +1609,7 @@ function salvarPosto(){
   else { dados.id='p'+Date.now(); postos.push(dados); obj=dados; }
   salvar(); nuvemUpsert(obj); renderMarcadores(); limparFormPosto();
   if(rotaCoords) listarPostosNaRota();
-  alert('Posto salvo! ✅' + (_nuvemAtiva?' Todos da equipe já veem.':''));
+  alert('Posto salvo.' + (_nuvemAtiva?' Toda a equipe já vê a alteração.':''));
 }
 function editarPosto(id){
   const p=postos.find(x=>x.id===id); if(!p) return;
@@ -1374,12 +1617,12 @@ function editarPosto(id){
   editandoId=id; pNome.value=p.nome; pRef.value=p.ref||''; pGr.value=p.gr||'';
   pS10.value=p.s10??''; pS500.value=p.s500??''; pArla.value=p.arla??''; pCnpj.value=p.cnpj||''; cnpjStatus.textContent='';
   definirLocal(p.lat,p.lng);
-  document.getElementById('tituloForm').textContent='✏️ Editar posto';
+  document.getElementById('tituloForm').innerHTML=ic('edit')+'Editar posto';
   document.querySelector('.conteudo').scrollTop=0;
 }
 function limparTodos(){
   if(!postos.length){ alert('Não há postos para excluir.'); return; }
-  if(_nuvemAtiva && !authAdmin){ alert('🔒 Apenas um administrador pode apagar a lista compartilhada.'); return; }
+  if(_nuvemAtiva && !authAdmin){ alert('Apenas um administrador pode apagar a lista compartilhada.'); return; }
   const aviso = _nuvemAtiva
     ? 'Excluir TODOS os '+postos.length+' postos do BANCO COMPARTILHADO? Isso apaga para TODA a equipe e não dá pra desfazer.'
     : 'Excluir TODOS os '+postos.length+' postos?';
@@ -1398,18 +1641,18 @@ function excluirPosto(id){
 // ---------- Busca por CNPJ (BrasilAPI) ----------
 async function buscarCnpj(){
   const raw=(pCnpj.value||'').replace(/\D/g,'');
-  if(raw.length!==14){ cnpjStatus.textContent='⚠️ Digite os 14 números do CNPJ.'; return; }
+  if(raw.length!==14){ cnpjStatus.textContent='Digite os 14 números do CNPJ.'; return; }
   cnpjStatus.textContent='⏳ Buscando dados do CNPJ...';
   let d;
   try{ const r=await fetch('https://brasilapi.com.br/api/cnpj/v1/'+raw); if(!r.ok) throw 0; d=await r.json(); }
-  catch{ cnpjStatus.textContent='❌ Não encontrei esse CNPJ. Preencha manualmente.'; return; }
+  catch{ cnpjStatus.textContent='Não encontrei esse CNPJ. Preencha manualmente.'; return; }
   pNome.value = d.nome_fantasia || d.razao_social || pNome.value;
   pRef.value  = [d.municipio, d.uf].filter(Boolean).join(' - ') || pRef.value;
   const endereco=[d.logradouro, d.numero, d.bairro, d.municipio, d.uf, d.cep].filter(Boolean).join(', ');
-  cnpjStatus.textContent='✅ '+(d.razao_social||'Empresa encontrada')+'. Localizando no mapa...';
+  cnpjStatus.textContent=''+(d.razao_social||'Empresa encontrada')+'. Localizando no mapa...';
   const g = await geocode(endereco) || await geocode([d.municipio,d.uf].filter(Boolean).join(' '));
-  if(g){ definirLocal(g.lat,g.lng); cnpjStatus.textContent='✅ '+(d.razao_social||'Encontrado')+' — pino no mapa. Ajuste se precisar.'; }
-  else cnpjStatus.textContent='✅ Dados preenchidos, mas não localizei no mapa. Clique em "Marcar no mapa".';
+  if(g){ definirLocal(g.lat,g.lng); cnpjStatus.textContent=''+(d.razao_social||'Encontrado')+' — pino no mapa. Ajuste se precisar.'; }
+  else cnpjStatus.textContent='Dados preenchidos, mas não localizei no mapa. Clique em "Marcar no mapa".';
 }
 
 // ---------- Busca de endereço (Nominatim) ----------
@@ -1458,12 +1701,12 @@ function _coord(s){
 async function importarCSV(ev){
   const f=ev.target.files[0]; if(!f) return;
   const nome=(f.name||'').toLowerCase();
-  csvStatus.textContent='📖 Lendo arquivo…';
+  csvStatus.textContent='Lendo arquivo…';
   try{
     const buf=await f.arrayBuffer();
     let rows;
     if(nome.endsWith('.xlsx')||nome.endsWith('.xls')){
-      if(typeof XLSX==='undefined'){ csvStatus.textContent='❌ Leitor de Excel não carregou (precisa de internet). Tente de novo.'; ev.target.value=''; return; }
+      if(typeof XLSX==='undefined'){ csvStatus.textContent='Leitor de Excel não carregou (precisa de internet). Tente de novo.'; ev.target.value=''; return; }
       const wb=XLSX.read(buf,{type:'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
@@ -1475,12 +1718,12 @@ async function importarCSV(ev){
       rows=_parseCSV(txt, sep);
     }
     await processarLinhas(rows);
-  }catch(err){ csvStatus.textContent='❌ Erro ao ler o arquivo. Verifique o formato.'; }
+  }catch(err){ csvStatus.textContent='Erro ao ler o arquivo. Verifique o formato.'; }
   ev.target.value='';
 }
 
 async function processarLinhas(rows){
-  if(!rows || rows.length<2){ csvStatus.textContent='❌ Arquivo vazio ou sem dados.'; return; }
+  if(!rows || rows.length<2){ csvStatus.textContent='Arquivo vazio ou sem dados.'; return; }
   // encontra a linha de cabeçalho (pode não ser a primeira)
   let hr=0;
   for(let i=0;i<Math.min(rows.length,20);i++){ const l=(rows[i]||[]).map(_norm); if(l.some(h=>h.includes('posto')||h.includes('nome fantasia'))){ hr=i; break; } }
@@ -1494,7 +1737,7 @@ async function processarLinhas(rows){
     s10:head.findIndex(h=>h.includes('s10')||h.includes('s-10')||h.includes('s 10')),
     s500:head.findIndex(h=>h.includes('500')), arla:col('arla'),
     dt:col('dt neg','data neg','data'), hom:col('hom'), obs:col('observ'), contato:col('contato') };
-  if(ci.nome<0){ csvStatus.textContent='❌ Não achei a coluna do nome do posto.'; return; }
+  if(ci.nome<0){ csvStatus.textContent='Não achei a coluna do nome do posto.'; return; }
 
   const chave=p=>{ const c=(p.cnpj||'').replace(/\D/g,''); return c.length>=11?'c'+c:'n'+_norm(p.nome)+'|'+_norm(p.ref); };
   const idx={}; postos.forEach(p=>idx[chave(p)]=p);
@@ -1528,13 +1771,13 @@ async function processarLinhas(rows){
   }
   salvar(); renderMarcadores();
   for(let i=0;i<geocodar.length;i++){
-    csvStatus.textContent=`🔎 Localizando ${i+1}/${geocodar.length} postos sem coordenada…`;
+    csvStatus.textContent=`Localizando ${i+1}/${geocodar.length} postos sem coordenada…`;
     const g=await _geoThrottle(geocodar[i].q);
     if(g){ geocodar[i].p.lat=g.lat; geocodar[i].p.lng=g.lng; } else semLoc++;
   }
   salvar(); renderMarcadores();
-  if(_nuvemAtiva){ csvStatus.textContent='☁️ Salvando no banco compartilhado…'; await nuvemSalvarTudo(); }
-  csvStatus.innerHTML=`✅ Importados <b>${add}</b> e atualizados <b>${upd}</b> posto(s).${semLoc?' ⚠️ '+semLoc+' sem localização.':''}${_nuvemAtiva?' <b>Toda a equipe já vê.</b>':''}`;
+  if(_nuvemAtiva){ csvStatus.textContent='Salvando no banco compartilhado…'; await nuvemSalvarTudo(); }
+  csvStatus.innerHTML=`Importados <b>${add}</b> e atualizados <b>${upd}</b> posto(s).${semLoc?' '+semLoc+' sem localização.':''}${_nuvemAtiva?' <b>Toda a equipe já vê.</b>':''}`;
 }
 
 // ---------- Paradas ----------
@@ -1580,7 +1823,7 @@ async function desenharRota(coordsReq){
   rotaCoords=coords; rota_km=rota.distance/1000; rota_horas=rota.duration/3600;
   coordsReq.forEach((c,i)=>{ let cls='parada',emoji=String(i); if(i===0){cls='origem';emoji='A';} else if(i===coordsReq.length-1){cls='destino';emoji='B';} marcadoresRota.push(L.marker([c.lat,c.lng],{icon:pinIcon(cls,emoji)}).addTo(mapa)); });
   mapa.fitBounds(linhaRota.getBounds(),{padding:[50,50]});
-  infoRota.innerHTML=`🛣️ <b>${rota_km.toFixed(0)} km</b>`;
+  infoRota.innerHTML=`<b>${rota_km.toFixed(0)} km</b>`;
   listarPostosNaRota();
   renderMarcadores();
   return true;
@@ -1590,14 +1833,14 @@ async function desenharRota(coordsReq){
 async function importarRota(){
   const txt=impText.value.trim();
   if(!txt){ impStatus.textContent='Cole o link ou as cidades.'; return; }
-  impStatus.textContent='🔎 Analisando…';
+  impStatus.textContent='Analisando…';
   let pontos=[], titulo='';
   try{
     if(/google\.[^/]*\/maps\/dir\//i.test(txt)){
       pontos = await coordsDeMapsUrl(txt);
     } else if(/noxgr\.srv\.br/i.test(txt)){
       const link=(txt.match(/https?:\/\/\S+/)||[])[0];
-      impStatus.textContent='🔎 Lendo a rota da NOX…';
+      impStatus.textContent='Lendo a rota da NOX…';
       const r=await fetch('/nox?u='+encodeURIComponent(link));
       if(!r.ok) throw new Error('func');
       const j=await r.json();
@@ -1607,22 +1850,22 @@ async function importarRota(){
       pontos=[...txt.matchAll(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/g)].map(m=>({lat:+m[1],lng:+m[2]}));
     } else {
       const linhas=txt.split(/[\n;]+/).map(s=>s.trim()).filter(Boolean);
-      impStatus.textContent=`🔎 Localizando ${linhas.length} cidade(s)…`;
+      impStatus.textContent=`Localizando ${linhas.length} cidade(s)…`;
       for(const l of linhas){ const g=await geocode(l); if(g) pontos.push(g); }
     }
   }catch(err){
     if(err.message==='func'||err.message==='parse')
-      impStatus.innerHTML='⚠️ Não consegui ler o link da NOX automaticamente (a função <code>/nox</code> pode não estar publicada). Abra o link, copie o endereço do Google Maps do QR/botão e cole aqui.';
-    else impStatus.textContent='❌ Não entendi o conteúdo colado.';
+      impStatus.innerHTML='Não consegui ler o link da NOX automaticamente (a função <code>/nox</code> pode não estar publicada). Abra o link, copie o endereço do Google Maps do QR/botão e cole aqui.';
+    else impStatus.textContent='Não entendi o conteúdo colado.';
     return;
   }
-  if(pontos.length<2){ impStatus.textContent='❌ Preciso de pelo menos 2 pontos (origem e destino).'; return; }
+  if(pontos.length<2){ impStatus.textContent='Preciso de pelo menos 2 pontos (origem e destino).'; return; }
   rotaTitulo = titulo || 'Rota importada da gerenciadora';
   paradas=[]; document.getElementById('paradas').innerHTML='';
-  impStatus.textContent='✅ Rota importada! Traçando…';
+  impStatus.textContent='Rota importada! Traçando…';
   const ok=await desenharRota(pontos);
-  if(ok){ impStatus.innerHTML='✅ Pronto! Veja o trajeto e os postos na aba <b>🧭 Rota</b>.'; mostrarAba('rota'); }
-  else impStatus.textContent='❌ Importei os pontos, mas não consegui traçar a rota.';
+  if(ok){ impStatus.innerHTML='Pronto! Veja o trajeto e os postos na aba <b>Rota</b>.'; mostrarAba('rota'); }
+  else impStatus.textContent='Importei os pontos, mas não consegui traçar a rota.';
 }
 async function coordsDeMapsUrl(txt){
   const dir=txt.match(/maps\/dir\/([^\s"'<>]+)/i);
@@ -1660,12 +1903,12 @@ function listarPostosNaRota(){
   const raio=parseFloat(document.getElementById('raio').value);
   const dkey=config.dieselTipo, dnome=dkey==='s10'?'S10':'S500';
   secaoResultado.style.display='block';
-  const tit=document.getElementById('tituloResultado'); if(tit) tit.textContent='💰 Postos no caminho';
+  const tit=document.getElementById('tituloResultado'); if(tit) tit.innerHTML=ic('fuel')+'Postos no caminho';
   const el=document.getElementById('resultado');
   let lista=postos.filter(p=>p.lat!=null&&p.lng!=null).map(p=>({...p, dist:distToRota(p,rotaCoords)})).filter(p=>p.dist<=raio);
   const fAtivo=(document.getElementById('fHom')&&document.getElementById('fHom').checked)||(document.getElementById('fValido')&&document.getElementById('fValido').checked);
   lista=lista.filter(postoPassaFiltro);
-  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto ${fAtivo?'(com os filtros ativos) ':''}dentro de ${raio} km da rota.<br>Ajuste o raio (⚙️) ou os filtros.</div>`; return; }
+  if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto ${fAtivo?'(com os filtros ativos) ':''}dentro de ${raio} km da rota.<br>Ajuste o raio nas configurações ou os filtros.</div>`; return; }
   // ordena pelo preço do diesel escolhido (mais barato primeiro; sem preço vai pro fim)
   lista.sort((a,b)=>{ const va=a[dkey], vb=b[dkey]; if(va==null&&vb==null) return a.dist-b.dist; if(va==null) return 1; if(vb==null) return -1; return va-vb; });
 
@@ -1685,28 +1928,28 @@ function listarPostosNaRota(){
   const motorista=document.body.classList.contains('motorista');
   const precosRota=lista.filter(p=>p[dkey]!=null).map(p=>p[dkey]);
   const mediaRota=precosRota.length? precosRota.reduce((a,b)=>a+b,0)/precosRota.length : null;
-  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b> · ${lista.length} posto(s)${(!motorista && mediaRota!=null)?`<br>📊 Média ${dnome} na rota: <b>R$ ${mediaRota.toFixed(2).replace('.',',')}</b>`:''}</div>`;
+  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b> · ${lista.length} posto(s)${(!motorista && mediaRota!=null)?`<br>Média ${dnome} na rota: <b>R$ ${mediaRota.toFixed(2).replace('.',',')}</b>`:''}</div>`;
   printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, dnome, lista, motorista };
 
   if(!motorista) postosSelecionados = new Set(lista.map(p=>p.id));
   const btnAcoes=`
-    <button class="btn-primario" style="width:100%;margin-bottom:8px" onclick="abrirRotaGoogle()">🗺️ Abrir rota no Google Maps</button>
+    <button class="btn-primario" style="width:100%;margin-bottom:8px" onclick="abrirRotaGoogle()">Abrir rota no Google Maps</button>
     <div class="btn-linha acoes-rota" style="margin-top:0;margin-bottom:11px">
-      <button class="btn-sec" onclick="imprimirRota()">🖨️ Imprimir</button>
-      <button class="btn-sec" onclick="gerarLinkMotorista()">🔗 Link p/ motorista</button></div>`;
-  const selCtrl = motorista?'':`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">☑️ Marque os postos que vão no <b>link do motorista</b> · <a onclick="marcarTodosPostos(true)" style="color:var(--brand-700);cursor:pointer;font-weight:600">todos</a> · <a onclick="marcarTodosPostos(false)" style="color:var(--brand-700);cursor:pointer;font-weight:600">nenhum</a></div>`;
+      <button class="btn-sec" onclick="imprimirRota()">Imprimir</button>
+      <button class="btn-sec" onclick="gerarLinkMotorista()">Link p/ motorista</button></div>`;
+  const selCtrl = motorista?'':`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Marque os postos que vão no <b>link do motorista</b> · <a onclick="marcarTodosPostos(true)" style="color:var(--brand-700);cursor:pointer;font-weight:600">todos</a> · <a onclick="marcarTodosPostos(false)" style="color:var(--brand-700);cursor:pointer;font-weight:600">nenhum</a></div>`;
   el.innerHTML = btnAcoes + resumo + selCtrl + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
     const chk = motorista?'':`<input type="checkbox" class="sel-posto" data-id="${p.id}" ${postosSelecionados.has(p.id)?'checked':''} onchange="togglePosto('${p.id}',this.checked)" title="Incluir no link do motorista" style="width:20px;height:20px;flex:0 0 auto;cursor:pointer">`;
     const gapTxt = p._gap!=null
       ? (p._abastecer
-          ? '🔴 Próximo posto a <b>'+p._gap.toFixed(0)+' km</b> — além da autonomia!'
-          : (p._gap>300?'🔴 ':'⛽ ')+'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b>'+(p._gap>300?' — trecho longo!':''))
-      : '🏁 Último posto da rota';
+          ? 'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b> — além da autonomia!'
+          : (p._gap>300?'':'')+'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b>'+(p._gap>300?' — trecho longo!':''))
+      : 'Último posto da rota';
     return `<div class="posto-card${(!motorista&&p._abastecer)?' abastecer':''}">
-      ${(!motorista&&p._abastecer)?'<span class="tag-abastecer">⛽ ABASTECER AQUI</span>':''}
-      <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&ehOportunidade(p))?'⭐ ':''}${p.nome}</span>${chk}</div>
-      <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?'✅ '+p.hom+' · ':''}${(!motorista&&p.dtNeg)?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
+      ${(!motorista&&p._abastecer)?'<span class="tag-abastecer">ABASTECER AQUI</span>':''}
+      <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&ehOportunidade(p))?'':''}${p.nome}</span>${chk}</div>
+      <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?''+p.hom+' · ':''}${(!motorista&&p.dtNeg)?''+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}
       ${motorista?'':`<div class="gap-info${p._abastecer?' perigo':''}">${gapTxt}</div>`}</div>`;
   }).join('');
@@ -1718,7 +1961,7 @@ async function verPostosPerto(){
   const cidade=(document.getElementById('inpCidade').value||'').trim();
   const info=document.getElementById('infoPerto');
   if(!cidade){ info.textContent='Digite uma cidade.'; return; }
-  info.textContent='🔎 Buscando cidade…';
+  info.textContent='Buscando cidade…';
   const g=await geocode(cidade);
   if(!g){ info.textContent='Cidade não encontrada. Tente cidade + estado.'; return; }
   if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
@@ -1731,18 +1974,18 @@ function limparPerto(){ pontoCentro=null; document.getElementById('inpCidade').v
 function listarPostosPerto(cidade){
   const dkey=config.dieselTipo;
   const el=document.getElementById('resultado'); secaoResultado.style.display='block';
-  const tit=document.getElementById('tituloResultado'); if(tit) tit.textContent='📍 Postos perto';
+  const tit=document.getElementById('tituloResultado'); if(tit) tit.innerHTML=ic('pin')+'Postos próximos';
   let lista=postos.filter(p=>p.lat!=null&&p.lng!=null&&postoPassaFiltro(p))
     .map(p=>({...p, dist:distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng)}))
     .filter(p=>p.dist<=150).sort((a,b)=>a.dist-b.dist);
   if(!lista.length){ el.innerHTML=`<div class="vazio">Nenhum posto num raio de 150 km de <b>${cidade}</b>.</div>`; return; }
-  el.innerHTML=`<div class="resumo-viagem">📍 <b>${lista.length}</b> posto(s) perto de <b>${cidade}</b> (até 150 km)
+  el.innerHTML=`<div class="resumo-viagem"><b>${lista.length}</b> posto(s) perto de <b>${cidade}</b> (até 150 km)
     <button class="btn-sec" style="width:100%;margin-top:8px" onclick="limparPerto()">Limpar</button></div>`
     + lista.map(p=>{
       const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
       return `<div class="posto-card">
-        <div class="nome">${ehOportunidade(p)?'⭐ ':''}${p.nome}</div>
-        <div class="dist">${p.ref?p.ref+' · ':''}${p.dtNeg?'📅 '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">⚠️ vencido</b>':'')+' · ':''}${p.dist.toFixed(0)} km de ${cidade}</div>
+        <div class="nome">${ehOportunidade(p)?'':''}${p.nome}</div>
+        <div class="dist">${p.ref?p.ref+' · ':''}${p.dtNeg?''+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">vencido</b>':'')+' · ':''}${p.dist.toFixed(0)} km de ${cidade}</div>
         <div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div></div>`;
     }).join('');
 }
@@ -1751,7 +1994,7 @@ function listarPostosPerto(cidade){
 function imprimirRota(){
   if(!printData) return; const d=printData;
   const linhas=d.lista.map(p=>{
-    return `<tr><td>${p.nome}${p.ref?' <small>('+p.ref+')</small>':''}${p.hom?' ✅'+p.hom:''}</td>
+    return `<tr><td>${p.nome}${p.ref?' <small>('+p.ref+')</small>':''}${p.hom?' · '+p.hom:''}</td>
       <td style="text-align:center">${p.dist.toFixed(1)} km</td><td style="text-align:right">${fmt(p.s10)}</td><td style="text-align:right">${fmt(p.s500)}</td><td style="text-align:right">${fmt(p.arla)}</td></tr>`; }).join('');
   const win=window.open('','_blank'); if(!win){ alert('Permita pop-ups para imprimir.'); return; }
   win.document.write(`<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>Rota — Blue Transportes</title>
@@ -1792,7 +2035,7 @@ function gerarLinkMotorista(){
   const url=r.url;
   linkInput.value=url;
   linkInfo.innerHTML=`Rota no Google Maps com <b>${r.usados}</b> posto(s) marcado(s)${r.total>r.usados?` (de ${r.total} — o Google mostra até 9)`:''}.`;
-  linkWa.href='https://wa.me/?text='+encodeURIComponent('⛽ Rota de abastecimento — Blue Transportes:\n'+url);
+  linkWa.href='https://wa.me/?text='+encodeURIComponent('Rota de abastecimento — Blue Transportes:\n'+url);
   linkQr.src='https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=8&data='+encodeURIComponent(url);
   linkQrWrap.style.display='block';
   modalLink.style.display='flex';
@@ -1802,7 +2045,7 @@ function copiarLink(){
   linkInput.select();
   try{ document.execCommand('copy'); }catch{}
   try{ navigator.clipboard.writeText(linkInput.value); }catch{}
-  linkCopiar.textContent='✅ Copiado!'; setTimeout(()=>linkCopiar.textContent='📋 Copiar link',1600);
+  linkCopiar.textContent='Copiado!'; setTimeout(()=>linkCopiar.textContent='Copiar link',1600);
 }
 function fecharLink(){ modalLink.style.display='none'; }
 
@@ -1851,16 +2094,16 @@ async function entrar(){
   if(!u||!p){ err.textContent='Preencha usuário e senha.'; err.style.display='block'; return; }
   try{ const j=await authApi({action:'login', user:u, pass:p});
     if(j.ok){ localStorage.setItem('authToken',j.token); authUser=j.user; authAdmin=j.admin; abrirApp(); }
-    else { err.textContent='🔒 '+(j.error||'Falha no login.'); err.style.display='block'; document.getElementById('senhaInput').select(); }
-  }catch{ err.textContent='⚠️ Servidor de login indisponível (a função /auth ou o banco USERS_KV podem não estar configurados).'; err.style.display='block'; }
+    else { err.textContent=''+(j.error||'Falha no login.'); err.style.display='block'; document.getElementById('senhaInput').select(); }
+  }catch{ err.textContent='Servidor de login indisponível (a função /auth ou o banco USERS_KV podem não estar configurados).'; err.style.display='block'; }
 }
 async function primeiroAcesso(){
   const u=prompt('Nome do usuário ADMINISTRADOR (o primeiro acesso):'); if(!u) return;
   const p=prompt('Crie uma senha para ele:'); if(!p) return;
   try{ const j=await authApi({action:'create', user:u.trim(), pass:p});
-    if(j.ok && j.primeiro){ alert('✅ Administrador criado! Agora entre com esse usuário e senha.'); document.getElementById('loginUser').value=u.trim(); document.getElementById('senhaInput').focus(); }
-    else alert('⚠️ '+(j.error||'Não foi possível. Já existe usuário — peça a um admin para criar o seu.'));
-  }catch{ alert('⚠️ Servidor de login indisponível.'); }
+    if(j.ok && j.primeiro){ alert('Administrador criado! Agora entre com esse usuário e senha.'); document.getElementById('loginUser').value=u.trim(); document.getElementById('senhaInput').focus(); }
+    else alert(''+(j.error||'Não foi possível. Já existe usuário — peça a um admin para criar o seu.'));
+  }catch{ alert('Servidor de login indisponível.'); }
 }
 async function sair(){ const t=localStorage.getItem('authToken'); localStorage.removeItem('authToken'); try{ await authApi({action:'logout', token:t}); }catch{} location.reload(); }
 
@@ -1870,7 +2113,7 @@ async function listarUsuarios(){
   const el=document.getElementById('listaUsers');
   try{ const j=await authApi({action:'list', token:localStorage.getItem('authToken')});
     if(!j.ok){ el.innerHTML='<div class="vazio">'+(j.error||'Erro ao listar')+'</div>'; return; }
-    el.innerHTML=(j.users.length? j.users.map(u=>`<div class="item"><div class="info"><div class="nm">${u.user}${u.admin?' 👑':''}</div><div class="sub">${u.admin?'administrador':'usuário'}</div></div><div class="acoes">${u.user===authUser?'':`<button class="ac del" onclick="excluirUsuario('${u.user}')" title="Excluir">🗑️</button>`}</div></div>`).join('') : '<div class="vazio">Nenhum usuário.</div>');
+    el.innerHTML=(j.users.length? j.users.map(u=>`<div class="item"><div class="info"><div class="nm">${u.user}</div><div class="sub">${u.admin?'Administrador':'Usuário'}</div></div><div class="acoes">${u.user===authUser?'':`<button class="ac del" onclick="excluirUsuario('${u.user}')" title="Excluir">${ic('trash','ic-sm')}</button>`}</div></div>`).join('') : '<div class="vazio">Nenhum usuário.</div>');
   }catch{ el.innerHTML='<div class="vazio">Servidor indisponível.</div>'; }
 }
 async function criarUsuario(){
@@ -1878,8 +2121,8 @@ async function criarUsuario(){
   const st=document.getElementById('usersStatus');
   if(!u||!p){ st.textContent='Preencha usuário e senha.'; return; }
   const j=await authApi({action:'create', token:localStorage.getItem('authToken'), user:u, pass:p, admin:adm});
-  if(j.ok){ st.textContent='✅ Usuário criado!'; document.getElementById('novoUser').value=''; document.getElementById('novaSenha').value=''; document.getElementById('novoAdmin').checked=false; listarUsuarios(); }
-  else st.textContent='⚠️ '+(j.error||'Erro.');
+  if(j.ok){ st.textContent='Usuário criado!'; document.getElementById('novoUser').value=''; document.getElementById('novaSenha').value=''; document.getElementById('novoAdmin').checked=false; listarUsuarios(); }
+  else st.textContent=''+(j.error||'Erro.');
 }
 async function excluirUsuario(user){
   if(!confirm('Excluir o usuário "'+user+'"?')) return;
@@ -1889,6 +2132,7 @@ async function excluirUsuario(user){
 
 // ---------- Início ----------
 (async function(){
+  pintarIcones();
   if(/[#&]rota=/.test(location.hash||'')){ renderConfig(); checarLinkMotorista(); return; } // motorista: sem login
   const token=localStorage.getItem('authToken');
   if(token){ try{ const j=await authApi({action:'me', token}); if(j.ok){ authUser=j.user; authAdmin=j.admin; abrirApp(); return; } }catch{} }
