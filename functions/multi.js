@@ -131,13 +131,36 @@ export async function onRequest(context) {
     return { ok: false, log };
   }
 
+  // O Multi não aceita null nas datas (System.DateTime): mandamos o mesmo
+  // período nos quatro campos, em formatos aceitos pelo .NET.
+  function corpoPeriodo(di, df, formato) {
+    const f = d => {
+      const s = String(d).slice(0, 10);            // yyyy-MM-dd vindo do <input type=date>
+      if (formato === 'iso') return s + 'T00:00:00';
+      if (formato === 'br') { const p = s.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+      return s;                                     // 'data' -> yyyy-MM-dd puro
+    };
+    const a = f(di), b = f(df);
+    return { dataCriacaoInicial: a, dataCriacaoFinal: b, dataCarregamentoInicial: a, dataCarregamentoFinal: b };
+  }
+
+  // tenta os formatos de data até um passar na validação
+  async function buscarCargas(di, df) {
+    let ultimo = null;
+    for (const fmt of ['iso', 'data', 'br']) {
+      const r = await chamar('/Cargas/BuscarCargasPorPeriodo', corpoPeriodo(di, df, fmt));
+      if (r.ok) return r;
+      ultimo = r;
+      // se o erro não for de validação de data, não adianta trocar o formato
+      const txt = JSON.stringify(r.log || '');
+      if (txt.indexOf('DateTime') < 0 && txt.indexOf('validation') < 0) break;
+    }
+    return ultimo || { ok: false, log: [] };
+  }
+
   // ---------- diagnóstico ----------
   if (body.action === 'testar') {
-    const r = await chamar('/Cargas/BuscarCargasPorPeriodo', {
-      dataCriacaoInicial: body.dataInicial || '2026-07-01',
-      dataCriacaoFinal: body.dataFinal || '2026-07-21',
-      dataCarregamentoInicial: null, dataCarregamentoFinal: null,
-    });
+    const r = await buscarCargas(body.dataInicial || '2026-07-01', body.dataFinal || '2026-07-21');
     return json({ ok: r.ok, tokenObtido: !!tk, via: r.via || null, diagnostico: r.log });
   }
 
@@ -145,10 +168,7 @@ export async function onRequest(context) {
   if (body.action === 'cargas') {
     const di = body.dataInicial, df = body.dataFinal;
     if (!di || !df) return json({ error: 'Informe dataInicial e dataFinal.' }, 400);
-    const r = await chamar('/Cargas/BuscarCargasPorPeriodo', {
-      dataCriacaoInicial: di, dataCriacaoFinal: df,
-      dataCarregamentoInicial: null, dataCarregamentoFinal: null,
-    });
+    const r = await buscarCargas(di, df);
     if (!r.ok) return json({ error: 'Não consegui consultar as viagens no Multi.', diagnostico: r.log }, 502);
 
     const arr = acharLista(r.json);
