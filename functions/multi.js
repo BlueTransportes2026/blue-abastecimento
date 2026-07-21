@@ -1,23 +1,20 @@
 // Cloudflare Pages Function — INTEGRAÇÃO COM O MULTITMS (KMM)
 //
-// Fluxo de autenticação:
-//   1) POST /CadastroUnificado/ObterTokenIntegracao com HTTP Basic (usuário/senha da API)
-//      -> devolve { token_type, access_token, expires_in }
-//   2) Demais chamadas usam Authorization: Bearer <access_token>
+// A API inteira é protegida por HTTP Basic. O endpoint ObterTokenIntegracao
+// pertence ao módulo de Webhook/CadastroUnificado e devolve 500 para qualquer
+// formato — então NÃO dependemos dele: tentamos os endpoints de negócio
+// direto com Basic e, se houver token, também com Bearer.
 //
-// As credenciais NUNCA ficam no código. Cadastre no Cloudflare como secrets:
-//   MULTI_USER  = usuário da API
-//   MULTI_PASS  = senha da API
-//   MULTI_BASE  = (opcional) https://barbieri.multitms.com.br/SGT.WEbService.REST
+// Credenciais (cadastrar no Cloudflare como secrets, nunca no código):
+//   MULTI_USER, MULTI_PASS  e opcionalmente MULTI_BASE
 //
 // Ações (POST /multi com { action, token, ... }):
-//   'testar'  -> só autentica e diz se deu certo
-//   'cargas'  { dataInicial, dataFinal } -> viagens do período (origem/destino com coordenadas)
-//   'posicao' { placa } -> última posição do veículo (retorno bruto, para inspeção)
+//   'testar'  -> diagnóstico completo de autenticação
+//   'cargas'  { dataInicial, dataFinal }
+//   'posicao' { placa }
 
 const BASE_PADRAO = 'https://barbieri.multitms.com.br/SGT.WEbService.REST';
 
-// procura o access_token em qualquer nível da resposta
 function acharToken(o) {
   if (!o || typeof o !== 'object') return null;
   if (typeof o.access_token === 'string' && o.access_token) return o.access_token;
@@ -27,6 +24,19 @@ function acharToken(o) {
     if (v && typeof v === 'object') { const t = acharToken(v); if (t) return t; }
   }
   return null;
+}
+
+// procura uma lista de resultados em qualquer formato de envelope
+function acharLista(o) {
+  if (!o) return [];
+  if (Array.isArray(o)) return o;
+  for (const k of ['retorno', 'dados', 'data', 'result', 'resultado', 'itens', 'items', 'lista']) {
+    if (o[k] != null) { const r = acharLista(o[k]); if (r.length) return r; }
+  }
+  if (typeof o === 'object') {
+    for (const k in o) { const v = o[k]; if (v && typeof v === 'object') { const r = acharLista(v); if (r.length) return r; } }
+  }
+  return [];
 }
 
 export async function onRequest(context) {
@@ -45,7 +55,7 @@ export async function onRequest(context) {
   let body = {};
   try { body = await request.json(); } catch {}
 
-  // --- só quem está logado no nosso site pode usar ---
+  // só quem está logado no nosso site
   let sess = null;
   if (env.USERS_KV && body.token) {
     const s = await env.USERS_KV.get('sess:' + body.token);
@@ -54,106 +64,97 @@ export async function onRequest(context) {
   if (!sess) return json({ error: 'Sessão inválida. Faça login novamente.' }, 401);
 
   const user = env.MULTI_USER, pass = env.MULTI_PASS;
-  if (!user || !pass) {
-    return json({ error: 'Credenciais do Multi não configuradas. Cadastre MULTI_USER e MULTI_PASS nas variáveis do Cloudflare.' }, 500);
-  }
+  if (!user || !pass) return json({ error: 'Credenciais do Multi não configuradas (MULTI_USER / MULTI_PASS).' }, 500);
+
   const base = (env.MULTI_BASE || BASE_PADRAO).replace(/\/+$/, '');
   const basic = 'Basic ' + btoa(user + ':' + pass);
 
-  // ---------- 1) obter o token ----------
-  // O endpoint não documenta o corpo esperado. Tentamos os formatos usuais,
-  // do mais provável ao menos, e ficamos com o primeiro que devolver access_token.
-  async function obterToken() {
+  // ---------- token (opcional, não bloqueia) ----------
+  async function tentarToken() {
     const url = base + '/CadastroUnificado/ObterTokenIntegracao';
-    const H = extra => Object.assign({ 'authorization': basic, 'accept': 'application/json' }, extra || {});
     const form = 'application/x-www-form-urlencoded';
     const e = encodeURIComponent;
-
-    // O formulário passa da validação (500) e o JSON é recusado (415):
-    // o formato certo é form-urlencoded; o que falta é o NOME dos campos.
-    const pares = [
-      ['usuario', 'senha'], ['Usuario', 'Senha'], ['login', 'senha'],
-      ['usuario', 'password'], ['username', 'password'], ['user', 'pass'],
-      ['client_id', 'client_secret'], ['email', 'senha'], ['cpf', 'senha'],
+    const tries = [
+      { ct: form, b: 'usuario=' + e(user) + '&senha=' + e(pass) },
+      { ct: form, b: 'grant_type=client_credentials' },
+      { ct: null, b: undefined },
     ];
-    const tentativas = [];
-    for (const [cu, cs] of pares) {
-      tentativas.push({ nome: 'form ' + cu + '/' + cs,
-        init: { method: 'POST', headers: H({ 'content-type': form }), body: cu + '=' + e(user) + '&' + cs + '=' + e(pass) } });
+    for (const t of tries) {
+      try {
+        const h = { 'authorization': basic, 'accept': 'application/json' };
+        if (t.ct) h['content-type'] = t.ct;
+        const r = await fetch(url, { method: 'POST', headers: h, body: t.b });
+        const txt = await r.text();
+        let j = null; try { j = JSON.parse(txt); } catch {}
+        const tk = acharToken(j);
+        if (tk) return { token: tk, tipo: (j && j.token_type) || 'Bearer' };
+      } catch {}
     }
-    // credenciais na URL
-    tentativas.push({ nome: 'query usuario/senha',
-      init: { method: 'POST', headers: H({ 'content-type': form }), body: '' }, url: url + '?usuario=' + e(user) + '&senha=' + e(pass) });
-    // credenciais em cabeçalhos
-    tentativas.push({ nome: 'cabecalhos usuario/senha',
-      init: { method: 'POST', headers: H({ 'content-type': form, 'usuario': user, 'senha': pass }), body: '' } });
-    tentativas.push({ nome: 'cabecalhos Usuario/Senha',
-      init: { method: 'POST', headers: H({ 'content-type': form, 'Usuario': user, 'Senha': pass }), body: '' } });
-    // sem o Basic, caso ele atrapalhe
-    tentativas.push({ nome: 'form usuario/senha sem basic',
-      init: { method: 'POST', headers: { 'accept': 'application/json', 'content-type': form }, body: 'usuario=' + e(user) + '&senha=' + e(pass) } });
-    // grant_type junto, caso seja OAuth de verdade
-    tentativas.push({ nome: 'form grant_type+usuario/senha',
-      init: { method: 'POST', headers: H({ 'content-type': form }), body: 'grant_type=password&usuario=' + e(user) + '&senha=' + e(pass) } });
-    tentativas.push({ nome: 'form vazio (referencia)',
-      init: { method: 'POST', headers: H({ 'content-type': form }), body: '' } });
+    return null;
+  }
 
+  const tk = await tentarToken();
+
+  // estratégias de autenticação, da mais provável para a menos
+  const autenticacoes = [];
+  autenticacoes.push({ nome: 'Basic direto', h: { 'authorization': basic } });
+  if (tk) autenticacoes.push({ nome: 'Bearer (token)', h: { 'authorization': (tk.tipo || 'Bearer') + ' ' + tk.token } });
+  autenticacoes.push({ nome: 'Basic + cabeçalhos usuario/senha', h: { 'authorization': basic, 'usuario': user, 'senha': pass } });
+
+  // ---------- chamada com fallback de autenticação e formato ----------
+  async function chamar(caminho, corpo) {
     const log = [];
-    for (const t of tentativas) {
-      let r, txt;
-      try { r = await fetch(t.url || url, t.init); txt = await r.text(); }
-      catch (err) { log.push({ tentativa: t.nome, erro: String(err).slice(0, 120) }); continue; }
-      let j = null; try { j = JSON.parse(txt); } catch {}
-      const tk = acharToken(j);
-      log.push({
-        tentativa: t.nome,
-        status: r.status,
-        tipoResposta: (r.headers.get('content-type') || '').split(';')[0],
-        resposta: String(txt || '').replace(/\s+/g, ' ').slice(0, 220),
-      });
-      if (tk) return { token: tk, tipo: (j && j.token_type) || 'Bearer', expira: j && j.expires_in, via: t.nome, log };
+    for (const a of autenticacoes) {
+      for (const ct of ['application/json', 'text/json']) {
+        let r, txt;
+        try {
+          r = await fetch(base + caminho, {
+            method: 'POST',
+            headers: Object.assign({ 'content-type': ct, 'accept': 'application/json' }, a.h),
+            body: JSON.stringify(corpo || {}),
+          });
+          txt = await r.text();
+        } catch (err) {
+          log.push({ tentativa: a.nome + ' + ' + ct, erro: String(err).slice(0, 120) });
+          continue;
+        }
+        let j = null; try { j = JSON.parse(txt); } catch {}
+        log.push({
+          tentativa: a.nome + ' + ' + ct,
+          status: r.status,
+          tipoResposta: (r.headers.get('content-type') || '').split(';')[0],
+          resposta: String(txt || '').replace(/\s+/g, ' ').slice(0, 220),
+        });
+        if (r.ok && j) return { ok: true, json: j, via: a.nome, log };
+      }
     }
-    return { erro: 'Não consegui obter o token do Multi. Veja o diagnóstico de cada tentativa.', log };
+    return { ok: false, log };
   }
 
-  // ---------- chamada autenticada ----------
-  async function chamar(caminho, corpo, tk) {
-    const r = await fetch(base + caminho, {
-      method: 'POST',
-      headers: {
-        'authorization': 'Bearer ' + tk,
-        'content-type': 'application/json',
-        'accept': 'application/json',
-      },
-      body: JSON.stringify(corpo || {}),
-    });
-    const txt = await r.text();
-    let j = null; try { j = JSON.parse(txt); } catch {}
-    return { ok: r.ok, status: r.status, json: j, texto: j ? null : txt.slice(0, 400) };
-  }
-
-  const auth = await obterToken();
-  if (auth.erro) return json({ error: auth.erro, diagnostico: auth.log }, 502);
-
+  // ---------- diagnóstico ----------
   if (body.action === 'testar') {
-    return json({ ok: true, autenticado: true, via: auth.via, expiraEm: auth.expira, tipo: auth.tipo, diagnostico: auth.log });
+    const r = await chamar('/Cargas/BuscarCargasPorPeriodo', {
+      dataCriacaoInicial: body.dataInicial || '2026-07-01',
+      dataCriacaoFinal: body.dataFinal || '2026-07-21',
+      dataCarregamentoInicial: null, dataCarregamentoFinal: null,
+    });
+    return json({ ok: r.ok, tokenObtido: !!tk, via: r.via || null, diagnostico: r.log });
   }
 
-  // ---------- viagens (cargas) do período ----------
+  // ---------- viagens ----------
   if (body.action === 'cargas') {
     const di = body.dataInicial, df = body.dataFinal;
     if (!di || !df) return json({ error: 'Informe dataInicial e dataFinal.' }, 400);
     const r = await chamar('/Cargas/BuscarCargasPorPeriodo', {
       dataCriacaoInicial: di, dataCriacaoFinal: df,
       dataCarregamentoInicial: null, dataCarregamentoFinal: null,
-    }, auth.token);
-    if (!r.ok) return json({ error: 'O Multi recusou a consulta de cargas (código ' + r.status + ').', detalhe: r.json || r.texto }, 502);
+    });
+    if (!r.ok) return json({ error: 'Não consegui consultar as viagens no Multi.', diagnostico: r.log }, 502);
 
-    const lista = (r.json && (r.json.retorno || r.json.dados || r.json.data)) || r.json || [];
-    const arr = Array.isArray(lista) ? lista : (lista.itens || lista.items || []);
+    const arr = acharLista(r.json);
     const num = v => { const n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isNaN(n) ? null : n; };
     const endereco = e => e ? {
-      cidade: (e.cidade && (e.cidade.nome || e.cidade.descricao)) || e.cidade || '',
+      cidade: (e.cidade && (e.cidade.nome || e.cidade.descricao)) || (typeof e.cidade === 'string' ? e.cidade : '') || '',
       uf: e.uf || (e.estado && (e.estado.sigla || e.estado.nome)) || '',
       lat: num(e.latitude), lng: num(e.longitude),
       texto: e.enderecoConcatenado || [e.logradouro, e.numero, e.bairro].filter(Boolean).join(', '),
@@ -174,7 +175,7 @@ export async function onRequest(context) {
       situacao: c.situacaoCarga || '',
     })).filter(v => v.origem && v.destino);
 
-    return json({ ok: true, total: viagens.length, viagens });
+    return json({ ok: true, total: viagens.length, viagens, via: r.via, brutoAmostra: viagens.length ? undefined : JSON.stringify(r.json).slice(0, 500) });
   }
 
   // ---------- posição do veículo ----------
@@ -182,10 +183,9 @@ export async function onRequest(context) {
     const placa = (body.placa || '').trim();
     if (!placa) return json({ error: 'Informe a placa.' }, 400);
     const r = await chamar('/Monitoramento/ConsultaPosicionamentoStatusDispositivo',
-      { placa, cpf: body.cpf || '', transporte: body.transporte || '' }, auth.token);
-    if (!r.ok) return json({ error: 'O Multi recusou a consulta de posição (código ' + r.status + ').', detalhe: r.json || r.texto }, 502);
-    // devolve o retorno bruto: os campos de posição vêm como texto e precisam ser inspecionados
-    return json({ ok: true, bruto: r.json });
+      { placa, cpf: body.cpf || '', transporte: body.transporte || '' });
+    if (!r.ok) return json({ error: 'Não consegui consultar a posição no Multi.', diagnostico: r.log }, 502);
+    return json({ ok: true, via: r.via, bruto: r.json });
   }
 
   return json({ error: 'Ação inválida.' }, 400);
