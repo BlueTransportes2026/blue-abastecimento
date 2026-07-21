@@ -650,17 +650,6 @@
   .custo-card .cc-base{margin-top:10px;font-size:10.5px;color:var(--muted-2)}
   .custo-card .cc-vazio{font-size:12px;color:var(--muted);margin-top:8px}
 
-  /* ---- Viagens importadas do Multi ---- */
-  #multiLista{margin-top:10px;max-height:320px;overflow-y:auto}
-  .viagem-item{border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;margin-bottom:8px;cursor:pointer;transition:.14s;background:var(--card)}
-  .viagem-item:hover{border-color:var(--ac-line);background:var(--ac-soft)}
-  .viagem-item .vi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:650;color:var(--ink)}
-  .viagem-item .vi-placa{font-size:10.5px;font-weight:700;letter-spacing:.04em;background:var(--line-2);border:1px solid var(--line);
-    color:var(--ink-2);border-radius:5px;padding:2px 7px;flex:0 0 auto}
-  .viagem-item .vi-rota{font-size:12px;color:var(--ink-2);margin-top:5px;font-weight:550}
-  .viagem-item .vi-meta{font-size:11px;color:var(--muted);margin-top:3px}
-  .viagem-item .vi-frio{color:var(--ac);font-weight:650}
-
   /* ---- Diagnóstico da integração ---- */
   .diag{margin-top:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--line-2);padding:11px 12px;font-size:11px;color:var(--ink-2);line-height:1.5}
   .diag > b{display:block;margin-bottom:7px;color:var(--ink);font-size:11.5px}
@@ -772,20 +761,6 @@
               <button class="btn-sec" style="flex:0 0 auto" onclick="limparRota()">Limpar</button>
             </div>
             <div class="status" id="infoRota"></div>
-          </div>
-        </div>
-
-        <div class="secao" id="secaoMulti">
-          <h2 data-ic="truck">Importar viagem do Multi</h2>
-          <div class="card-form">
-            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Busque as cargas do período no MultiTMS e escolha a viagem. Origem e destino são preenchidos automaticamente, com as coordenadas do sistema.</p>
-            <div class="linha">
-              <div><label style="margin-top:0">De</label><input id="multiDe" type="date" /></div>
-              <div><label style="margin-top:0">Até</label><input id="multiAte" type="date" /></div>
-            </div>
-            <div class="btn-linha"><button class="btn-primario" onclick="buscarViagensMulti()">Buscar viagens</button></div>
-            <div class="status" id="multiStatus"></div>
-            <div id="multiLista"></div>
           </div>
         </div>
 
@@ -2015,62 +1990,8 @@ async function multiApi(payload){
   const r=await fetch('/multi',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   return await r.json();
 }
-function _dataISO(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
-function initDatasMulti(){
-  const de=document.getElementById('multiDe'), ate=document.getElementById('multiAte');
-  if(de && !de.value) de.value=_dataISO(new Date(Date.now()-7*86400000));
-  if(ate && !ate.value) ate.value=_dataISO(new Date());
-}
-let _viagensMulti=[];
-async function buscarViagensMulti(){
-  const st=document.getElementById('multiStatus'), el=document.getElementById('multiLista');
-  const de=document.getElementById('multiDe').value, ate=document.getElementById('multiAte').value;
-  if(!de||!ate){ st.textContent='Informe o período.'; return; }
-  st.textContent='Consultando o Multi…'; el.innerHTML='';
-  let j;
-  try{ j=await multiApi({action:'cargas', token:tokenAuth(), dataInicial:de, dataFinal:ate}); }
-  catch{ st.textContent='Não consegui falar com o servidor.'; return; }
-  if(!j||!j.ok){
-    st.innerHTML=((j&&j.error)||'Não consegui consultar as viagens.');
-    if(j&&j.diagnostico){
-      el.innerHTML='<div class="diag"><b>Diagnóstico — o que o Multi respondeu a cada formato:</b>'+
-        j.diagnostico.map(d=>'<div><span>'+d.tentativa+'</span> → <b>'+(d.status!=null?('código '+d.status):('erro: '+d.erro))+'</b>'+
-        (d.tipoResposta?' <small>('+d.tipoResposta+')</small>':'')+
-        (d.resposta?'<br><i>'+String(d.resposta).replace(/[<>]/g,'')+'</i>':'')+'</div>').join('')+
-        '<div class="diag-fim">Copie e me envie este bloco.</div></div>';
-    } else if(j&&j.detalhe){
-      el.innerHTML='<div class="diag"><b>Resposta do Multi:</b><div><i>'+JSON.stringify(j.detalhe).slice(0,600).replace(/[<>]/g,'')+'</i></div></div>';
-    }
-    return;
-  }
-  _viagensMulti=j.viagens||[];
-  if(!_viagensMulti.length){ st.textContent='Nenhuma viagem encontrada nesse período.'; return; }
-  st.textContent=_viagensMulti.length+' viagem(ns) encontrada(s). Clique para carregar.';
-  el.innerHTML=_viagensMulti.map((v,i)=>{
-    const o=(v.origem.cidade||'—')+(v.origem.uf?' - '+v.origem.uf:'');
-    const d=(v.destino.cidade||'—')+(v.destino.uf?' - '+v.destino.uf:'');
-    const meta=[ v.distancia?Math.round(v.distancia)+' km':'', v.motorista||'', v.inicio?String(v.inicio).slice(0,10).split('-').reverse().join('/'):'' ].filter(Boolean).join(' · ');
-    return `<div class="viagem-item" onclick="usarViagemMulti(${i})">
-      <div class="vi-top"><span>${v.numero?('Carga '+v.numero):('Protocolo '+v.protocolo)}</span>${v.placa?'<span class="vi-placa">'+v.placa+'</span>':''}</div>
-      <div class="vi-rota">${o} &rarr; ${d}</div>
-      <div class="vi-meta">${meta}${v.refrigerada?' · <span class="vi-frio">Refrigerada'+(v.temperatura?' '+v.temperatura:'')+'</span>':''}</div>
-    </div>`;
-  }).join('');
-}
-async function usarViagemMulti(i){
-  const v=_viagensMulti[i]; if(!v) return;
-  const st=document.getElementById('multiStatus');
-  if(v.origem.lat==null||v.destino.lat==null){ st.textContent='Essa viagem não tem coordenadas de origem/destino no Multi. Digite as cidades manualmente.'; return; }
-  origem.value=(v.origem.cidade||'')+(v.origem.uf?' - '+v.origem.uf:'');
-  destino.value=(v.destino.cidade||'')+(v.destino.uf?' - '+v.destino.uf:'');
-  origemSel={lat:v.origem.lat,lng:v.origem.lng};
-  destinoSel={lat:v.destino.lat,lng:v.destino.lng};
-  if(v.refrigerada){ try{ document.getElementById('modalidade').value='frigo'; }catch(e){} }
-  rotaTitulo=(v.numero?('Carga '+v.numero+' · '):'')+origem.value+' → '+destino.value;
-  st.textContent='Traçando a rota da viagem…';
-  const ok=await desenharRota([origemSel, destinoSel]);
-  st.textContent = ok ? 'Viagem carregada. Veja os postos e o custo abaixo.' : 'Importei a viagem, mas não consegui traçar a rota.';
-}
+// (a importação de viagens foi removida: não há cargas cadastradas no Multi.
+//  A função multiApi acima segue disponível para futuras integrações.)
 
 // ---------- Custo e economia da viagem ----------
 // A rota é imposta pela gerenciadora de risco: o cálculo compara apenas os
@@ -2252,7 +2173,7 @@ async function authApi(payload){
 }
 function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin);
   const tu=document.getElementById('tbUser'); if(tu) tu.textContent=(authUser||'U').trim().slice(0,1).toUpperCase();
-  renderConfig(); renderAutonomiaInputs(); initDatasMulti(); mostrarAba('inicio');
+  renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio');
   carregarPostos().then(()=>{ carregarCfgPlanilha(); if(authAdmin) sincronizarPlanilha(true); }); }
 function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
 async function entrar(){
