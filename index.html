@@ -2035,6 +2035,7 @@ async function buscarViagensMulti(){
     if(j&&j.diagnostico){
       el.innerHTML='<div class="diag"><b>Diagnóstico — o que o Multi respondeu a cada formato:</b>'+
         j.diagnostico.map(d=>'<div><span>'+d.tentativa+'</span> → <b>'+(d.status!=null?('código '+d.status):('erro: '+d.erro))+'</b>'+
+        (d.tipoResposta?' <small>('+d.tipoResposta+')</small>':'')+
         (d.resposta?'<br><i>'+String(d.resposta).replace(/[<>]/g,'')+'</i>':'')+'</div>').join('')+
         '<div class="diag-fim">Copie e me envie este bloco.</div></div>';
     } else if(j&&j.detalhe){

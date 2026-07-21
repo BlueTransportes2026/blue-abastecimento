@@ -67,26 +67,50 @@ export async function onRequest(context) {
     const url = base + '/CadastroUnificado/ObterTokenIntegracao';
     const H = extra => Object.assign({ 'authorization': basic, 'accept': 'application/json' }, extra || {});
     const form = 'application/x-www-form-urlencoded';
-    const tentativas = [
-      { nome: 'sem corpo',              init: { method: 'POST', headers: H() } },
-      { nome: 'form vazio',             init: { method: 'POST', headers: H({ 'content-type': form }), body: '' } },
-      { nome: 'form client_credentials',init: { method: 'POST', headers: H({ 'content-type': form }), body: 'grant_type=client_credentials' } },
-      { nome: 'form password',          init: { method: 'POST', headers: H({ 'content-type': form }),
-              body: 'grant_type=password&username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) } },
-      { nome: 'json credenciais',       init: { method: 'POST', headers: H({ 'content-type': 'application/json' }),
-              body: JSON.stringify({ usuario: user, senha: pass, username: user, password: pass }) } },
-      { nome: 'json vazio',             init: { method: 'POST', headers: H({ 'content-type': 'application/json' }), body: '{}' } },
-      { nome: 'texto vazio',            init: { method: 'POST', headers: H({ 'content-type': 'text/plain' }), body: '' } },
-      { nome: 'get',                    init: { method: 'GET',  headers: H() } },
+    const e = encodeURIComponent;
+
+    // O formulário passa da validação (500) e o JSON é recusado (415):
+    // o formato certo é form-urlencoded; o que falta é o NOME dos campos.
+    const pares = [
+      ['usuario', 'senha'], ['Usuario', 'Senha'], ['login', 'senha'],
+      ['usuario', 'password'], ['username', 'password'], ['user', 'pass'],
+      ['client_id', 'client_secret'], ['email', 'senha'], ['cpf', 'senha'],
     ];
+    const tentativas = [];
+    for (const [cu, cs] of pares) {
+      tentativas.push({ nome: 'form ' + cu + '/' + cs,
+        init: { method: 'POST', headers: H({ 'content-type': form }), body: cu + '=' + e(user) + '&' + cs + '=' + e(pass) } });
+    }
+    // credenciais na URL
+    tentativas.push({ nome: 'query usuario/senha',
+      init: { method: 'POST', headers: H({ 'content-type': form }), body: '' }, url: url + '?usuario=' + e(user) + '&senha=' + e(pass) });
+    // credenciais em cabeçalhos
+    tentativas.push({ nome: 'cabecalhos usuario/senha',
+      init: { method: 'POST', headers: H({ 'content-type': form, 'usuario': user, 'senha': pass }), body: '' } });
+    tentativas.push({ nome: 'cabecalhos Usuario/Senha',
+      init: { method: 'POST', headers: H({ 'content-type': form, 'Usuario': user, 'Senha': pass }), body: '' } });
+    // sem o Basic, caso ele atrapalhe
+    tentativas.push({ nome: 'form usuario/senha sem basic',
+      init: { method: 'POST', headers: { 'accept': 'application/json', 'content-type': form }, body: 'usuario=' + e(user) + '&senha=' + e(pass) } });
+    // grant_type junto, caso seja OAuth de verdade
+    tentativas.push({ nome: 'form grant_type+usuario/senha',
+      init: { method: 'POST', headers: H({ 'content-type': form }), body: 'grant_type=password&usuario=' + e(user) + '&senha=' + e(pass) } });
+    tentativas.push({ nome: 'form vazio (referencia)',
+      init: { method: 'POST', headers: H({ 'content-type': form }), body: '' } });
+
     const log = [];
     for (const t of tentativas) {
       let r, txt;
-      try { r = await fetch(url, t.init); txt = await r.text(); }
-      catch (e) { log.push({ tentativa: t.nome, erro: String(e).slice(0, 120) }); continue; }
+      try { r = await fetch(t.url || url, t.init); txt = await r.text(); }
+      catch (err) { log.push({ tentativa: t.nome, erro: String(err).slice(0, 120) }); continue; }
       let j = null; try { j = JSON.parse(txt); } catch {}
       const tk = acharToken(j);
-      log.push({ tentativa: t.nome, status: r.status, resposta: String(txt || '').slice(0, 150) });
+      log.push({
+        tentativa: t.nome,
+        status: r.status,
+        tipoResposta: (r.headers.get('content-type') || '').split(';')[0],
+        resposta: String(txt || '').replace(/\s+/g, ' ').slice(0, 220),
+      });
       if (tk) return { token: tk, tipo: (j && j.token_type) || 'Bearer', expira: j && j.expires_in, via: t.nome, log };
     }
     return { erro: 'Não consegui obter o token do Multi. Veja o diagnóstico de cada tentativa.', log };
