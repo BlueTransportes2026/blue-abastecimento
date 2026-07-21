@@ -633,6 +633,33 @@
   .filtros-rota label{font-size:12px;font-weight:550;color:var(--ink-2)}
   .badge-loc{border-radius:var(--r);font-size:11.5px;border:1px dashed #d7dce4;background:var(--line-2)}
   .badge-loc.ok{background:var(--ok-soft);border-color:#a7f3d0;color:var(--ok)}
+
+  /* ---- Custo e economia da viagem ---- */
+  .custo-card{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);padding:16px;margin-bottom:12px}
+  .custo-card .cc-t{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .custo-card .cc-big{font-size:27px;font-weight:680;letter-spacing:-.025em;color:var(--ink);margin-top:8px;line-height:1}
+  .custo-card .cc-sub{font-size:11.5px;color:var(--muted);margin-top:5px}
+  .custo-card .cc-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line-2)}
+  .custo-card .cc-grid > div{display:flex;flex-direction:column;gap:2px}
+  .custo-card .cc-grid span{font-size:10.5px;color:var(--muted);font-weight:500}
+  .custo-card .cc-grid b{font-size:13px;font-weight:650;color:var(--ink)}
+  .custo-card .cc-eco{margin-top:11px;background:var(--ok-soft);border:1px solid #a7f3d0;color:var(--ok);
+    border-radius:var(--r);padding:9px 11px;font-size:11.5px;font-weight:550;line-height:1.45}
+  .custo-card .cc-eco b{font-weight:700}
+  .custo-card .cc-eco.alerta{background:var(--warn-soft);border-color:#fde68a;color:var(--warn)}
+  .custo-card .cc-base{margin-top:10px;font-size:10.5px;color:var(--muted-2)}
+  .custo-card .cc-vazio{font-size:12px;color:var(--muted);margin-top:8px}
+
+  /* ---- Viagens importadas do Multi ---- */
+  #multiLista{margin-top:10px;max-height:320px;overflow-y:auto}
+  .viagem-item{border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;margin-bottom:8px;cursor:pointer;transition:.14s;background:var(--card)}
+  .viagem-item:hover{border-color:var(--ac-line);background:var(--ac-soft)}
+  .viagem-item .vi-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;font-weight:650;color:var(--ink)}
+  .viagem-item .vi-placa{font-size:10.5px;font-weight:700;letter-spacing:.04em;background:var(--line-2);border:1px solid var(--line);
+    color:var(--ink-2);border-radius:5px;padding:2px 7px;flex:0 0 auto}
+  .viagem-item .vi-rota{font-size:12px;color:var(--ink-2);margin-top:5px;font-weight:550}
+  .viagem-item .vi-meta{font-size:11px;color:var(--muted);margin-top:3px}
+  .viagem-item .vi-frio{color:var(--ac);font-weight:650}
 </style>
 
 <div id="app">
@@ -737,6 +764,20 @@
               <button class="btn-sec" style="flex:0 0 auto" onclick="limparRota()">Limpar</button>
             </div>
             <div class="status" id="infoRota"></div>
+          </div>
+        </div>
+
+        <div class="secao" id="secaoMulti">
+          <h2 data-ic="truck">Importar viagem do Multi</h2>
+          <div class="card-form">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Busque as cargas do período no MultiTMS e escolha a viagem. Origem e destino são preenchidos automaticamente, com as coordenadas do sistema.</p>
+            <div class="linha">
+              <div><label style="margin-top:0">De</label><input id="multiDe" type="date" /></div>
+              <div><label style="margin-top:0">Até</label><input id="multiAte" type="date" /></div>
+            </div>
+            <div class="btn-linha"><button class="btn-primario" onclick="buscarViagensMulti()">Buscar viagens</button></div>
+            <div class="status" id="multiStatus"></div>
+            <div id="multiLista"></div>
           </div>
         </div>
 
@@ -995,6 +1036,9 @@
       </div>
       <div><label>Arla (% do diesel)</label><input id="cfgArla" type="number" step="0.5" onchange="salvarConfig()" /></div>
     </div>
+    <label>Preço de referência da bomba (R$/litro) — opcional</label>
+    <input id="cfgRef" type="number" step="0.01" placeholder="Ex.: 6,80" onchange="salvarConfig()" />
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45">Usado para calcular quanto a empresa economiza abastecendo nos postos negociados em vez do preço comum de bomba.</div>
     <div class="cfg-mod"><div class="cfg-lbl">Carga seca</div>
       <div class="linha"><div><span>km/l</span><input id="kml_seca" type="number" step="0.1" onchange="salvarConfig()" /></div>
       <div><span>Aparelho (L/h)</span><input id="ap_seca" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
@@ -1065,10 +1109,12 @@ const configPadrao = { dieselTipo:'s10', arlaPct:5,
 let config = Object.assign({}, configPadrao, JSON.parse(localStorage.getItem('blueConfig')||'{}'));
 function renderConfig(){
   cfgDiesel.value=config.dieselTipo; cfgArla.value=config.arlaPct;
+  if(document.getElementById('cfgRef')) cfgRef.value = config.precoRef!=null ? config.precoRef : '';
   for(const k of ['seca','container','frigo']){ document.getElementById('kml_'+k).value=config.modalidades[k].kml; document.getElementById('ap_'+k).value=config.modalidades[k].aparelho; }
 }
 function salvarConfig(){
   config.dieselTipo=cfgDiesel.value; config.arlaPct=parseFloat(cfgArla.value)||0;
+  config.precoRef = (cfgRef && cfgRef.value!=='') ? (parseFloat(String(cfgRef.value).replace(',','.'))||null) : null;
   for(const k of ['seca','container','frigo']){ config.modalidades[k].kml=parseFloat(document.getElementById('kml_'+k).value)||1; config.modalidades[k].aparelho=parseFloat(document.getElementById('ap_'+k).value)||0; }
   localStorage.setItem('blueConfig',JSON.stringify(config));
   if(rotaCoords) listarPostosNaRota();
@@ -1938,7 +1984,8 @@ function listarPostosNaRota(){
       <button class="btn-sec" onclick="imprimirRota()">Imprimir</button>
       <button class="btn-sec" onclick="gerarLinkMotorista()">Link p/ motorista</button></div>`;
   const selCtrl = motorista?'':`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Marque os postos que vão no <b>link do motorista</b> · <a onclick="marcarTodosPostos(true)" style="color:var(--brand-700);cursor:pointer;font-weight:600">todos</a> · <a onclick="marcarTodosPostos(false)" style="color:var(--brand-700);cursor:pointer;font-weight:600">nenhum</a></div>`;
-  el.innerHTML = btnAcoes + resumo + selCtrl + lista.map(p=>{
+  const custoHtml = motorista ? '' : renderCustoRota(lista, dkey, dnome);
+  el.innerHTML = btnAcoes + resumo + custoHtml + selCtrl + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
     const chk = motorista?'':`<input type="checkbox" class="sel-posto" data-id="${p.id}" ${postosSelecionados.has(p.id)?'checked':''} onchange="togglePosto('${p.id}',this.checked)" title="Incluir no link do motorista" style="width:20px;height:20px;flex:0 0 auto;cursor:pointer">`;
     const gapTxt = p._gap!=null
@@ -1953,6 +2000,106 @@ function listarPostosNaRota(){
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}
       ${motorista?'':`<div class="gap-info${p._abastecer?' perigo':''}">${gapTxt}</div>`}</div>`;
   }).join('');
+}
+
+// ---------- Integração com o MultiTMS (viagens e posição) ----------
+async function multiApi(payload){
+  const r=await fetch('/multi',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  return await r.json();
+}
+function _dataISO(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function initDatasMulti(){
+  const de=document.getElementById('multiDe'), ate=document.getElementById('multiAte');
+  if(de && !de.value) de.value=_dataISO(new Date(Date.now()-7*86400000));
+  if(ate && !ate.value) ate.value=_dataISO(new Date());
+}
+let _viagensMulti=[];
+async function buscarViagensMulti(){
+  const st=document.getElementById('multiStatus'), el=document.getElementById('multiLista');
+  const de=document.getElementById('multiDe').value, ate=document.getElementById('multiAte').value;
+  if(!de||!ate){ st.textContent='Informe o período.'; return; }
+  st.textContent='Consultando o Multi…'; el.innerHTML='';
+  let j;
+  try{ j=await multiApi({action:'cargas', token:tokenAuth(), dataInicial:de, dataFinal:ate}); }
+  catch{ st.textContent='Não consegui falar com o servidor.'; return; }
+  if(!j||!j.ok){ st.textContent=(j&&j.error)||'Não consegui consultar as viagens.'; return; }
+  _viagensMulti=j.viagens||[];
+  if(!_viagensMulti.length){ st.textContent='Nenhuma viagem encontrada nesse período.'; return; }
+  st.textContent=_viagensMulti.length+' viagem(ns) encontrada(s). Clique para carregar.';
+  el.innerHTML=_viagensMulti.map((v,i)=>{
+    const o=(v.origem.cidade||'—')+(v.origem.uf?' - '+v.origem.uf:'');
+    const d=(v.destino.cidade||'—')+(v.destino.uf?' - '+v.destino.uf:'');
+    const meta=[ v.distancia?Math.round(v.distancia)+' km':'', v.motorista||'', v.inicio?String(v.inicio).slice(0,10).split('-').reverse().join('/'):'' ].filter(Boolean).join(' · ');
+    return `<div class="viagem-item" onclick="usarViagemMulti(${i})">
+      <div class="vi-top"><span>${v.numero?('Carga '+v.numero):('Protocolo '+v.protocolo)}</span>${v.placa?'<span class="vi-placa">'+v.placa+'</span>':''}</div>
+      <div class="vi-rota">${o} &rarr; ${d}</div>
+      <div class="vi-meta">${meta}${v.refrigerada?' · <span class="vi-frio">Refrigerada'+(v.temperatura?' '+v.temperatura:'')+'</span>':''}</div>
+    </div>`;
+  }).join('');
+}
+async function usarViagemMulti(i){
+  const v=_viagensMulti[i]; if(!v) return;
+  const st=document.getElementById('multiStatus');
+  if(v.origem.lat==null||v.destino.lat==null){ st.textContent='Essa viagem não tem coordenadas de origem/destino no Multi. Digite as cidades manualmente.'; return; }
+  origem.value=(v.origem.cidade||'')+(v.origem.uf?' - '+v.origem.uf:'');
+  destino.value=(v.destino.cidade||'')+(v.destino.uf?' - '+v.destino.uf:'');
+  origemSel={lat:v.origem.lat,lng:v.origem.lng};
+  destinoSel={lat:v.destino.lat,lng:v.destino.lng};
+  if(v.refrigerada){ try{ document.getElementById('modalidade').value='frigo'; }catch(e){} }
+  rotaTitulo=(v.numero?('Carga '+v.numero+' · '):'')+origem.value+' → '+destino.value;
+  st.textContent='Traçando a rota da viagem…';
+  const ok=await desenharRota([origemSel, destinoSel]);
+  st.textContent = ok ? 'Viagem carregada. Veja os postos e o custo abaixo.' : 'Importei a viagem, mas não consegui traçar a rota.';
+}
+
+// ---------- Custo e economia da viagem ----------
+// A rota é imposta pela gerenciadora de risco: o cálculo compara apenas os
+// postos que JÁ estão no caminho — nunca sugere sair da rota.
+function moeda(v){ return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function renderCustoRota(lista, dkey, dnome){
+  if(!rota_km) return '';
+  const m = (document.getElementById('modalidade')||{}).value || 'seca';
+  const cfgM = (config.modalidades||{})[m] || {kml:2.5, aparelho:0};
+  const kml = parseFloat(cfgM.kml)||2.5;
+  const aph = parseFloat(cfgM.aparelho)||0;
+  const litrosDiesel = rota_km/kml + aph*(rota_horas||0);
+  const litrosArla = litrosDiesel*((config.arlaPct||0)/100);
+  if(!(litrosDiesel>0)) return '';
+
+  const pd = lista.map(p=>p[dkey]).filter(v=>v!=null);
+  const pa = lista.map(p=>p.arla).filter(v=>v!=null);
+  if(!pd.length) return `<div class="custo-card"><div class="cc-t">Custo estimado da viagem</div>
+    <div class="cc-vazio">Nenhum posto desta rota tem preço de ${dnome} cadastrado.</div></div>`;
+
+  const minD=Math.min(...pd), maxD=Math.max(...pd);
+  const minA=pa.length?Math.min(...pa):0, maxA=pa.length?Math.max(...pa):0;
+  const custoMelhor = litrosDiesel*minD + litrosArla*minA;
+  const custoPior   = litrosDiesel*maxD + litrosArla*maxA;
+  const ganhoEscolha = custoPior - custoMelhor;
+
+  const ref = config.precoRef;
+  let blocoRef = '';
+  if(ref && ref>0){
+    const custoRef = litrosDiesel*ref;              // referência considera só o diesel
+    const econ = custoRef - (litrosDiesel*minD);
+    if(econ>0) blocoRef = `<div class="cc-eco">Ante a referência de ${moeda(ref)}/L na bomba, esta viagem economiza <b>${moeda(econ)}</b>.</div>`;
+    else blocoRef = `<div class="cc-eco alerta">Os preços desta rota estão acima da referência de ${moeda(ref)}/L.</div>`;
+  }
+
+  return `<div class="custo-card">
+    <div class="cc-t">Custo estimado da viagem</div>
+    <div class="cc-big">${moeda(custoMelhor)}</div>
+    <div class="cc-sub">abastecendo pelo melhor preço disponível nesta rota</div>
+    <div class="cc-grid">
+      <div><span>Distância</span><b>${rota_km.toFixed(0)} km</b></div>
+      <div><span>${dnome}</span><b>${litrosDiesel.toLocaleString('pt-BR',{maximumFractionDigits:0})} L</b></div>
+      <div><span>Arla 32</span><b>${litrosArla.toLocaleString('pt-BR',{maximumFractionDigits:0})} L</b></div>
+      <div><span>Faixa na rota</span><b>${fmt(minD)} a ${fmt(maxD)}</b></div>
+    </div>
+    ${ganhoEscolha>0?`<div class="cc-eco">Escolhendo o posto mais barato da rota em vez do mais caro: <b>${moeda(ganhoEscolha)}</b> de diferença.</div>`:''}
+    ${blocoRef}
+    <div class="cc-base">Base: ${kml} km/L${aph?' + '+aph+' L/h do aparelho':''} · Arla ${config.arlaPct||0}% do diesel</div>
+  </div>`;
 }
 
 // ---------- Postos perto de uma cidade ----------
@@ -2085,7 +2232,7 @@ async function authApi(payload){
 }
 function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin);
   const tu=document.getElementById('tbUser'); if(tu) tu.textContent=(authUser||'U').trim().slice(0,1).toUpperCase();
-  renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio');
+  renderConfig(); renderAutonomiaInputs(); initDatasMulti(); mostrarAba('inicio');
   carregarPostos().then(()=>{ carregarCfgPlanilha(); if(authAdmin) sincronizarPlanilha(true); }); }
 function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
 async function entrar(){
