@@ -17,6 +17,18 @@
 
 const BASE_PADRAO = 'https://barbieri.multitms.com.br/SGT.WEbService.REST';
 
+// procura o access_token em qualquer nível da resposta
+function acharToken(o) {
+  if (!o || typeof o !== 'object') return null;
+  if (typeof o.access_token === 'string' && o.access_token) return o.access_token;
+  if (typeof o.accessToken === 'string' && o.accessToken) return o.accessToken;
+  for (const k in o) {
+    const v = o[k];
+    if (v && typeof v === 'object') { const t = acharToken(v); if (t) return t; }
+  }
+  return null;
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
   const cors = {
@@ -49,18 +61,35 @@ export async function onRequest(context) {
   const basic = 'Basic ' + btoa(user + ':' + pass);
 
   // ---------- 1) obter o token ----------
+  // O endpoint não documenta o corpo esperado. Tentamos os formatos usuais,
+  // do mais provável ao menos, e ficamos com o primeiro que devolver access_token.
   async function obterToken() {
-    const r = await fetch(base + '/CadastroUnificado/ObterTokenIntegracao', {
-      method: 'POST',
-      headers: { 'authorization': basic, 'content-type': 'application/json', 'accept': 'application/json' },
-      body: '{}',
-    });
-    const txt = await r.text();
-    if (!r.ok) return { erro: 'Falha ao autenticar no Multi (código ' + r.status + '). ' + txt.slice(0, 200) };
-    let j; try { j = JSON.parse(txt); } catch { return { erro: 'O Multi respondeu algo que não é JSON: ' + txt.slice(0, 200) }; }
-    const tk = j.access_token || (j.retorno && j.retorno.access_token) || (j.dados && j.dados.access_token);
-    if (!tk) return { erro: 'Autenticou, mas não encontrei o access_token na resposta.', bruto: j };
-    return { token: tk, tipo: j.token_type || 'Bearer', expira: j.expires_in };
+    const url = base + '/CadastroUnificado/ObterTokenIntegracao';
+    const H = extra => Object.assign({ 'authorization': basic, 'accept': 'application/json' }, extra || {});
+    const form = 'application/x-www-form-urlencoded';
+    const tentativas = [
+      { nome: 'sem corpo',              init: { method: 'POST', headers: H() } },
+      { nome: 'form vazio',             init: { method: 'POST', headers: H({ 'content-type': form }), body: '' } },
+      { nome: 'form client_credentials',init: { method: 'POST', headers: H({ 'content-type': form }), body: 'grant_type=client_credentials' } },
+      { nome: 'form password',          init: { method: 'POST', headers: H({ 'content-type': form }),
+              body: 'grant_type=password&username=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(pass) } },
+      { nome: 'json credenciais',       init: { method: 'POST', headers: H({ 'content-type': 'application/json' }),
+              body: JSON.stringify({ usuario: user, senha: pass, username: user, password: pass }) } },
+      { nome: 'json vazio',             init: { method: 'POST', headers: H({ 'content-type': 'application/json' }), body: '{}' } },
+      { nome: 'texto vazio',            init: { method: 'POST', headers: H({ 'content-type': 'text/plain' }), body: '' } },
+      { nome: 'get',                    init: { method: 'GET',  headers: H() } },
+    ];
+    const log = [];
+    for (const t of tentativas) {
+      let r, txt;
+      try { r = await fetch(url, t.init); txt = await r.text(); }
+      catch (e) { log.push({ tentativa: t.nome, erro: String(e).slice(0, 120) }); continue; }
+      let j = null; try { j = JSON.parse(txt); } catch {}
+      const tk = acharToken(j);
+      log.push({ tentativa: t.nome, status: r.status, resposta: String(txt || '').slice(0, 150) });
+      if (tk) return { token: tk, tipo: (j && j.token_type) || 'Bearer', expira: j && j.expires_in, via: t.nome, log };
+    }
+    return { erro: 'Não consegui obter o token do Multi. Veja o diagnóstico de cada tentativa.', log };
   }
 
   // ---------- chamada autenticada ----------
@@ -80,10 +109,10 @@ export async function onRequest(context) {
   }
 
   const auth = await obterToken();
-  if (auth.erro) return json({ error: auth.erro, bruto: auth.bruto }, 502);
+  if (auth.erro) return json({ error: auth.erro, diagnostico: auth.log }, 502);
 
   if (body.action === 'testar') {
-    return json({ ok: true, autenticado: true, expiraEm: auth.expira, tipo: auth.tipo });
+    return json({ ok: true, autenticado: true, via: auth.via, expiraEm: auth.expira, tipo: auth.tipo, diagnostico: auth.log });
   }
 
   // ---------- viagens (cargas) do período ----------

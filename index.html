@@ -660,6 +660,14 @@
   .viagem-item .vi-rota{font-size:12px;color:var(--ink-2);margin-top:5px;font-weight:550}
   .viagem-item .vi-meta{font-size:11px;color:var(--muted);margin-top:3px}
   .viagem-item .vi-frio{color:var(--ac);font-weight:650}
+
+  /* ---- Diagnóstico da integração ---- */
+  .diag{margin-top:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--line-2);padding:11px 12px;font-size:11px;color:var(--ink-2);line-height:1.5}
+  .diag > b{display:block;margin-bottom:7px;color:var(--ink);font-size:11.5px}
+  .diag > div{padding:5px 0;border-top:1px solid var(--line)}
+  .diag span{font-weight:650;color:var(--ink)}
+  .diag i{color:var(--muted);font-style:normal;word-break:break-word}
+  .diag .diag-fim{border-top:1px solid var(--line);margin-top:6px;color:var(--muted);font-weight:600}
 </style>
 
 <div id="app">
@@ -2022,7 +2030,18 @@ async function buscarViagensMulti(){
   let j;
   try{ j=await multiApi({action:'cargas', token:tokenAuth(), dataInicial:de, dataFinal:ate}); }
   catch{ st.textContent='Não consegui falar com o servidor.'; return; }
-  if(!j||!j.ok){ st.textContent=(j&&j.error)||'Não consegui consultar as viagens.'; return; }
+  if(!j||!j.ok){
+    st.innerHTML=((j&&j.error)||'Não consegui consultar as viagens.');
+    if(j&&j.diagnostico){
+      el.innerHTML='<div class="diag"><b>Diagnóstico — o que o Multi respondeu a cada formato:</b>'+
+        j.diagnostico.map(d=>'<div><span>'+d.tentativa+'</span> → <b>'+(d.status!=null?('código '+d.status):('erro: '+d.erro))+'</b>'+
+        (d.resposta?'<br><i>'+String(d.resposta).replace(/[<>]/g,'')+'</i>':'')+'</div>').join('')+
+        '<div class="diag-fim">Copie e me envie este bloco.</div></div>';
+    } else if(j&&j.detalhe){
+      el.innerHTML='<div class="diag"><b>Resposta do Multi:</b><div><i>'+JSON.stringify(j.detalhe).slice(0,600).replace(/[<>]/g,'')+'</i></div></div>';
+    }
+    return;
+  }
   _viagensMulti=j.viagens||[];
   if(!_viagensMulti.length){ st.textContent='Nenhuma viagem encontrada nesse período.'; return; }
   st.textContent=_viagensMulti.length+' viagem(ns) encontrada(s). Clique para carregar.';
