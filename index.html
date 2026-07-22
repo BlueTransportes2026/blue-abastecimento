@@ -662,6 +662,17 @@
   .dz-s{font-size:12px;color:var(--muted);margin-top:5px}
   .dz-s b{color:var(--ac);font-weight:650}
 
+  /* formulário de cadastro recolhível */
+  #detCadastro > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px}
+  #detCadastro > summary::-webkit-details-marker{display:none}
+  #detCadastro > summary h2{margin:0;flex:1}
+  #detCadastro > summary::after{content:'+';font-size:16px;font-weight:700;color:var(--ac);
+    width:24px;height:24px;border:1px solid var(--ac-line);border-radius:7px;background:var(--ac-soft);
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:.15s}
+  #detCadastro[open] > summary::after{content:'–'}
+  #detCadastro > summary:hover::after{background:var(--ac);color:#fff;border-color:var(--ac)}
+  #detCadastro .card-form{margin-top:10px}
+
   .mais-op{margin-top:12px}
   .mais-op > summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);padding:6px 0;list-style:none}
   .mais-op > summary::-webkit-details-marker{display:none}
@@ -728,6 +739,7 @@
 
       <div class="nav-sec">Cadastro</div>
       <button class="nav-item" id="nav-postos" onclick="mostrarAba('postos')" data-ic="fuel"><span class="ni-tx">Postos</span></button>
+      <button class="nav-item" id="nav-importacao" onclick="mostrarAba('importacao')" data-ic="upload"><span class="ni-tx">Importação</span></button>
 
       <div class="nav-sec">Análise</div>
       <button class="nav-item" id="nav-gerenciadora" onclick="mostrarAba('gerenciadora')" data-ic="chart"><span class="ni-tx">Indicadores</span></button>
@@ -762,10 +774,10 @@
               <div class="cs" id="homePendN">Preços a atualizar</div></button>
             <button class="home-card" onclick="mostrarAba('postos')">
               <div class="ci" data-ic="fuel"></div><div class="ct">Postos</div>
-              <div class="cs">Cadastro, importação e lista completa</div></button>
-            <button class="home-card" onclick="mostrarAba('gerenciadora')">
-              <div class="ci" data-ic="chart"></div><div class="ct">Indicadores</div>
-              <div class="cs">Painel gerencial e rotas da gerenciadora</div></button>
+              <div class="cs">Lista completa, busca e cadastro</div></button>
+            <button class="home-card" onclick="mostrarAba('importacao')">
+              <div class="ci" data-ic="upload"></div><div class="ct">Importação</div>
+              <div class="cs">Atualizar preços por planilha do KMM</div></button>
           </div>
         </div>
       </div>
@@ -800,6 +812,21 @@
               <button class="btn-sec" style="flex:0 0 auto" onclick="limparRota()">Limpar</button>
             </div>
             <div class="status" id="infoRota"></div>
+          </div>
+        </div>
+
+        <div class="secao" id="secaoGerenciadora">
+          <h2 data-ic="shield">Rota da gerenciadora</h2>
+          <div class="card-form">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 9px;line-height:1.5">O trajeto é definido pela gerenciadora de risco. Cole aqui <b>uma</b> destas opções para reproduzir a rota homologada:</p>
+            <ul style="font-size:11.5px;color:var(--muted);margin:0 0 10px;padding-left:17px;line-height:1.7">
+              <li>o <b>link da NOX</b> (noxgr.srv.br/...)</li>
+              <li>um <b>link do Google Maps</b> com a rota</li>
+              <li>as <b>cidades do trajeto</b>, uma por linha (JBS/Opentech)</li>
+            </ul>
+            <textarea id="impText" rows="4" placeholder="Cole o link aqui...&#10;&#10;ou as cidades:&#10;Itupeva SP&#10;Campinas SP&#10;Cordeirópolis SP"></textarea>
+            <button class="btn-primario" style="margin-top:10px" onclick="importarRota()">Importar e traçar rota</button>
+            <div class="status" id="impStatus"></div>
           </div>
         </div>
 
@@ -853,7 +880,8 @@
       </div>
 
       <!-- ================= ABA POSTOS ================= -->
-      <div id="aba-postos" style="display:none">
+      <!-- ================= ABA IMPORTAÇÃO ================= -->
+      <div id="aba-importacao" style="display:none">
         <div class="secao">
           <h2 data-ic="upload">Importar planilha</h2>
           <div class="dropzone" id="dropzone">
@@ -864,21 +892,41 @@
           <input type="file" id="csvFile" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="importarCSV(event)" />
           <div class="status" id="csvStatus"></div>
           <div id="importResumo"></div>
-          <details class="mais-op">
-            <summary>Outras formas de atualizar</summary>
-            <div class="card-form admin-only-block" style="margin-top:10px">
-              <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">Planilha do Google (automático)</div>
-              <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Cole o link da planilha publicada em CSV. O site puxa sozinho sempre que um administrador entra.</p>
-              <input id="sheetUrl" placeholder="link da planilha …/pub?output=csv" />
-              <div class="btn-linha">
-                <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">Salvar link</button>
-                <button class="btn-primario" onclick="sincronizarPlanilha()">Sincronizar agora</button>
-              </div>
-              <div class="status" id="sheetStatus"></div>
-            </div>
-          </details>
+          <p style="font-size:11.5px;color:var(--muted);margin:12px 2px 0;line-height:1.55">Aceita tanto a exportação do <b>KMM</b> (<i>Abastecidas por Fornecedor — Valores Atuais Negociados</i>, que traz ativos e inativos) quanto a sua <b>planilha modelo</b>. Só entram os postos ativos, e a atualização vale para toda a equipe.</p>
         </div>
 
+        <div class="secao admin-only-block">
+          <h2 data-ic="refresh">Atualização automática</h2>
+          <div class="card-form">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Cole o link de uma planilha do Google publicada em CSV. O site puxa dela sozinho sempre que um administrador entra.</p>
+            <input id="sheetUrl" placeholder="link da planilha …/pub?output=csv" />
+            <div class="btn-linha">
+              <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">Salvar link</button>
+              <button class="btn-primario" onclick="sincronizarPlanilha()">Sincronizar agora</button>
+            </div>
+            <div class="status" id="sheetStatus"></div>
+          </div>
+        </div>
+
+        <div class="secao">
+          <h2 data-ic="database">Cópia de segurança</h2>
+          <div class="card-form">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Baixe um arquivo com todos os postos para guardar, ou restaure a partir de um backup.</p>
+            <div class="btn-linha" style="margin-top:0">
+              <button class="btn-sec" onclick="exportar()">Baixar backup</button>
+              <button class="btn-sec" onclick="document.getElementById('arquivo').click()">Restaurar</button>
+            </div>
+            <input type="file" id="arquivo" accept=".json" style="display:none" onchange="importar(event)" />
+          </div>
+          <div class="aviso admin-only-block" style="margin-top:12px">
+            <b>Zona de risco.</b> Apagar remove os postos da base compartilhada, para toda a equipe.
+            <button onclick="limparTodos()" style="width:100%;margin-top:9px;background:var(--dang-soft);color:var(--dang);border:1px solid #fecaca">Excluir todos os postos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ABA POSTOS ================= -->
+      <div id="aba-postos" style="display:none">
         <div class="secao">
           <h2 data-ic="chart">Resumo</h2>
           <div class="resumo-card" id="resumoGeral"></div>
@@ -890,7 +938,8 @@
         </div>
 
         <div class="secao">
-          <h2 id="tituloForm" data-ic="plus">Cadastrar posto</h2>
+          <details id="detCadastro">
+          <summary><h2 id="tituloForm" data-ic="plus">Cadastrar posto</h2></summary>
           <div class="card-form">
             <label>Buscar por CNPJ (preenche automático)</label>
             <div class="linha">
@@ -922,6 +971,7 @@
               <button class="btn-sec" style="flex:0 0 auto" onclick="limparFormPosto()">Limpar</button>
             </div>
           </div>
+          </details>
         </div>
 
 
@@ -941,15 +991,6 @@
           <div class="lista-todos" id="listaTodos"></div>
         </div>
 
-        <div class="aviso">
-          Backup dos postos deste computador:
-          <div class="btn-linha">
-            <button class="btn-sec" onclick="exportar()">Exportar</button>
-            <button class="btn-sec" onclick="document.getElementById('arquivo').click()">Importar</button>
-          </div>
-          <input type="file" id="arquivo" accept=".json" style="display:none" onchange="importar(event)" />
-          <button onclick="limparTodos()" style="width:100%;margin-top:10px;background:#fdeaea;color:#e5484d">Excluir TODOS os postos</button>
-        </div>
       </div>
 
       <!-- ================= ABA GESTÃO ================= -->
@@ -957,23 +998,6 @@
         <div class="secao">
           <h2 data-ic="chart">Painel gerencial</h2>
           <div id="gestaoDash"></div>
-        </div>
-        <div class="secao">
-          <h2 data-ic="shield">Importar rota da gerenciadora</h2>
-          <div class="card-form">
-            <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;line-height:1.5">Cole abaixo <b>uma</b> destas opções:</p>
-            <ul style="font-size:12px;color:var(--muted);margin:0 0 10px;padding-left:18px;line-height:1.7">
-              <li>o <b>link da NOX</b> (noxgr.srv.br/...)</li>
-              <li>um <b>link do Google Maps</b> com a rota</li>
-              <li>as <b>cidades do trajeto</b>, uma por linha (JBS/Opentech)</li>
-            </ul>
-            <textarea id="impText" rows="5" placeholder="Cole o link aqui...&#10;&#10;ou as cidades:&#10;Itupeva SP&#10;Campinas SP&#10;Cordeirópolis SP"></textarea>
-            <button class="btn-primario" style="margin-top:10px" onclick="importarRota()">Importar e traçar rota</button>
-            <div class="status" id="impStatus"></div>
-          </div>
-        </div>
-        <div class="aviso">
-          A leitura automática do link da NOX precisa da função publicada no Cloudflare (arquivo <code>functions/nox.js</code>). Sem ela, você pode colar o link do Google Maps ou as cidades.
         </div>
       </div>
     </div>
@@ -1297,9 +1321,9 @@ function postoPassaFiltro(p){
 function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota(); }
 
 // ---------- Abas ----------
-const _tituloAba={inicio:'Início',rota:'Roteirização',pendencias:'Pendências',postos:'Postos',gerenciadora:'Indicadores'};
+const _tituloAba={inicio:'Início',rota:'Roteirização',pendencias:'Pendências',postos:'Postos',importacao:'Importação',gerenciadora:'Indicadores'};
 function mostrarAba(nome){
-  ['inicio','rota','pendencias','postos','gerenciadora'].forEach(n=>{
+  ['inicio','rota','pendencias','postos','importacao','gerenciadora'].forEach(n=>{
     document.getElementById('aba-'+n).style.display = n===nome?'block':'none';
     const nav=document.getElementById('nav-'+n); if(nav) nav.classList.toggle('ativo', n===nome);
   });
@@ -1691,7 +1715,7 @@ function editarPosto(id){
   pS10.value=p.s10??''; pS500.value=p.s500??''; pArla.value=p.arla??''; pCnpj.value=p.cnpj||''; cnpjStatus.textContent='';
   definirLocal(p.lat,p.lng);
   document.getElementById('tituloForm').innerHTML=ic('edit')+'Editar posto';
-  document.querySelector('.conteudo').scrollTop=0;
+  const det=document.getElementById('detCadastro'); if(det){ det.open=true; det.scrollIntoView({block:'start'}); }
 }
 function limparTodos(){
   if(!postos.length){ alert('Não há postos para excluir.'); return; }
