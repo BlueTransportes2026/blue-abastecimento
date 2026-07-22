@@ -650,6 +650,43 @@
   .custo-card .cc-base{margin-top:10px;font-size:10.5px;color:var(--muted-2)}
   .custo-card .cc-vazio{font-size:12px;color:var(--muted);margin-top:8px}
 
+  /* ---- Área de importação de planilha ---- */
+  .dropzone{border:2px dashed #cbd5e1;border-radius:var(--r-lg);background:var(--card);padding:26px 18px;text-align:center;
+    cursor:pointer;transition:.16s;user-select:none}
+  .dropzone:hover{border-color:var(--ac);background:var(--ac-soft)}
+  .dropzone.arrastando{border-color:var(--ac);background:var(--ac-soft);transform:scale(1.01)}
+  .dropzone.ocupado{opacity:.6;pointer-events:none}
+  .dz-ic{color:var(--ac);display:flex;justify-content:center;margin-bottom:10px}
+  .dz-ic .ic{width:30px;height:30px;stroke-width:1.5}
+  .dz-t{font-size:14.5px;font-weight:650;color:var(--ink)}
+  .dz-s{font-size:12px;color:var(--muted);margin-top:5px}
+  .dz-s b{color:var(--ac);font-weight:650}
+
+  .mais-op{margin-top:12px}
+  .mais-op > summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);padding:6px 0;list-style:none}
+  .mais-op > summary::-webkit-details-marker{display:none}
+  .mais-op > summary::before{content:'+ ';font-weight:700;color:var(--ac)}
+  .mais-op[open] > summary::before{content:'– '}
+  .mais-op > summary:hover{color:var(--ac)}
+
+  .imp-res{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);padding:15px;margin-top:12px}
+  .imp-res .ir-t{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+  .imp-res .ir-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .imp-res .ir-c{border:1px solid var(--line);border-radius:var(--r);padding:11px 12px}
+  .imp-res .ir-c .v{font-size:20px;font-weight:680;color:var(--ink);line-height:1}
+  .imp-res .ir-c .l{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500}
+  .imp-res .ir-c.destaque{background:var(--ac-soft);border-color:var(--ac-line)}
+  .imp-res .ir-c.destaque .v{color:var(--ac)}
+  .imp-res .ir-c.alerta{background:var(--warn-soft);border-color:#fde68a}
+  .imp-res .ir-c.alerta .v{color:var(--warn)}
+  .imp-res .ir-ok{margin-top:11px;background:var(--ok-soft);border:1px solid #a7f3d0;color:var(--ok);
+    border-radius:var(--r);padding:9px 11px;font-size:11.5px;font-weight:600}
+  .imp-res .ir-lista{margin-top:11px;border-top:1px solid var(--line-2);padding-top:9px;max-height:170px;overflow-y:auto}
+  .imp-res .ir-lista .li{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:4px 0;color:var(--ink-2)}
+  .imp-res .ir-lista .li b{font-weight:650;white-space:nowrap}
+  .imp-res .ir-lista .sobe{color:var(--dang)}
+  .imp-res .ir-lista .desce{color:var(--ok)}
+
   /* ---- Diagnóstico da integração ---- */
   .diag{margin-top:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--line-2);padding:11px 12px;font-size:11px;color:var(--ink-2);line-height:1.5}
   .diag > b{display:block;margin-bottom:7px;color:var(--ink);font-size:11.5px}
@@ -816,6 +853,31 @@
       <!-- ================= ABA POSTOS ================= -->
       <div id="aba-postos" style="display:none">
         <div class="secao">
+          <h2 data-ic="upload">Importar planilha</h2>
+          <div class="dropzone" id="dropzone">
+            <div class="dz-ic" data-ic="upload"></div>
+            <div class="dz-t">Arraste a planilha aqui</div>
+            <div class="dz-s">ou <b>clique para escolher</b> — aceita Excel (.xlsx) e CSV</div>
+          </div>
+          <input type="file" id="csvFile" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="importarCSV(event)" />
+          <div class="status" id="csvStatus"></div>
+          <div id="importResumo"></div>
+          <details class="mais-op">
+            <summary>Outras formas de atualizar</summary>
+            <div class="card-form admin-only-block" style="margin-top:10px">
+              <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">Planilha do Google (automático)</div>
+              <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Cole o link da planilha publicada em CSV. O site puxa sozinho sempre que um administrador entra.</p>
+              <input id="sheetUrl" placeholder="link da planilha …/pub?output=csv" />
+              <div class="btn-linha">
+                <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">Salvar link</button>
+                <button class="btn-primario" onclick="sincronizarPlanilha()">Sincronizar agora</button>
+              </div>
+              <div class="status" id="sheetStatus"></div>
+            </div>
+          </details>
+        </div>
+
+        <div class="secao">
           <h2 data-ic="chart">Resumo</h2>
           <div class="resumo-card" id="resumoGeral"></div>
         </div>
@@ -860,26 +922,6 @@
           </div>
         </div>
 
-        <div class="secao">
-          <h2 data-ic="refresh">Atualizar postos e preços</h2>
-          <div class="card-form admin-only-block" style="margin-bottom:12px">
-            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">Atualizar preços automaticamente</div>
-            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Puxa a lista de preços e atualiza <b>para toda a equipe</b>. Usa a <b>planilha do Google</b> (se você colar o link abaixo) ou, se não houver, o <b>arquivo do sistema</b> (<code>Postos-Blue-Transportes-PLANILHA.csv</code>) publicado junto com o site. Roda sozinho quando um admin entra.</p>
-            <input id="sheetUrl" placeholder="(opcional) link da planilha do Google …/pub?output=csv" />
-            <div class="btn-linha">
-              <button class="btn-sec" style="flex:0 0 auto" onclick="salvarLinkPlanilha()">Salvar link</button>
-              <button class="btn-primario" onclick="sincronizarPlanilha()">Sincronizar agora</button>
-            </div>
-            <div class="status" id="sheetStatus"></div>
-          </div>
-          <div class="card-form">
-            <div class="cfg-lbl" style="font-size:13px;margin-bottom:4px">Ou importar um arquivo (CSV / Excel)</div>
-            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Exporte a lista da KMM e importe aqui. O sistema <b>localiza cada posto no mapa</b> pelo endereço.</p>
-            <button class="btn-sec" onclick="document.getElementById('csvFile').click()">Escolher arquivo</button>
-            <input type="file" id="csvFile" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="importarCSV(event)" />
-            <div class="status" id="csvStatus"></div>
-          </div>
-        </div>
 
         <div class="secao">
           <h2 data-ic="list">Postos cadastrados (<span id="qtdPostos">0</span>)</h2>
@@ -1728,14 +1770,23 @@ function _coord(s){
   return null;
 }
 async function importarCSV(ev){
-  const f=ev.target.files[0]; if(!f) return;
+  const f=ev.target.files[0];
+  if(f) await importarArquivo(f);
+  ev.target.value='';
+}
+// lê a planilha (Excel ou CSV) e joga tudo para dentro do sistema
+async function importarArquivo(f){
   const nome=(f.name||'').toLowerCase();
-  csvStatus.textContent='Lendo arquivo…';
+  const dz=document.getElementById('dropzone');
+  const res=document.getElementById('importResumo'); if(res) res.innerHTML='';
+  if(!/\.(csv|xlsx|xls)$/.test(nome)){ csvStatus.textContent='Formato não aceito. Envie um arquivo .xlsx, .xls ou .csv.'; return; }
+  if(dz) dz.classList.add('ocupado');
+  csvStatus.textContent='Lendo "'+f.name+'"…';
   try{
     const buf=await f.arrayBuffer();
     let rows;
     if(nome.endsWith('.xlsx')||nome.endsWith('.xls')){
-      if(typeof XLSX==='undefined'){ csvStatus.textContent='Leitor de Excel não carregou (precisa de internet). Tente de novo.'; ev.target.value=''; return; }
+      if(typeof XLSX==='undefined'){ csvStatus.textContent='Leitor de Excel não carregou (precisa de internet). Tente de novo.'; if(dz) dz.classList.remove('ocupado'); return; }
       const wb=XLSX.read(buf,{type:'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
@@ -1748,7 +1799,37 @@ async function importarCSV(ev){
     }
     await processarLinhas(rows);
   }catch(err){ csvStatus.textContent='Erro ao ler o arquivo. Verifique o formato.'; }
-  ev.target.value='';
+  if(dz) dz.classList.remove('ocupado');
+}
+// arrastar e soltar
+function ligarDropzone(){
+  const dz=document.getElementById('dropzone'); if(!dz||dz.dataset.pronto) return;
+  dz.dataset.pronto='1';
+  dz.addEventListener('click', ()=>document.getElementById('csvFile').click());
+  ['dragenter','dragover'].forEach(e=>dz.addEventListener(e, ev=>{ ev.preventDefault(); ev.stopPropagation(); dz.classList.add('arrastando'); }));
+  ['dragleave','drop'].forEach(e=>dz.addEventListener(e, ev=>{ ev.preventDefault(); ev.stopPropagation(); dz.classList.remove('arrastando'); }));
+  dz.addEventListener('drop', ev=>{ const f=ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0]; if(f) importarArquivo(f); });
+  // impede que soltar fora da área abra o arquivo no navegador
+  ['dragover','drop'].forEach(e=>window.addEventListener(e, ev=>{ if(!dz.contains(ev.target)) ev.preventDefault(); }));
+}
+// resumo do que a planilha mudou
+function renderResumoImport(r){
+  const el=document.getElementById('importResumo'); if(!el) return;
+  const linhas=(r.mudancas||[]).slice(0,40).map(m=>{
+    const subiu=m.novo>m.antigo;
+    return '<div class="li"><span>'+m.nome.slice(0,34)+'</span><b class="'+(subiu?'sobe':'desce')+'">'
+      +fmt(m.antigo)+' &rarr; '+fmt(m.novo)+'</b></div>';
+  }).join('');
+  el.innerHTML='<div class="imp-res"><div class="ir-t">Resultado da importação</div>'
+    +'<div class="ir-grid">'
+    +'<div class="ir-c"><div class="v">'+r.upd+'</div><div class="l">postos atualizados</div></div>'
+    +'<div class="ir-c'+(r.add?' destaque':'')+'"><div class="v">'+r.add+'</div><div class="l">postos novos</div></div>'
+    +'<div class="ir-c'+(r.precos?' destaque':'')+'"><div class="v">'+r.precos+'</div><div class="l">preços alterados</div></div>'
+    +'<div class="ir-c'+(r.semLoc?' alerta':'')+'"><div class="v">'+r.semLoc+'</div><div class="l">sem localização</div></div>'
+    +'</div>'
+    +(_nuvemAtiva?'<div class="ir-ok">Salvo na base compartilhada — toda a equipe já vê.</div>':'')
+    +(linhas?'<div class="ir-lista">'+linhas+(r.mudancas.length>40?'<div class="li"><span>e mais '+(r.mudancas.length-40)+'…</span></div>':'')+'</div>':'')
+    +'</div>';
 }
 
 async function processarLinhas(rows){
@@ -1771,7 +1852,7 @@ async function processarLinhas(rows){
   const chave=p=>{ const c=(p.cnpj||'').replace(/\D/g,''); return c.length>=11?'c'+c:'n'+_norm(p.nome)+'|'+_norm(p.ref); };
   const idx={}; postos.forEach(p=>idx[chave(p)]=p);
 
-  let add=0, upd=0, semLoc=0, pulados=0; const geocodar=[];
+  let add=0, upd=0, semLoc=0, pulados=0; const geocodar=[]; const mudancas=[];
   for(let r=hr+1;r<rows.length;r++){
     const c=rows[r]||[]; const gv=i=> i>=0 && c[i]!=null ? String(c[i]).trim() : '';
     const nome=gv(ci.nome); if(!nome) continue;
@@ -1793,7 +1874,11 @@ async function processarLinhas(rows){
       dtNeg, hom:gv(ci.hom), obs:gv(ci.obs), contato:gv(ci.contato) };
     const k = cnpj.length>=11?'c'+cnpj:'n'+_norm(nome)+'|'+_norm(ref);
     let obj=idx[k];
-    if(obj){ Object.assign(obj,dados); upd++; }
+    if(obj){
+      if(dados.s10!=null && obj.s10!=null && Math.abs(dados.s10-obj.s10)>0.0005)
+        mudancas.push({nome:obj.nome, antigo:obj.s10, novo:dados.s10});
+      Object.assign(obj,dados); upd++;
+    }
     else { obj={ id:'p'+Date.now()+'_'+r, gr:'', lat:null, lng:null, ...dados }; postos.push(obj); idx[k]=obj; add++; }
     if(coord){ obj.lat=coord.lat; obj.lng=coord.lng; }
     else if(obj.lat==null){ const q=[end,cidade,uf].filter(Boolean).join(', '); if(q) geocodar.push({p:obj,q}); else semLoc++; }
@@ -1805,8 +1890,9 @@ async function processarLinhas(rows){
     if(g){ geocodar[i].p.lat=g.lat; geocodar[i].p.lng=g.lng; } else semLoc++;
   }
   salvar(); renderMarcadores();
-  if(_nuvemAtiva){ csvStatus.textContent='Salvando no banco compartilhado…'; await nuvemSalvarTudo(); }
-  csvStatus.innerHTML=`Importados <b>${add}</b> e atualizados <b>${upd}</b> posto(s).${semLoc?' '+semLoc+' sem localização.':''}${_nuvemAtiva?' <b>Toda a equipe já vê.</b>':''}`;
+  if(_nuvemAtiva){ csvStatus.textContent='Salvando na base compartilhada…'; await nuvemSalvarTudo(); }
+  csvStatus.textContent='Importação concluída.';
+  renderResumoImport({ add, upd, semLoc, precos: mudancas.length, mudancas });
 }
 
 // ---------- Paradas ----------
@@ -2220,7 +2306,7 @@ async function excluirUsuario(user){
 
 // ---------- Início ----------
 (async function(){
-  pintarIcones();
+  pintarIcones(); ligarDropzone();
   if(/[#&]rota=/.test(location.hash||'')){ renderConfig(); checarLinkMotorista(); return; } // motorista: sem login
   const token=localStorage.getItem('authToken');
   if(token){ try{ const j=await authApi({action:'me', token}); if(j.ok){ authUser=j.user; authAdmin=j.admin; abrirApp(); return; } }catch{} }
