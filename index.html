@@ -681,6 +681,8 @@
   .imp-res .ir-c.alerta .v{color:var(--warn)}
   .imp-res .ir-ok{margin-top:11px;background:var(--ok-soft);border:1px solid #a7f3d0;color:var(--ok);
     border-radius:var(--r);padding:9px 11px;font-size:11.5px;font-weight:600}
+  .imp-res .ir-nota{margin-top:11px;background:var(--line-2);border:1px solid var(--line);color:var(--muted);
+    border-radius:var(--r);padding:9px 11px;font-size:11.5px;font-weight:500}
   .imp-res .ir-lista{margin-top:11px;border-top:1px solid var(--line-2);padding-top:9px;max-height:170px;overflow-y:auto}
   .imp-res .ir-lista .li{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:4px 0;color:var(--ink-2)}
   .imp-res .ir-lista .li b{font-weight:650;white-space:nowrap}
@@ -1827,6 +1829,7 @@ function renderResumoImport(r){
     +'<div class="ir-c'+(r.precos?' destaque':'')+'"><div class="v">'+r.precos+'</div><div class="l">preços alterados</div></div>'
     +'<div class="ir-c'+(r.semLoc?' alerta':'')+'"><div class="v">'+r.semLoc+'</div><div class="l">sem localização</div></div>'
     +'</div>'
+    +(r.inativos?'<div class="ir-nota">'+r.inativos+' posto(s) inativo(s) da planilha foram ignorados.</div>':'')
     +(_nuvemAtiva?'<div class="ir-ok">Salvo na base compartilhada — toda a equipe já vê.</div>':'')
     +(linhas?'<div class="ir-lista">'+linhas+(r.mudancas.length>40?'<div class="li"><span>e mais '+(r.mudancas.length-40)+'…</span></div>':'')+'</div>':'')
     +'</div>';
@@ -1836,26 +1839,30 @@ async function processarLinhas(rows){
   if(!rows || rows.length<2){ csvStatus.textContent='Arquivo vazio ou sem dados.'; return; }
   // encontra a linha de cabeçalho (pode não ser a primeira)
   let hr=0;
-  for(let i=0;i<Math.min(rows.length,20);i++){ const l=(rows[i]||[]).map(_norm); if(l.some(h=>h.includes('posto')||h.includes('nome fantasia'))){ hr=i; break; } }
+  for(let i=0;i<Math.min(rows.length,20);i++){ const l=(rows[i]||[]).map(_norm); if(l.some(h=>h.includes('posto')||h.includes('fornecedor')||h.includes('nome fantasia'))){ hr=i; break; } }
   const head=(rows[hr]||[]).map(_norm);
   const col=(...ts)=>{ for(const t of ts){ const i=head.findIndex(h=>h&&h.includes(t)); if(i>=0) return i; } return -1; };
   const combinado=head.findIndex(h=>h.includes('lat')&&h.includes('long')); // ex.: "Latitude/longitude"
-  const ci={ nome:col('posto','nome fantasia','razao'), cnpj:col('cnpj'), end:col('endereco'),
-    cidade:col('cidade','localidade'), uf:col('uf'), latlng:combinado, loc2:col('localizacao'),
+  const ci={ nome:col('posto','fornecedor','nome fantasia','razao'), cnpj:col('cnpj'), end:col('endereco'),
+    cidade:col('cidade','localidade'), uf:col('uf'), latlng:combinado, loc2:col('localizacao','maps'),
+    sit:col('situacao','situa'),
     lat:head.findIndex(h=>(h.includes('latidude')||h.includes('latitude')||h.includes('cli_lat'))&&!h.includes('long')),
     lng:head.findIndex(h=>(h.includes('longitude')||h.includes('cli_long'))&&!(h.includes('latidude')||h.includes('latitude'))),
     s10:head.findIndex(h=>h.includes('s10')||h.includes('s-10')||h.includes('s 10')),
     s500:head.findIndex(h=>h.includes('500')), arla:col('arla'),
-    dt:col('dt neg','data neg','data'), hom:col('hom'), obs:col('observ'), contato:col('contato') };
+    dt:col('ultima neg','ult neg','dt neg','data neg','data'), hom:col('hom'), obs:col('observ'),
+    contato:col('contato','telefone','fone') };
   if(ci.nome<0){ csvStatus.textContent='Não achei a coluna do nome do posto.'; return; }
 
   const chave=p=>{ const c=(p.cnpj||'').replace(/\D/g,''); return c.length>=11?'c'+c:'n'+_norm(p.nome)+'|'+_norm(p.ref); };
   const idx={}; postos.forEach(p=>idx[chave(p)]=p);
 
-  let add=0, upd=0, semLoc=0, pulados=0; const geocodar=[]; const mudancas=[];
+  let add=0, upd=0, semLoc=0, pulados=0, inativos=0; const geocodar=[]; const mudancas=[];
   for(let r=hr+1;r<rows.length;r++){
     const c=rows[r]||[]; const gv=i=> i>=0 && c[i]!=null ? String(c[i]).trim() : '';
     const nome=gv(ci.nome); if(!nome) continue;
+    // planilha do KMM traz ativos e inativos: só entram os ATIVOS
+    if(ci.sit>=0 && _norm(gv(ci.sit))!=='ativo'){ inativos++; continue; }  // vazio também não é ativo
     const cidade=gv(ci.cidade), uf=gv(ci.uf), end=gv(ci.end), ref=[cidade,uf].filter(Boolean).join(' - ');
     const cnpj=gv(ci.cnpj).replace(/\D/g,'');
     // coordenada: coluna combinada OU colunas separadas
@@ -1892,7 +1899,7 @@ async function processarLinhas(rows){
   salvar(); renderMarcadores();
   if(_nuvemAtiva){ csvStatus.textContent='Salvando na base compartilhada…'; await nuvemSalvarTudo(); }
   csvStatus.textContent='Importação concluída.';
-  renderResumoImport({ add, upd, semLoc, precos: mudancas.length, mudancas });
+  renderResumoImport({ add, upd, semLoc, inativos, precos: mudancas.length, mudancas });
 }
 
 // ---------- Paradas ----------
