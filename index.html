@@ -768,6 +768,15 @@
   .fh-aviso-tg.on{background:var(--dang-soft);border-color:#fecaca}
   .fh-aviso-tg .t{flex:1;font-size:13px;font-weight:600;color:var(--ink)}
   .fh-aviso-tg.on .t{color:var(--dang)}
+  .fh-jbs-tg{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;cursor:pointer}
+  .fh-jbs-tg.on{background:var(--ok-soft);border-color:#a7f3d0}
+  .fh-jbs-tg .t{flex:1;font-size:13px;font-weight:600;color:var(--ink)}
+  .fh-jbs-tg.on .t{color:var(--ok)}
+  .fh-jbs-tg .fh-jbs-tag{font-size:10px;font-weight:800;letter-spacing:.06em;padding:3px 8px;border-radius:6px;
+    background:var(--line-2);color:var(--muted-2)}
+  .fh-jbs-tg.on .fh-jbs-tag{background:var(--ok);color:#fff}
+  .jbs-tag{display:inline-flex;align-items:center;font-size:9.5px;font-weight:800;letter-spacing:.04em;
+    padding:2px 6px;border-radius:5px;background:var(--ok-soft);color:var(--ok);border:1px solid #a7f3d0;margin-right:5px}
   .fh-fone{display:flex;gap:8px}
   .fh-fone a{flex:1;text-decoration:none}
   .fh-acoes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
@@ -884,7 +893,8 @@
             <button class="link-mini" onclick="addParada()">+ Adicionar parada</button>
 
             <div class="filtros-rota">
-              <label><input type="checkbox" id="fValido" onchange="aplicarFiltros()"> Mostrar só postos com preço válido</label>
+              <label><input type="checkbox" id="fValido" onchange="aplicarFiltros()"> Só com preço válido</label>
+              <label><input type="checkbox" id="fJbs" onchange="aplicarFiltros()"> Só homologados JBS</label>
             </div>
 
             <div class="btn-linha">
@@ -1447,8 +1457,10 @@ function ehOportunidade(p){ if(!p||p.s10==null) return false; const m=ufMedias[g
 function postoPassaFiltro(p){
   const fHom=document.getElementById('fHom')&&document.getElementById('fHom').checked;
   const fVal=document.getElementById('fValido')&&document.getElementById('fValido').checked;
+  const fJbs=document.getElementById('fJbs')&&document.getElementById('fJbs').checked;
   if(fHom && !(p.hom && _norm(p.hom).includes('homolog') && !_norm(p.hom).includes('nao'))) return false;
   if(fVal && !((p.s10!=null||p.s500!=null) && !precoVencido(p))) return false;
+  if(fJbs && !p.jbs) return false;
   return true;
 }
 function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota(); }
@@ -1514,7 +1526,7 @@ function renderMarcadores(){
     const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'')}).addTo(mapa);
     m.bindPopup(motorista
       ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br><a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>Abrir no Google Maps</b></a>`
-      : `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.naoAbastecer?'<br><b style="color:#b91c1c">⚠ NÃO ABASTECER</b>':''}<br><br>
+      : `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.jbs?'<br><b style="color:#047857">✓ Homologado JBS</b>':''}${p.naoAbastecer?'<br><b style="color:#b91c1c">⚠ NÃO ABASTECER</b>':''}<br><br>
       S10 <b>${fmt(p.s10)}</b> · S500 <b>${fmt(p.s500)}</b> · Arla <b>${fmt(p.arla)}</b>${p.dtNeg?'<br><small>preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">VENCIDO</b>':'')+'</small>':''}<br><br>
       <a href="#" onclick="abrirFicha('${p.id}');return false"><b>Ver ficha completa</b></a>`);
     marcadores[p.id]=m;
@@ -1538,7 +1550,7 @@ function atualizarLista(){
     <div class="item">
       <div class="info" onclick="abrirFicha('${p.id}')">
         <div class="nm">${ehOportunidade(p)?'':''}${p.nome}</div>
-        <div class="sub">${p.naoAbastecer?'<b style="color:#b91c1c">NÃO ABASTECER</b> · ':''}${p.ref||''}${p.lat==null?' · sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">preço vencido</b>':''}${p.hom?' · '+p.hom:''} · S10 ${fmt(p.s10)}</div>
+        <div class="sub">${p.jbs?'<b style="color:#047857">JBS</b> · ':''}${p.naoAbastecer?'<b style="color:#b91c1c">NÃO ABASTECER</b> · ':''}${p.ref||''}${p.lat==null?' · sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">preço vencido</b>':''} · S10 ${fmt(p.s10)}</div>
       </div>
       <div class="acoes">
         <button class="ac ok" onclick="confirmarPreco('${p.id}')" title="Marcar preço como OK (renova a data)">${ic('check','ic-sm')}</button>
@@ -1637,10 +1649,18 @@ function abrirFicha(id){
      <button class="fh-x" onclick="fecharFicha()">${ic('x','ic-sm')}</button>
      <div class="fh-nome">${p.nome}</div>
      <div class="fh-ref">${p.ref||'—'}${p.cnpj?' · CNPJ '+p.cnpj:''}</div>
-     <span class="fh-pill ${stCls}">${stTxt}${p.dtNeg?' · '+p.dtNeg:''}</span>
+     <span class="fh-pill ${stCls}">${stTxt}${p.dtNeg?' · '+p.dtNeg:''}</span>${p.jbs?'<span class="fh-pill" style="background:rgba(16,185,129,.34)">Homologado JBS</span>':''}
    </div>
    <div class="fh-body">
      <div class="fh-precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>
+     <div class="fh-sec"><div class="fh-sec-t">Homologação</div>
+       <label class="fh-jbs-tg ${p.jbs?'on':''}" id="fhJbsLbl">
+         <input type="checkbox" id="fhJbs" ${p.jbs?'checked':''} style="width:auto"
+           onchange="document.getElementById('fhJbsLbl').classList.toggle('on',this.checked)">
+         <span class="t">Homologado JBS</span>
+         <span class="fh-jbs-tag">JBS</span>
+       </label>
+     </div>
      <div class="fh-sec"><div class="fh-sec-t">Histórico do S10</div>${svgLine(histPts)}</div>
      ${fone}
      <div class="fh-sec"><div class="fh-sec-t">Comodidades</div><div class="fh-chips" id="fhChips">${chips}</div></div>
@@ -1667,6 +1687,7 @@ function salvarFicha(){
   const p=postos.find(x=>x.id===_fichaId); if(!p) return;
   p.com=[...document.querySelectorAll('#fhChips .fh-chip.on')].map(c=>c.dataset.k);
   p.naoAbastecer=document.getElementById('fhBloq').checked;
+  p.jbs=document.getElementById('fhJbs').checked;
   p.nota=document.getElementById('fhObs').value.trim();
   salvar(); nuvemUpsert(p); renderMarcadores();
   fecharFicha();
@@ -2323,7 +2344,7 @@ function listarPostosNaRota(){
       : 'Último posto da rota';
     return `<div class="posto-card${(!motorista&&p._abastecer)?' abastecer':''}">
       ${(!motorista&&p._abastecer)?'<span class="tag-abastecer">ABASTECER AQUI</span>':''}
-      <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&ehOportunidade(p))?'':''}${p.nome}</span>${chk}</div>
+      <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&p.jbs)?'<span class="jbs-tag">JBS</span>':''}${p.nome}</span>${chk}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?''+p.hom+' · ':''}${(!motorista&&p.dtNeg)?''+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}
       ${motorista?'':`<div class="gap-info${p._abastecer?' perigo':''}">${gapTxt}</div>`}</div>`;
