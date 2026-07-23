@@ -700,6 +700,46 @@
   .imp-res .ir-lista .sobe{color:var(--dang)}
   .imp-res .ir-lista .desce{color:var(--ok)}
 
+  /* ---- Logo no menu ---- */
+  .nav-top{flex-direction:column;align-items:stretch;gap:9px;padding:2px 4px 15px}
+  .nav-logo{background:#fff;border-radius:9px;padding:11px 13px;min-height:0;display:flex;align-items:center;justify-content:center}
+  .nav-logo img{height:30px;width:auto;max-width:100%;display:block}
+  .nav-logo-txt{font-size:15px;font-weight:800;color:var(--nav);letter-spacing:.06em;line-height:1.05;text-align:center}
+  .nav-logo-txt i{display:block;font-style:normal;font-size:8px;letter-spacing:.22em;color:var(--ac);margin-top:2px}
+  .nav-sub{font-size:9.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#6b7f9e;text-align:center}
+  #app.rail-min .nav-sub{display:none}
+  #app.rail-min .nav-logo{padding:7px}
+  #app.rail-min .nav-logo img{height:22px}
+
+  /* ---- Formatos aceitos (rota da gerenciadora) ---- */
+  .fmt{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line-2)}
+  .fmt:last-child{border-bottom:none}
+  .fmt b{font-size:12.5px;font-weight:650;color:var(--ink);min-width:112px;flex:0 0 auto}
+  .fmt span{font-size:11.5px;color:var(--muted);line-height:1.45}
+
+  /* ---- Oportunidades ---- */
+  .op-topo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .op-topo > div{border:1px solid var(--line);border-radius:var(--r);padding:11px 12px;background:var(--card)}
+  .op-topo span{display:block;font-size:10.5px;color:var(--muted);font-weight:500;line-height:1.3}
+  .op-topo b{display:block;font-size:15px;font-weight:680;color:var(--ink);margin-top:5px}
+  .op-topo b.verde{color:var(--ok)}
+  .op-bloco{margin-bottom:16px}
+  .op-tit{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  .op-item{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:var(--r);
+    padding:9px 12px;margin-bottom:7px;background:var(--card);cursor:pointer;transition:.14s}
+  .op-item:hover{border-color:var(--ac-line);background:var(--ac-soft)}
+  .op-pos{width:22px;height:22px;border-radius:6px;background:var(--line-2);color:var(--muted);
+    font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .op-item.bom .op-pos{background:var(--ok-soft);color:var(--ok)}
+  .op-item.ruim .op-pos{background:var(--dang-soft);color:var(--dang)}
+  .op-info{flex:1;min-width:0}
+  .op-nome{font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .op-ref{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .op-val{font-size:13.5px;font-weight:680;color:var(--ink);flex:0 0 auto}
+  .op-item.bom .op-val{color:var(--ok)}
+  .op-item.ruim .op-val{color:var(--dang)}
+  .op-nota{font-size:11px;color:var(--muted-2);line-height:1.5}
+
   /* ---- Diagnóstico da integração ---- */
   .diag{margin-top:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--line-2);padding:11px 12px;font-size:11px;color:var(--ink-2);line-height:1.5}
   .diag > b{display:block;margin-bottom:7px;color:var(--ink);font-size:11.5px}
@@ -727,14 +767,16 @@
       <div class="nav-top">
         <div class="nav-logo">
           <img src="https://static.wixstatic.com/media/4373da_8f730a6062a0456090221fdaa9c3268a~mv2.png" alt="Blue Transportes"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <span style="font-size:14px;font-weight:800;color:var(--nav);letter-spacing:.04em">BLUE</span>
+               onerror="this.style.display='none';this.nextElementSibling.style.display='block'" />
+          <span class="nav-logo-txt" style="display:none">BLUE<i>TRANSPORTES</i></span>
         </div>
+        <div class="nav-sub">Abastecimento</div>
       </div>
       <button class="nav-item ativo" id="nav-inicio" onclick="mostrarAba('inicio')" data-ic="home"><span class="ni-tx">Início</span></button>
 
       <div class="nav-sec">Operação</div>
       <button class="nav-item" id="nav-rota" onclick="mostrarAba('rota')" data-ic="route"><span class="ni-tx">Roteirização</span></button>
+      <button class="nav-item" id="nav-gerenciadora" onclick="mostrarAba('gerenciadora')" data-ic="shield"><span class="ni-tx">Rota da gerenciadora</span></button>
       <button class="nav-item" id="nav-pendencias" onclick="mostrarAba('pendencias')" data-ic="alert"><span class="ni-tx">Pendências</span><span class="tab-badge" id="badgePend" style="display:none">0</span></button>
 
       <div class="nav-sec">Cadastro</div>
@@ -742,7 +784,12 @@
       <button class="nav-item" id="nav-importacao" onclick="mostrarAba('importacao')" data-ic="upload"><span class="ni-tx">Importação</span></button>
 
       <div class="nav-sec">Análise</div>
-      <button class="nav-item" id="nav-gerenciadora" onclick="mostrarAba('gerenciadora')" data-ic="chart"><span class="ni-tx">Indicadores</span></button>
+      <button class="nav-item" id="nav-indicadores" onclick="mostrarAba('indicadores')" data-ic="chart"><span class="ni-tx">Indicadores</span></button>
+      <button class="nav-item" id="nav-oportunidades" onclick="mostrarAba('oportunidades')" data-ic="target"><span class="ni-tx">Oportunidades</span></button>
+
+      <div class="nav-sec">Sistema</div>
+      <button class="nav-item" id="nav-config" onclick="mostrarAba('config')" data-ic="settings"><span class="ni-tx">Configurações</span></button>
+      <button class="nav-item admin-only-block" id="nav-usuarios" onclick="mostrarAba('usuarios')" data-ic="users"><span class="ni-tx">Usuários</span></button>
 
       <div class="nav-spacer"></div>
       <button class="nav-item nav-sair" onclick="sair()" data-ic="logout"><span class="ni-tx">Sair</span></button>
@@ -815,21 +862,6 @@
           </div>
         </div>
 
-        <div class="secao" id="secaoGerenciadora">
-          <h2 data-ic="shield">Rota da gerenciadora</h2>
-          <div class="card-form">
-            <p style="font-size:12px;color:var(--muted);margin:0 0 9px;line-height:1.5">O trajeto é definido pela gerenciadora de risco. Cole aqui <b>uma</b> destas opções para reproduzir a rota homologada:</p>
-            <ul style="font-size:11.5px;color:var(--muted);margin:0 0 10px;padding-left:17px;line-height:1.7">
-              <li>o <b>link da NOX</b> (noxgr.srv.br/...)</li>
-              <li>um <b>link do Google Maps</b> com a rota</li>
-              <li>as <b>cidades do trajeto</b>, uma por linha (JBS/Opentech)</li>
-            </ul>
-            <textarea id="impText" rows="4" placeholder="Cole o link aqui...&#10;&#10;ou as cidades:&#10;Itupeva SP&#10;Campinas SP&#10;Cordeirópolis SP"></textarea>
-            <button class="btn-primario" style="margin-top:10px" onclick="importarRota()">Importar e traçar rota</button>
-            <div class="status" id="impStatus"></div>
-          </div>
-        </div>
-
         <div class="secao" id="secaoAutonomia">
           <div class="card-form">
             <h2 data-ic="gauge" style="margin-top:0;margin-bottom:12px">Autonomia do tanque</h2>
@@ -880,6 +912,44 @@
       </div>
 
       <!-- ================= ABA POSTOS ================= -->
+      <!-- ================= ABA ROTA DA GERENCIADORA ================= -->
+      <div id="aba-gerenciadora" style="display:none">
+        <div class="secao">
+          <h2 data-ic="shield">Rota homologada</h2>
+          <div class="card-form">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 9px;line-height:1.5">O trajeto é definido pela <b>gerenciadora de risco</b> — o sistema não escolhe caminho. Cole aqui a rota recebida para reproduzi-la e ver os postos negociados ao longo dela.</p>
+            <textarea id="impText" rows="5" placeholder="Cole o link aqui...&#10;&#10;ou as cidades, uma por linha:&#10;Itupeva SP&#10;Campinas SP&#10;Cordeirópolis SP"></textarea>
+            <button class="btn-primario" style="margin-top:10px" onclick="importarRota()">Importar e traçar rota</button>
+            <div class="status" id="impStatus"></div>
+          </div>
+        </div>
+        <div class="secao">
+          <h2 data-ic="list">Formatos aceitos</h2>
+          <div class="card-form">
+            <div class="fmt"><b>NOX</b><span>link noxgr.srv.br/... — leitura automática</span></div>
+            <div class="fmt"><b>Google Maps</b><span>link da rota com os pontos do trajeto</span></div>
+            <div class="fmt"><b>JBS / Opentech</b><span>lista de cidades, uma por linha</span></div>
+            <div class="fmt"><b>Coordenadas</b><span>pares latitude, longitude</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ABA OPORTUNIDADES ================= -->
+      <div id="aba-oportunidades" style="display:none">
+        <div class="secao">
+          <h2 data-ic="target">Melhores preços</h2>
+          <div class="linha" style="margin-bottom:12px">
+            <select id="opCombustivel" onchange="renderOportunidades()">
+              <option value="s10">Diesel S10</option>
+              <option value="s500">Diesel S500</option>
+              <option value="arla">Arla 32</option>
+            </select>
+            <select id="opUF" onchange="renderOportunidades()"><option value="">Todos os estados</option></select>
+          </div>
+          <div id="opConteudo"></div>
+        </div>
+      </div>
+
       <!-- ================= ABA IMPORTAÇÃO ================= -->
       <div id="aba-importacao" style="display:none">
         <div class="secao">
@@ -993,8 +1063,79 @@
 
       </div>
 
-      <!-- ================= ABA GESTÃO ================= -->
-      <div id="aba-gerenciadora" style="display:none">
+      <!-- ================= ABA CONFIGURAÇÕES ================= -->
+      <div id="aba-config" style="display:none">
+        <div class="secao">
+          <h2 data-ic="truck">Frota e consumo</h2>
+          <div class="card-form">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Base do cálculo de litros e custo da viagem. Quanto mais próximo do real, melhor a estimativa.</p>
+            <label style="margin-top:0">Modalidade padrão da carga</label>
+            <select id="modalidade" onchange="if(rotaCoords) listarPostosNaRota()">
+              <option value="seca">Carga seca (Sider)</option>
+              <option value="container">Container refrigerado</option>
+              <option value="frigo">Carreta frigorífica</option>
+            </select>
+            <div class="linha" style="margin-top:10px">
+              <div><label style="margin-top:0">Diesel do caminhão</label>
+                <select id="cfgDiesel" onchange="salvarConfig()"><option value="s10">Diesel S10</option><option value="s500">Diesel S500</option></select>
+              </div>
+              <div><label style="margin-top:0">Arla (% do diesel)</label><input id="cfgArla" type="number" step="0.5" onchange="salvarConfig()" /></div>
+            </div>
+            <div class="cfg-mod"><div class="cfg-lbl">Carga seca</div>
+              <div class="linha"><div><span>km/l</span><input id="kml_seca" type="number" step="0.1" onchange="salvarConfig()" /></div>
+              <div><span>Aparelho (L/h)</span><input id="ap_seca" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
+            <div class="cfg-mod"><div class="cfg-lbl">Container refrigerado</div>
+              <div class="linha"><div><span>km/l</span><input id="kml_container" type="number" step="0.1" onchange="salvarConfig()" /></div>
+              <div><span>Aparelho (L/h)</span><input id="ap_container" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
+            <div class="cfg-mod"><div class="cfg-lbl">Carreta frigorífica</div>
+              <div class="linha"><div><span>km/l</span><input id="kml_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div>
+              <div><span>Aparelho (L/h)</span><input id="ap_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
+          </div>
+        </div>
+
+        <div class="secao">
+          <h2 data-ic="dollar">Referência de mercado</h2>
+          <div class="card-form">
+            <label style="margin-top:0">Preço da bomba (R$/litro)</label>
+            <input id="cfgRef" type="number" step="0.01" placeholder="Ex.: 6,80" onchange="salvarConfig()" />
+            <div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5">Usado para calcular quanto a empresa economiza abastecendo nos postos negociados em vez do preço comum de bomba. Deixe em branco se não quiser essa comparação.</div>
+          </div>
+        </div>
+
+        <div class="secao">
+          <h2 data-ic="map">Mapa</h2>
+          <div class="card-form">
+            <label style="margin-top:0">Mostrar postos até <b id="raioLbl">15</b> km da estrada</label>
+            <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords){ renderMarcadores(); listarPostosNaRota(); }" />
+            <div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5">Raio de busca ao redor do trajeto. Valores maiores trazem mais opções, porém mais distantes da rota.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ABA USUÁRIOS ================= -->
+      <div id="aba-usuarios" style="display:none">
+        <div class="secao">
+          <h2 data-ic="users">Equipe com acesso</h2>
+          <div id="listaUsers" class="lista-todos"></div>
+        </div>
+        <div class="secao">
+          <h2 data-ic="plus">Novo usuário</h2>
+          <div class="card-form">
+            <label style="margin-top:0">Nome de usuário</label>
+            <input id="novoUser" placeholder="ex.: joao.silva" />
+            <label>Senha</label>
+            <input id="novaSenha" type="text" placeholder="senha de acesso" />
+            <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-weight:600;color:var(--ink)">
+              <input type="checkbox" id="novoAdmin" style="width:auto" /> Conceder permissão de administrador
+            </label>
+            <div class="btn-linha"><button class="btn-primario" onclick="criarUsuario()">Criar usuário</button></div>
+            <div class="status" id="usersStatus"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ABA INDICADORES ================= -->
+      <div id="aba-indicadores" style="display:none">
         <div class="secao">
           <h2 data-ic="chart">Painel gerencial</h2>
           <div id="gestaoDash"></div>
@@ -1017,23 +1158,7 @@
   </div><!-- /#main -->
 </div>
 
-<!-- MODAL USUÁRIOS -->
-<div class="modal" id="modalUsers">
-  <div class="caixa">
-    <h3>Usuários</h3>
-    <div class="sub">Crie e gerencie os acessos da equipe.</div>
-    <div id="listaUsers" class="lista-todos"></div>
-    <label>Criar novo usuário</label>
-    <input id="novoUser" placeholder="nome de usuário" />
-    <div class="linha" style="margin-top:8px;align-items:center">
-      <input id="novaSenha" type="text" placeholder="senha" />
-      <label style="display:flex;align-items:center;gap:5px;flex:0 0 auto;margin:0;font-weight:600;color:var(--ink)"><input type="checkbox" id="novoAdmin" style="width:auto"> admin</label>
-    </div>
-    <div class="btn-linha"><button class="btn-primario" onclick="criarUsuario()">Criar usuário</button></div>
-    <div class="status" id="usersStatus"></div>
-    <div class="btn-linha"><button class="btn-sec" onclick="document.getElementById('modalUsers').style.display='none'">Fechar</button></div>
-  </div>
-</div>
+
 
 <!-- TELA DE LOGIN -->
 <div id="loginTela">
@@ -1070,41 +1195,7 @@
   </div>
 </div>
 
-<!-- MODAL FROTA -->
-<div class="modal" id="modalFrota">
-  <div class="caixa">
-    <h3>Frota e consumo</h3>
-    <div class="sub">Usado para calcular litros e custo da viagem por modalidade.</div>
-    <label>Modalidade da carga (padrão)</label>
-    <select id="modalidade" onchange="if(rotaCoords) listarPostosNaRota()">
-      <option value="seca">Carga seca (Sider)</option>
-      <option value="container">Container refrigerado</option>
-      <option value="frigo">Carreta frigorífica</option>
-    </select>
-    <div class="linha" style="margin-top:8px">
-      <div><label>Diesel do caminhão</label>
-        <select id="cfgDiesel" onchange="salvarConfig()"><option value="s10">Diesel S10</option><option value="s500">Diesel S500</option></select>
-      </div>
-      <div><label>Arla (% do diesel)</label><input id="cfgArla" type="number" step="0.5" onchange="salvarConfig()" /></div>
-    </div>
-    <label>Preço de referência da bomba (R$/litro) — opcional</label>
-    <input id="cfgRef" type="number" step="0.01" placeholder="Ex.: 6,80" onchange="salvarConfig()" />
-    <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45">Usado para calcular quanto a empresa economiza abastecendo nos postos negociados em vez do preço comum de bomba.</div>
-    <div class="cfg-mod"><div class="cfg-lbl">Carga seca</div>
-      <div class="linha"><div><span>km/l</span><input id="kml_seca" type="number" step="0.1" onchange="salvarConfig()" /></div>
-      <div><span>Aparelho (L/h)</span><input id="ap_seca" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
-    <div class="cfg-mod"><div class="cfg-lbl">Container refrigerado</div>
-      <div class="linha"><div><span>km/l</span><input id="kml_container" type="number" step="0.1" onchange="salvarConfig()" /></div>
-      <div><span>Aparelho (L/h)</span><input id="ap_container" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
-    <div class="cfg-mod"><div class="cfg-lbl">Carreta frigorífica</div>
-      <div class="linha"><div><span>km/l</span><input id="kml_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div>
-      <div><span>Aparelho (L/h)</span><input id="ap_frigo" type="number" step="0.1" onchange="salvarConfig()" /></div></div></div>
-    <label style="margin-top:14px">Mostrar postos até <span id="raioLbl">15</span> km da estrada</label>
-    <input type="range" id="raio" min="1" max="100" value="15" oninput="raioLbl.textContent=this.value; if(rotaCoords){ renderMarcadores(); listarPostosNaRota(); }" />
-    <div class="btn-linha admin-only"><button class="btn-sec" onclick="abrirUsuarios()" style="width:100%">Gerenciar usuários</button></div>
-    <div class="btn-linha"><button class="btn-sec" onclick="sair()">Sair</button><button class="btn-primario" onclick="fecharFrota()">Pronto</button></div>
-  </div>
-</div>
+
 
 <script>
 /* =========================================================
@@ -1170,8 +1261,8 @@ function salvarConfig(){
   localStorage.setItem('blueConfig',JSON.stringify(config));
   if(rotaCoords) listarPostosNaRota();
 }
-function abrirFrota(){ modalFrota.style.display='flex'; }
-function fecharFrota(){ modalFrota.style.display='none'; }
+function abrirFrota(){ mostrarAba('config'); }   // engrenagem abre a aba Configuracoes
+function fecharFrota(){ mostrarAba('inicio'); }
 
 // ---------- Estado ----------
 let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
@@ -1321,9 +1412,9 @@ function postoPassaFiltro(p){
 function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota(); }
 
 // ---------- Abas ----------
-const _tituloAba={inicio:'Início',rota:'Roteirização',pendencias:'Pendências',postos:'Postos',importacao:'Importação',gerenciadora:'Indicadores'};
+const _tituloAba={inicio:'Início',rota:'Roteirização',gerenciadora:'Rota da gerenciadora',pendencias:'Pendências',postos:'Postos',importacao:'Importação',indicadores:'Indicadores',oportunidades:'Oportunidades',config:'Configurações',usuarios:'Usuários'};
 function mostrarAba(nome){
-  ['inicio','rota','pendencias','postos','importacao','gerenciadora'].forEach(n=>{
+  ['inicio','rota','gerenciadora','pendencias','postos','importacao','indicadores','oportunidades','config','usuarios'].forEach(n=>{
     document.getElementById('aba-'+n).style.display = n===nome?'block':'none';
     const nav=document.getElementById('nav-'+n); if(nav) nav.classList.toggle('ativo', n===nome);
   });
@@ -1331,7 +1422,9 @@ function mostrarAba(nome){
   document.querySelector('.conteudo').scrollTop=0;
   if(nome==='pendencias') renderPendencias();
   if(nome==='inicio') renderInicio();
-  if(nome==='gerenciadora') renderGestao();
+  if(nome==='indicadores') renderGestao();
+  if(nome==='oportunidades') renderOportunidades();
+  if(nome==='usuarios') listarUsuarios();
 }
 function toggleRail(){ document.getElementById('app').classList.toggle('rail-min'); setTimeout(()=>{ try{ mapa.invalidateSize(); }catch(e){} },220); }
 
@@ -1426,7 +1519,8 @@ function atualizarLista(){
   atualizarBadgePend();
   if(document.getElementById('aba-pendencias').style.display!=='none') renderPendencias();
   if(document.getElementById('aba-inicio').style.display!=='none') renderInicio();
-  if(document.getElementById('aba-gerenciadora').style.display!=='none') renderGestao();
+  if(document.getElementById('aba-indicadores').style.display!=='none') renderGestao();
+  if(document.getElementById('aba-oportunidades').style.display!=='none') renderOportunidades();
 }
 function renderSemLocal(){
   const el=document.getElementById('listaSemLocal'); const q=document.getElementById('qtdSemLocal'); if(!el) return;
@@ -1478,6 +1572,42 @@ function renderInicio(){
     <div class="home-kpi">${ic('calendar')}<div class="v" style="color:var(--warn)">${quase}</div><div class="l">quase vencendo</div></div>`;
   const pn=document.getElementById('homePendN');
   if(pn){ const n=venc+quase; pn.textContent = n? (n+' preço(s) a atualizar') : 'Tudo em dia'; }
+}
+
+// ==================== OPORTUNIDADES ====================
+function renderOportunidades(){
+  const el=document.getElementById('opConteudo'); if(!el) return;
+  const k=(document.getElementById('opCombustivel')||{}).value||'s10';
+  const rotulo={s10:'Diesel S10',s500:'Diesel S500',arla:'Arla 32'}[k];
+  const selUF=document.getElementById('opUF');
+  if(selUF){ const at=selUF.value; const ufs=[...new Set(postos.filter(p=>getUF(p)).map(getUF))].sort();
+    selUF.innerHTML='<option value="">Todos os estados</option>'+ufs.map(u=>`<option value="${u}">${u}</option>`).join(''); selUF.value=at; }
+  const uf=selUF?selUF.value:'';
+
+  // só considera preço válido (não vencido) — não adianta indicar preço velho
+  let base=postos.filter(p=>p[k]!=null && !precoVencido(p) && (!uf||getUF(p)===uf));
+  if(!base.length){ el.innerHTML='<div class="vazio">Nenhum posto com preço de '+rotulo+' válido'+(uf?' em '+uf:'')+'.</div>'; return; }
+
+  const vals=base.map(p=>p[k]);
+  const media=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const baratos=[...base].sort((a,b)=>a[k]-b[k]).slice(0,10);
+  const caros=[...base].sort((a,b)=>b[k]-a[k]).slice(0,5);
+  const econ=(media-baratos[0][k]);
+
+  const linha=(p,i,cls)=>`<div class="op-item ${cls||''}" onclick="irPara('${p.id}')">
+      <div class="op-pos">${i+1}</div>
+      <div class="op-info"><div class="op-nome">${p.nome}</div><div class="op-ref">${p.ref||'—'}${p.dtNeg?' · '+p.dtNeg:''}</div></div>
+      <div class="op-val">${fmt(p[k])}</div></div>`;
+
+  el.innerHTML=`
+    <div class="op-topo">
+      <div><span>${rotulo} — média${uf?' em '+uf:''}</span><b>${fmt(media)}</b></div>
+      <div><span>Menor preço</span><b class="verde">${fmt(baratos[0][k])}</b></div>
+      <div><span>Diferença por litro</span><b class="verde">${fmt(econ)}</b></div>
+    </div>
+    <div class="op-bloco"><div class="op-tit">10 menores preços</div>${baratos.map((p,i)=>linha(p,i,'bom')).join('')}</div>
+    <div class="op-bloco"><div class="op-tit">5 maiores preços — candidatos a renegociação</div>${caros.map((p,i)=>linha(p,i,'ruim')).join('')}</div>
+    <div class="op-nota">Considera apenas preços dentro da validade (${base.length} de ${postos.length} postos). Clique em qualquer posto para vê-lo no mapa.</div>`;
 }
 
 // ==================== PAINEL GERENCIAL (GRÁFICOS) ====================
@@ -2313,7 +2443,7 @@ async function primeiroAcesso(){
 async function sair(){ const t=localStorage.getItem('authToken'); localStorage.removeItem('authToken'); try{ await authApi({action:'logout', token:t}); }catch{} location.reload(); }
 
 // Gerenciar usuários (admin)
-async function abrirUsuarios(){ document.getElementById('modalFrota').style.display='none'; document.getElementById('modalUsers').style.display='flex'; await listarUsuarios(); }
+async function abrirUsuarios(){ mostrarAba('usuarios'); }
 async function listarUsuarios(){
   const el=document.getElementById('listaUsers');
   try{ const j=await authApi({action:'list', token:localStorage.getItem('authToken')});
