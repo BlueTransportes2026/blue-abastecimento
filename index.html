@@ -740,6 +740,39 @@
   .op-item.ruim .op-val{color:var(--dang)}
   .op-nota{font-size:11px;color:var(--muted-2);line-height:1.5}
 
+  /* ---- Ficha do posto ---- */
+  .caixa-ficha{width:450px;max-width:95vw;padding:0;overflow:hidden}
+  #fichaBody{max-height:88vh;overflow-y:auto}
+  .fh-top{position:relative;background:linear-gradient(120deg,var(--nav),#1e3a6d);color:#fff;padding:20px 22px}
+  .fh-nome{font-size:17px;font-weight:680;letter-spacing:-.01em;line-height:1.25;padding-right:34px}
+  .fh-ref{font-size:12px;opacity:.82;margin-top:5px}
+  .fh-pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;margin-top:11px;background:rgba(255,255,255,.16)}
+  .fh-pill.venc{background:rgba(239,68,68,.32)} .fh-pill.quase{background:rgba(245,158,11,.32)}
+  .fh-x{position:absolute;top:15px;right:15px;background:rgba(255,255,255,.16);color:#fff;border:none;width:30px;height:30px;
+    border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  .fh-x:hover{background:rgba(255,255,255,.3)}
+  .fh-body{padding:18px 22px 22px}
+  .fh-precos{display:flex;gap:8px}
+  .fh-preco{flex:1;border:1px solid var(--line);border-radius:var(--r);padding:9px 6px;text-align:center}
+  .fh-preco .l{font-size:9.5px;letter-spacing:.05em;color:var(--muted);font-weight:700;text-transform:uppercase}
+  .fh-preco .v{font-size:15px;font-weight:680;color:var(--ink);margin-top:3px}
+  .fh-preco.on{background:var(--ac-soft);border-color:var(--ac-line)} .fh-preco.on .v{color:var(--ac)}
+  .fh-sec{margin-top:17px}
+  .fh-sec-t{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .fh-chips{display:flex;flex-wrap:wrap;gap:7px}
+  .fh-chip{font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;border:1px solid var(--line);
+    background:var(--card);color:var(--muted);cursor:pointer;transition:.14s;user-select:none}
+  .fh-chip:hover{border-color:#cbd5e1}
+  .fh-chip.on{background:var(--ac-soft);border-color:var(--ac);color:var(--ac)}
+  .fh-aviso-tg{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;cursor:pointer}
+  .fh-aviso-tg.on{background:var(--dang-soft);border-color:#fecaca}
+  .fh-aviso-tg .t{flex:1;font-size:13px;font-weight:600;color:var(--ink)}
+  .fh-aviso-tg.on .t{color:var(--dang)}
+  .fh-fone{display:flex;gap:8px}
+  .fh-fone a{flex:1;text-decoration:none}
+  .fh-acoes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+  .pin.bloq{background:linear-gradient(135deg,#1f2937,#991b1b)!important}
+
   /* ---- Diagnóstico da integração ---- */
   .diag{margin-top:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--line-2);padding:11px 12px;font-size:11px;color:var(--ink-2);line-height:1.5}
   .diag > b{display:block;margin-bottom:7px;color:var(--ink);font-size:11.5px}
@@ -1177,6 +1210,13 @@
 </div>
 
 <!-- MODAL LINK MOTORISTA -->
+<!-- FICHA DO POSTO -->
+<div class="modal" id="modalFicha">
+  <div class="caixa caixa-ficha">
+    <div id="fichaBody"></div>
+  </div>
+</div>
+
 <div class="modal" id="modalLink">
   <div class="caixa">
     <h3>Link para o motorista</h3>
@@ -1239,7 +1279,9 @@ const ICONS={
   target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
   dollar:'<path d="M12 2v20"/><path d="M17 6.5c0-1.9-2.2-3-5-3s-5 1.1-5 3c0 4.5 10 2.5 10 7 0 1.9-2.2 3-5 3s-5-1.1-5-3"/>',
   file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/>',
-  zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7Z"/>'
+  zap:'<path d="M13 2 4 14h7l-1 8 9-12h-7Z"/>',
+  phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
 };
 function ic(n,cls){ return '<svg class="ic '+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICONS[n]||'')+'</svg>'; }
 // injeta ícones nos elementos com data-ic
@@ -1468,18 +1510,13 @@ function renderMarcadores(){
     if(pontoCentro && !rotaCoords && distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng) > 150) return; // só perto da cidade
     const venc=precoVencido(p), opp=ehOportunidade(p);
     const _st=statusPreco(p);
-    const _cls=_st==='vencido'?'vencido':_st==='quase'?'quase':_st==='sem'?'cinza':'';
+    const _cls = p.naoAbastecer ? 'bloq' : (_st==='vencido'?'vencido':_st==='quase'?'quase':_st==='sem'?'cinza':'');
     const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'')}).addTo(mapa);
-    const gmaps=`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>Abrir no Google Maps</b></a>`;
     m.bindPopup(motorista
-      ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br>${gmaps}`
-      : `<b>${opp?'':''}${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.hom?'<br><small>'+p.hom+'</small>':''}${p.dtNeg?'<br><small>preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">VENCIDO</b>':'')+'</small>':''}${opp?'<br><small style="color:#0f9d58"><b>Melhor oportunidade (abaixo da média do estado)</b></small>':''}<br><br>
-      S10: <b>${fmt(p.s10)}</b><br>S500: <b>${fmt(p.s500)}</b><br>Arla: <b>${fmt(p.arla)}</b><br>
-      ${(p.hist&&p.hist.length)?'<br><small><b>Histórico S10:</b></small><br>'+p.hist.map((h,i)=>{const pv=i>0?p.hist[i-1].s10:null;const ar=(pv!=null&&h.s10!=null)?(h.s10>pv?' <span style=\"color:#b91c1c\">▲</span>':(h.s10<pv?' <span style=\"color:#047857\">▼</span>':'')):'';return '<small>'+(h.d||'—')+': '+fmt(h.s10)+ar+'</small>';}).join('<br>'):''}<br><br>
-      ${gmaps}<br><br>
-      <a href="#" style="color:#0f9d58;font-weight:700" onclick="confirmarPreco('${p.id}');return false">Preço OK (renovar data)</a><br><br>
-      <a href="#" onclick="editarPosto('${p.id}');return false">Editar</a> &nbsp;
-      <a href="#" style="color:#e5484d" onclick="excluirPosto('${p.id}');return false">Excluir</a>`);
+      ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br><a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>Abrir no Google Maps</b></a>`
+      : `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.naoAbastecer?'<br><b style="color:#b91c1c">⚠ NÃO ABASTECER</b>':''}<br><br>
+      S10 <b>${fmt(p.s10)}</b> · S500 <b>${fmt(p.s500)}</b> · Arla <b>${fmt(p.arla)}</b>${p.dtNeg?'<br><small>preço de '+p.dtNeg+(venc?' — <b style="color:#e5484d">VENCIDO</b>':'')+'</small>':''}<br><br>
+      <a href="#" onclick="abrirFicha('${p.id}');return false"><b>Ver ficha completa</b></a>`);
     marcadores[p.id]=m;
   });
   atualizarLista();
@@ -1499,9 +1536,9 @@ function atualizarLista(){
   qtdPostos.textContent = (b||filtroUF)? (lista.length+' de '+postos.length) : postos.length;
   el.innerHTML = lista.length ? lista.map(p=>`
     <div class="item">
-      <div class="info" onclick="irPara('${p.id}')">
+      <div class="info" onclick="abrirFicha('${p.id}')">
         <div class="nm">${ehOportunidade(p)?'':''}${p.nome}</div>
-        <div class="sub">${p.ref||''}${p.lat==null?' · sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">preço vencido</b>':''}${p.hom?' · '+p.hom:''} · S10 ${fmt(p.s10)}</div>
+        <div class="sub">${p.naoAbastecer?'<b style="color:#b91c1c">NÃO ABASTECER</b> · ':''}${p.ref||''}${p.lat==null?' · sem local':''}${precoVencido(p)?' · <b style="color:#e5484d">preço vencido</b>':''}${p.hom?' · '+p.hom:''} · S10 ${fmt(p.s10)}</div>
       </div>
       <div class="acoes">
         <button class="ac ok" onclick="confirmarPreco('${p.id}')" title="Marcar preço como OK (renova a data)">${ic('check','ic-sm')}</button>
@@ -1574,6 +1611,67 @@ function renderInicio(){
   if(pn){ const n=venc+quase; pn.textContent = n? (n+' preço(s) a atualizar') : 'Tudo em dia'; }
 }
 
+// ==================== FICHA DO POSTO ====================
+const COMODIDADES=[
+  {k:'balanca',n:'Balança'},{k:'restaurante',n:'Restaurante'},{k:'dormitorio',n:'Dormitório'},
+  {k:'banho',n:'Banho'},{k:'patio',n:'Pátio / estacionamento'},{k:'borracharia',n:'Borracharia'},
+  {k:'conveniencia',n:'Conveniência'},{k:'h24',n:'24 horas'}
+];
+let _fichaId=null;
+function abrirFicha(id){
+  const p=postos.find(x=>x.id===id); if(!p) return; _fichaId=id;
+  try{ mapa.closePopup(); }catch(e){}
+  const set=new Set(p.com||[]);
+  const dkey=config.dieselTipo, st=statusPreco(p);
+  const stTxt={vencido:'Preço vencido',quase:'Vence em breve',sem:'Sem preço',ok:'Preço válido'}[st];
+  const stCls=st==='vencido'?'venc':st==='quase'?'quase':'';
+  const cell=(k,l)=>`<div class="fh-preco ${k===dkey?'on':''}"><div class="l">${l}</div><div class="v">${fmt(p[k])}</div></div>`;
+  const histPts=(p.hist||[]).filter(h=>h.s10!=null).map(h=>({lbl:String(h.d||'').slice(0,5),v:h.s10}));
+  const tel=(p.tel||'').replace(/\D/g,'');
+  const fone = tel.length>=8 ? `<div class="fh-sec"><div class="fh-sec-t">Contato</div><div class="fh-fone">
+      <a class="btn-primario" href="tel:+55${tel}">${ic('phone','ic-sm')} Ligar</a>
+      <a class="btn-sec" href="https://wa.me/55${tel}" target="_blank">WhatsApp</a></div></div>` : '';
+  const chips=COMODIDADES.map(c=>`<div class="fh-chip ${set.has(c.k)?'on':''}" data-k="${c.k}" onclick="this.classList.toggle('on')">${c.n}</div>`).join('');
+  document.getElementById('fichaBody').innerHTML=`
+   <div class="fh-top">
+     <button class="fh-x" onclick="fecharFicha()">${ic('x','ic-sm')}</button>
+     <div class="fh-nome">${p.nome}</div>
+     <div class="fh-ref">${p.ref||'—'}${p.cnpj?' · CNPJ '+p.cnpj:''}</div>
+     <span class="fh-pill ${stCls}">${stTxt}${p.dtNeg?' · '+p.dtNeg:''}</span>
+   </div>
+   <div class="fh-body">
+     <div class="fh-precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>
+     <div class="fh-sec"><div class="fh-sec-t">Histórico do S10</div>${svgLine(histPts)}</div>
+     ${fone}
+     <div class="fh-sec"><div class="fh-sec-t">Comodidades</div><div class="fh-chips" id="fhChips">${chips}</div></div>
+     <div class="fh-sec"><div class="fh-sec-t">Avisos</div>
+       <label class="fh-aviso-tg ${p.naoAbastecer?'on':''}" id="fhBloqLbl">
+         <input type="checkbox" id="fhBloq" ${p.naoAbastecer?'checked':''} style="width:auto"
+           onchange="document.getElementById('fhBloqLbl').classList.toggle('on',this.checked)">
+         <span class="t">Não abastecer neste posto</span>
+       </label>
+       <textarea id="fhObs" rows="2" placeholder="Observações: horário, restrições, senha..." style="margin-top:9px">${(p.nota||'').replace(/</g,'&lt;')}</textarea>
+     </div>
+     <div class="fh-acoes">
+       <button class="btn-primario" onclick="salvarFicha()">Salvar alterações</button>
+       <button class="btn-sec" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}','_blank')">Google Maps</button>
+       <button class="btn-sec" onclick="fecharFicha();irPara('${p.id}')">Ver no mapa</button>
+       <button class="btn-sec" onclick="fecharFicha();editarPosto('${p.id}')">Editar cadastro</button>
+     </div>
+     <div style="text-align:center;margin-top:13px"><a onclick="confirmarPreco('${p.id}');fecharFicha()" style="color:var(--ok);font-weight:650;font-size:12.5px;cursor:pointer">Marcar preço como OK (renovar data)</a></div>
+   </div>`;
+  document.getElementById('modalFicha').style.display='flex';
+}
+function fecharFicha(){ document.getElementById('modalFicha').style.display='none'; }
+function salvarFicha(){
+  const p=postos.find(x=>x.id===_fichaId); if(!p) return;
+  p.com=[...document.querySelectorAll('#fhChips .fh-chip.on')].map(c=>c.dataset.k);
+  p.naoAbastecer=document.getElementById('fhBloq').checked;
+  p.nota=document.getElementById('fhObs').value.trim();
+  salvar(); nuvemUpsert(p); renderMarcadores();
+  fecharFicha();
+}
+
 // ==================== OPORTUNIDADES ====================
 function renderOportunidades(){
   const el=document.getElementById('opConteudo'); if(!el) return;
@@ -1594,7 +1692,7 @@ function renderOportunidades(){
   const caros=[...base].sort((a,b)=>b[k]-a[k]).slice(0,5);
   const econ=(media-baratos[0][k]);
 
-  const linha=(p,i,cls)=>`<div class="op-item ${cls||''}" onclick="irPara('${p.id}')">
+  const linha=(p,i,cls)=>`<div class="op-item ${cls||''}" onclick="abrirFicha('${p.id}')">
       <div class="op-pos">${i+1}</div>
       <div class="op-info"><div class="op-nome">${p.nome}</div><div class="op-ref">${p.ref||'—'}${p.dtNeg?' · '+p.dtNeg:''}</div></div>
       <div class="op-val">${fmt(p[k])}</div></div>`;
@@ -1728,7 +1826,7 @@ function renderPendencias(){
     else { cls='quase'; selo=`<span class="pc-dias" style="color:var(--muted)">Sem preço</span>`; }
     return `<div class="pend-card ${cls}">
       <div class="pc-top">
-        <div><div class="pc-nome" onclick="irPara('${p.id}')">${p.nome}</div>
+        <div><div class="pc-nome" onclick="abrirFicha('${p.id}')">${p.nome}</div>
           <div class="pc-sub">${p.ref||'—'}${p.dtNeg?' · '+p.dtNeg:''} · S10 ${fmt(p.s10)}</div></div>
         ${selo}
       </div>
