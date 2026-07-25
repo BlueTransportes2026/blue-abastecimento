@@ -1,16 +1,23 @@
-// Cloudflare Pages Function — CONSULTA DE COMODIDADES (Google Places API, v1)
+// Cloudflare Pages Function — CONSULTA DE COMODIDADES (OpenStreetMap / Overpass)
 //
-// Para cada posto enviado, procura o lugar no Google e lê:
-//   - 24 horas .......... regularOpeningHours (aberto 24/7)
-//   - banheiro .......... restroom
-//   - restaurante ....... servesLunch / servesDinner / dineIn / primaryType restaurant
-//   - estacionamento .... parkingOptions
-//
-// Credencial (cadastrar no Cloudflare como secret, nunca no código):
-//   GOOGLE_KEY = chave da Places API (New)
+// Totalmente gratuito, sem chave. Para cada posto (com lat/lng), procura um
+// posto de combustível (amenity=fuel) no mapa aberto por perto e lê as etiquetas:
+//   - 24 horas ......... opening_hours = 24/7
+//   - banheiro ......... toilets = yes/customers
+//   - estacionamento ... parking / hgv (pátio para caminhão)
+//   - restaurante ...... restaurant / fast_food / cuisine
+//   - conveniência ..... shop = convenience
 //
 // POST /comodidades com { token, postos:[{id,nome,cidade,uf,lat,lng}, ...] }
-// Devolve { ok, resultados:[{id, com:[...], achou:true/false}], semChave? }
+// Devolve { ok, resultados:[{id, achou, com:[...]}] }
+//
+// Cobertura depende do que a comunidade mapeou — para postos pequenos costuma
+// vir vazio. O que faltar, a equipe completa na ficha.
+
+const OVERPASS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+];
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -36,81 +43,63 @@ export async function onRequest(context) {
   }
   if (!sess) return json({ error: 'Sessão inválida. Faça login novamente.' }, 401);
 
-  const key = env.GOOGLE_KEY;
-  if (!key) return json({ error: 'Chave do Google (GOOGLE_KEY) não configurada no Cloudflare.', semChave: true }, 500);
+  const lista = (Array.isArray(body.postos) ? body.postos : []).filter(p => p.lat != null && p.lng != null).slice(0, 12);
+  if (!lista.length) return json({ ok: true, resultados: [] });
 
-  const lista = Array.isArray(body.postos) ? body.postos.slice(0, 25) : []; // processa em lotes de até 25
-  if (!lista.length) return json({ error: 'Nenhum posto enviado.' }, 400);
+  // uma única consulta com um "around" por posto
+  const partes = lista.map(p => `nwr(around:300,${(+p.lat).toFixed(6)},${(+p.lng).toFixed(6)})[amenity=fuel];`).join('');
+  const q = `[out:json][timeout:60];(${partes});out tags center;`;
 
-  // ---- deriva as comodidades a partir dos detalhes do lugar ----
-  function extrair(d) {
+  let elementos = null, ultimoErro = '';
+  for (const url of OVERPASS) {
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+          'user-agent': 'BlueTransportesRoteirizador/1.0 (roteirizador de abastecimento interno)',
+          'accept': 'application/json',
+        },
+        body: 'data=' + encodeURIComponent(q),
+      });
+      if (!r.ok) { ultimoErro = 'HTTP ' + r.status; continue; }
+      const j = await r.json();
+      elementos = j.elements || [];
+      break;
+    } catch (e) { ultimoErro = String(e).slice(0, 120); }
+  }
+  if (elementos == null) return json({ error: 'Não consegui consultar o mapa aberto agora. Tente de novo em instantes.', detalhe: ultimoErro }, 502);
+
+  const kx = lat => 111320 * Math.cos(lat * Math.PI / 180), ky = 110570;
+  function dist(aLat, aLng, bLat, bLng) {
+    const dx = (aLng - bLng) * kx((aLat + bLat) / 2), dy = (aLat - bLat) * ky;
+    return Math.sqrt(dx * dx + dy * dy); // metros
+  }
+  function derivar(t) {
+    if (!t) return [];
     const com = [];
-    // 24 horas: algum período sem horário de fechamento, ou texto com "24"
-    const oh = d.regularOpeningHours;
-    if (oh) {
-      const per = oh.periods || [];
-      const aberto247 = per.length === 1 && per[0].open && !per[0].close;
-      const txt24 = (oh.weekdayDescriptions || []).some(t => /24 ?h|24 horas|00:00.*(24:00|00:00)|aberto 24/i.test(t));
-      if (aberto247 || txt24) com.push('h24');
-    }
-    if (d.restroom === true) com.push('banheiro');
-    // estacionamento
-    const pk = d.parkingOptions;
-    if (pk && (pk.freeParkingLot || pk.paidParkingLot || pk.freeStreetParking || pk.parkingLot)) com.push('patio');
-    // restaurante / serve comida no local
-    if (d.dineIn === true || d.servesLunch === true || d.servesDinner === true || d.servesBreakfast === true
-        || d.primaryType === 'restaurant' || (Array.isArray(d.types) && d.types.includes('restaurant'))) com.push('restaurante');
+    const oh = (t.opening_hours || '').toLowerCase();
+    if (oh.includes('24/7')) com.push('h24');
+    if (t.toilets === 'yes' || t.toilets === 'customers' || t['toilets:access'] === 'yes' || t['toilets:access'] === 'customers') com.push('banheiro');
+    if (t.shop === 'convenience' || t.shop === 'kiosk') com.push('conveniencia');
+    if (t.restaurant === 'yes' || t.amenity === 'restaurant' || t.fast_food === 'yes' || t.cuisine) com.push('restaurante');
+    if (t.parking || t.hgv === 'yes' || t['hgv:parking'] === 'yes' || t['parking:hgv']) com.push('estacionamento');
     return com;
   }
 
-  async function buscarPlaceId(p) {
-    // Text Search (New) por nome + cidade/uf; usa viés de localização se houver coordenada
-    const b = {
-      textQuery: [p.nome, p.cidade, p.uf, 'posto combustível'].filter(Boolean).join(' '),
-      languageCode: 'pt-BR', regionCode: 'BR', maxResultCount: 1,
-    };
-    if (p.lat != null && p.lng != null) {
-      b.locationBias = { circle: { center: { latitude: p.lat, longitude: p.lng }, radius: 4000 } };
+  // para cada posto, pega o elemento de combustível mais próximo (até 350 m)
+  const resultados = lista.map(p => {
+    let melhor = null, md = 351;
+    for (const el of elementos) {
+      const elat = el.lat != null ? el.lat : (el.center && el.center.lat);
+      const elng = el.lon != null ? el.lon : (el.center && el.center.lon);
+      if (elat == null) continue;
+      const d = dist(+p.lat, +p.lng, elat, elng);
+      if (d < md) { md = d; melhor = el; }
     }
-    const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'X-Goog-Api-Key': key,
-        'X-Goog-FieldMask': 'places.id',
-      },
-      body: JSON.stringify(b),
-    });
-    if (!r.ok) return { erro: r.status, txt: (await r.text()).slice(0, 200) };
-    const j = await r.json();
-    return { id: j.places && j.places[0] && j.places[0].id };
-  }
-
-  async function detalhes(placeId) {
-    const campos = [
-      'regularOpeningHours', 'restroom', 'parkingOptions',
-      'dineIn', 'servesBreakfast', 'servesLunch', 'servesDinner', 'primaryType', 'types',
-    ].join(',');
-    const r = await fetch('https://places.googleapis.com/v1/places/' + placeId + '?languageCode=pt-BR', {
-      headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': campos },
-    });
-    if (!r.ok) return { erro: r.status };
-    return await r.json();
-  }
-
-  const resultados = [];
-  for (const p of lista) {
-    try {
-      const busca = await buscarPlaceId(p);
-      if (busca.erro) { resultados.push({ id: p.id, achou: false, erro: busca.erro, detalhe: busca.txt }); continue; }
-      if (!busca.id) { resultados.push({ id: p.id, achou: false }); continue; }
-      const d = await detalhes(busca.id);
-      if (d.erro) { resultados.push({ id: p.id, achou: false, erro: d.erro }); continue; }
-      resultados.push({ id: p.id, achou: true, com: extrair(d) });
-    } catch (e) {
-      resultados.push({ id: p.id, achou: false, erro: String(e).slice(0, 120) });
-    }
-  }
+    if (!melhor) return { id: p.id, achou: false };
+    return { id: p.id, achou: true, com: derivar(melhor.tags) };
+  });
 
   return json({ ok: true, resultados });
 }
