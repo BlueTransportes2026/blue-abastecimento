@@ -1021,6 +1021,18 @@
           </div>
         </div>
 
+        <div class="secao admin-only-block">
+          <h2 data-ic="target">Comodidades pelo Google</h2>
+          <div class="card-form">
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;line-height:1.5">Consulta no Google Maps quais postos têm <b>banheiro, estacionamento, restaurante</b> e são <b>24 horas</b>, e preenche as comodidades automaticamente. Só adiciona o que encontrar — não apaga o que você já marcou na ficha.</p>
+            <div class="btn-linha" style="margin-top:0">
+              <button class="btn-primario" onclick="enriquecerComodidades()" id="btnEnriq">Buscar comodidades</button>
+            </div>
+            <div class="status" id="enriqStatus"></div>
+            <div id="enriqResumo"></div>
+          </div>
+        </div>
+
         <div class="secao">
           <h2 data-ic="database">Cópia de segurança</h2>
           <div class="card-form">
@@ -1683,6 +1695,52 @@ function abrirFicha(id){
   document.getElementById('modalFicha').style.display='flex';
 }
 function fecharFicha(){ document.getElementById('modalFicha').style.display='none'; }
+
+// consulta comodidades no Google (em lotes) e mescla com o que já existe
+async function comodidadesApi(payload){
+  const r=await fetch('/comodidades',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  return await r.json();
+}
+async function enriquecerComodidades(){
+  const st=document.getElementById('enriqStatus'), res=document.getElementById('enriqResumo'), btn=document.getElementById('btnEnriq');
+  if(res) res.innerHTML='';
+  const alvos=postos.filter(p=>p.nome && (p.lat!=null || p.ref));
+  if(!alvos.length){ st.textContent='Nenhum posto para consultar.'; return; }
+  btn.disabled=true;
+  const LOTE=25; let achou=0, semDados=0, erro=0; const cont={h24:0,banheiro:0,patio:0,restaurante:0};
+  try{
+    for(let i=0;i<alvos.length;i+=LOTE){
+      const lote=alvos.slice(i,i+LOTE).map(p=>({id:p.id,nome:p.nome,cidade:(p.ref||'').split(' - ')[0],uf:(p.ref||'').split(' - ')[1]||'',lat:p.lat,lng:p.lng}));
+      st.textContent='Consultando '+Math.min(i+LOTE,alvos.length)+' de '+alvos.length+' postos…';
+      let j;
+      try{ j=await comodidadesApi({token:tokenAuth(), postos:lote}); }
+      catch{ erro+=lote.length; continue; }
+      if(!j||!j.ok){
+        if(j&&j.semChave){ st.textContent='A chave do Google (GOOGLE_KEY) ainda não está configurada no Cloudflare.'; return; }
+        erro+=lote.length; continue;
+      }
+      (j.resultados||[]).forEach(r=>{
+        const p=postos.find(x=>x.id===r.id); if(!p) return;
+        if(r.achou && r.com && r.com.length){
+          const set=new Set(p.com||[]);
+          r.com.forEach(kk=>{ if(!set.has(kk)){ set.add(kk); if(cont[kk]!=null) cont[kk]++; } });
+          p.com=[...set]; achou++;
+        } else semDados++;
+      });
+    }
+    salvar(); if(_nuvemAtiva) await nuvemSalvarTudo(); renderMarcadores();
+    st.textContent='Consulta concluída.';
+    if(res) res.innerHTML='<div class="imp-res"><div class="ir-t">Resultado da consulta</div><div class="ir-grid">'
+      +'<div class="ir-c destaque"><div class="v">'+achou+'</div><div class="l">postos com comodidades</div></div>'
+      +'<div class="ir-c"><div class="v">'+semDados+'</div><div class="l">sem dados no Google</div></div>'
+      +'<div class="ir-c"><div class="v">'+cont.h24+'</div><div class="l">marcados 24h</div></div>'
+      +'<div class="ir-c"><div class="v">'+cont.banheiro+'</div><div class="l">com banheiro</div></div>'
+      +'<div class="ir-c"><div class="v">'+cont.patio+'</div><div class="l">estacionamento</div></div>'
+      +'<div class="ir-c"><div class="v">'+cont.restaurante+'</div><div class="l">restaurante</div></div>'
+      +'</div>'+(erro?'<div class="ir-nota">'+erro+' posto(s) deram erro na consulta.</div>':'')
+      +(_nuvemAtiva?'<div class="ir-ok">Salvo na base compartilhada — toda a equipe já vê.</div>':'')+'</div>';
+  } finally { btn.disabled=false; }
+}
 function salvarFicha(){
   const p=postos.find(x=>x.id===_fichaId); if(!p) return;
   p.com=[...document.querySelectorAll('#fhChips .fh-chip.on')].map(c=>c.dataset.k);
