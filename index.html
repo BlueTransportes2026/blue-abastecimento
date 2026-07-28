@@ -740,6 +740,16 @@
   .op-item.ruim .op-val{color:var(--dang)}
   .op-nota{font-size:11px;color:var(--muted-2);line-height:1.5}
 
+  /* ---- Aviso de mapa limpo ---- */
+  .mapa-dica{position:absolute;inset:0;z-index:450;display:none;align-items:center;justify-content:center;
+    padding:24px;pointer-events:none;background:rgba(246,247,249,.35)}
+  .mapa-dica .md-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-lg);
+    padding:26px 28px;max-width:340px;text-align:center;pointer-events:auto}
+  .mapa-dica .md-ic{color:var(--ac);display:flex;justify-content:center;margin-bottom:12px}
+  .mapa-dica .md-ic .ic{width:34px;height:34px;stroke-width:1.5}
+  .mapa-dica .md-t{font-size:16px;font-weight:680;color:var(--ink);letter-spacing:-.01em}
+  .mapa-dica .md-s{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:8px}
+
   /* ---- Ficha do posto ---- */
   .caixa-ficha{width:450px;max-width:95vw;padding:0;overflow:hidden}
   #fichaBody{max-height:88vh;overflow-y:auto}
@@ -1200,6 +1210,13 @@
   </aside>
 
   <div class="map-wrap">
+    <div class="mapa-dica" id="mapaDica">
+      <div class="md-card">
+        <div class="md-ic" data-ic="route"></div>
+        <div class="md-t">Comece por uma rota</div>
+        <div class="md-s">Trace ou importe uma rota, ou busque uma cidade, para ver no mapa apenas os postos que interessam. Assim o mapa fica limpo e fácil de acompanhar.</div>
+      </div>
+    </div>
     <div class="dica-add" id="dicaAdd">Clique no mapa onde fica o posto…</div>
     <div class="legenda" id="legenda">
       <div class="lgt">Status do preço</div>
@@ -1253,7 +1270,7 @@
       <a id="linkWa" target="_blank" class="btn-primario" style="text-align:center;text-decoration:none;line-height:1.4">Enviar no WhatsApp</a>
     </div>
     <div class="btn-linha"><button class="btn-sec" onclick="fecharLink()">Fechar</button></div>
-    <div class="sub" style="margin-top:10px">O motorista escaneia o QR (ou abre o link) e a rota abre no <b>Google Maps</b> com os postos marcados — só localização, <b>sem preços</b>.</div>
+    <div class="sub" style="margin-top:10px">O motorista escaneia o QR (ou abre o link) e a rota abre no <b>Google Maps</b> seguindo <b>exatamente o trajeto informado</b>, sem desvios.</div>
   </div>
 </div>
 
@@ -1332,7 +1349,7 @@ function fecharFrota(){ mostrarAba('inicio'); }
 let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
 let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, destinoSel=null, rotaPontos=null;
-let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={}, pontoCentro=null;
+let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={}, pontoCentro=null, focoId=null;
 let postosSelecionados=new Set();
 function togglePosto(id, checked){ if(checked) postosSelecionados.add(id); else postosSelecionados.delete(id); renderMarcadores(); }
 function marcarTodosPostos(v){ document.querySelectorAll('#resultado .sel-posto').forEach(cb=>{ cb.checked=v; if(v) postosSelecionados.add(cb.dataset.id); else postosSelecionados.delete(cb.dataset.id); }); renderMarcadores(); }
@@ -1526,12 +1543,17 @@ function renderMarcadores(){
   Object.values(marcadores).forEach(m=>mapa.removeLayer(m)); marcadores={};
   const motorista=document.body.classList.contains('motorista');
   const raio=parseFloat(document.getElementById('raio').value)||15;
-  postos.forEach(p=>{
+  // MAPA LIMPO: sem rota, sem busca de cidade, sem estado filtrado e sem posto em foco,
+  // não desenha os 180 pinos (evita poluição e deixa o carregamento rápido).
+  const modoLimpo = !rotaCoords && !pontoCentro && !filtroUF && !motorista && !focoId;
+  const dica=document.getElementById('mapaDica'); if(dica) dica.style.display = modoLimpo ? 'flex' : 'none';
+  if(!modoLimpo) postos.forEach(p=>{
     if(p.lat==null||p.lng==null) return;
     if(!postoPassaFiltro(p)) return;
     if(filtroUF && getUF(p)!==filtroUF) return;                       // filtro por estado
-    if(rotaCoords){ if(distToRota(p,rotaCoords) > raio) return; if(!motorista && !postosSelecionados.has(p.id)) return; } // só postos da rota e marcados
+    if(rotaCoords){ if(distToRota(p,rotaCoords) > raio) return; } // só postos dentro do raio da rota
     if(pontoCentro && !rotaCoords && distKm(p.lat,p.lng,pontoCentro.lat,pontoCentro.lng) > 150) return; // só perto da cidade
+    if(focoId && !rotaCoords && !pontoCentro && !filtroUF && p.id!==focoId) return; // só o posto em foco
     const venc=precoVencido(p), opp=ehOportunidade(p);
     const _st=statusPreco(p);
     const _cls = p.naoAbastecer ? 'bloq' : (_st==='vencido'?'vencido':_st==='quase'?'quase':_st==='sem'?'cinza':'');
@@ -1615,7 +1637,7 @@ function renderResumo(){
     ${ufs.length?`<div style="font-size:11px;color:var(--muted);margin-top:10px">Média S10 por estado (mais barato → mais caro):</div>
     <div class="uf-list">${ufs.map(u=>`<span class="uf-chip">${u.uf}: <b>R$ ${u.m.toFixed(2).replace('.',',')}</b> <small>(${u.n})</small></span>`).join('')}</div>`:''}`;
 }
-function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Clique em para editar e marcar no mapa.'); return; } mostrarAba('rota'); mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
+function irPara(id){ const p=postos.find(x=>x.id===id); if(!p) return; if(p.lat==null){ alert('Este posto está sem localização. Cadastre a localização primeiro.'); return; } focoId=id; renderMarcadores(); mostrarAba('rota'); mapa.setView([p.lat,p.lng],14); if(marcadores[id]) marcadores[id].openPopup(); }
 
 // ==================== TELA INICIAL ====================
 function renderInicio(){
@@ -2259,7 +2281,7 @@ async function tracarRota(){
 }
 
 async function desenharRota(coordsReq){
-  rotaPontos=coordsReq; pontoCentro=null;
+  rotaPontos=coordsReq; pontoCentro=null; focoId=null;
   if(coordsReq.length<2){ infoRota.textContent='Preciso de origem e destino.'; return false; }
   infoRota.textContent='Calculando rota…';
   const path=coordsReq.map(c=>`${c.lng},${c.lat}`).join(';');
@@ -2336,7 +2358,7 @@ function limparRota(){
   paradas.forEach(p=>{ const b=document.getElementById('box_'+p.id); if(b) b.remove(); }); paradas=[];
   if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
   marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[];
-  rotaCoords=null; pontoCentro=null; secaoResultado.style.display='none'; infoRota.textContent='';
+  rotaCoords=null; pontoCentro=null; focoId=null; secaoResultado.style.display='none'; infoRota.textContent='';
   renderMarcadores();
 }
 
@@ -2384,17 +2406,16 @@ function listarPostosNaRota(){
   const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b> · ${lista.length} posto(s)${(!motorista && mediaRota!=null)?`<br>Média ${dnome} na rota: <b>R$ ${mediaRota.toFixed(2).replace('.',',')}</b>`:''}</div>`;
   printData={ rota: rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—')), info:infoRota.textContent, dnome, lista, motorista };
 
-  if(!motorista) postosSelecionados = new Set(lista.map(p=>p.id));
   const btnAcoes=`
-    <button class="btn-primario" style="width:100%;margin-bottom:8px" onclick="abrirRotaGoogle()">Abrir rota no Google Maps</button>
+    <button class="btn-primario" style="width:100%;margin-bottom:8px" onclick="abrirRotaGoogle()">Abrir rota exata no Google Maps</button>
     <div class="btn-linha acoes-rota" style="margin-top:0;margin-bottom:11px">
       <button class="btn-sec" onclick="imprimirRota()">Imprimir</button>
       <button class="btn-sec" onclick="gerarLinkMotorista()">Link p/ motorista</button></div>`;
-  const selCtrl = motorista?'':`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Marque os postos que vão no <b>link do motorista</b> · <a onclick="marcarTodosPostos(true)" style="color:var(--brand-700);cursor:pointer;font-weight:600">todos</a> · <a onclick="marcarTodosPostos(false)" style="color:var(--brand-700);cursor:pointer;font-weight:600">nenhum</a></div>`;
+  const selCtrl='';
   const custoHtml = motorista ? '' : renderCustoRota(lista, dkey, dnome);
   el.innerHTML = btnAcoes + resumo + custoHtml + selCtrl + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
-    const chk = motorista?'':`<input type="checkbox" class="sel-posto" data-id="${p.id}" ${postosSelecionados.has(p.id)?'checked':''} onchange="togglePosto('${p.id}',this.checked)" title="Incluir no link do motorista" style="width:20px;height:20px;flex:0 0 auto;cursor:pointer">`;
+    const chk='';
     const gapTxt = p._gap!=null
       ? (p._abastecer
           ? 'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b> — além da autonomia!'
@@ -2478,7 +2499,7 @@ async function verPostosPerto(){
   if(!g){ info.textContent='Cidade não encontrada. Tente cidade + estado.'; return; }
   if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
   marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[]; rotaCoords=null;
-  pontoCentro={lat:g.lat,lng:g.lng}; info.textContent='';
+  pontoCentro={lat:g.lat,lng:g.lng}; focoId=null; info.textContent='';
   mapa.setView([g.lat,g.lng],8);
   renderMarcadores(); listarPostosPerto(cidade);
 }
@@ -2524,16 +2545,20 @@ function imprimirRota(){
 
 // ---------- Abrir rota no Google Maps ----------
 // monta a URL do Google Maps: origem → postos MARCADOS → destino
+// Monta a URL do Google Maps seguindo EXATAMENTE os pontos da rota informada
+// (origem → pontos do trajeto → destino). NÃO insere postos: o trajeto não é desviado.
 function urlGoogleRota(){
   if(!rotaPontos || rotaPontos.length<2) return null;
-  const o=rotaPontos[0], d=rotaPontos[rotaPontos.length-1];
-  let pts=postos.filter(p=>p.lat!=null && postosSelecionados.has(p.id))
-    .map(p=>({lat:+p.lat, lng:+p.lng, d0:distKm(p.lat,p.lng,o.lat,o.lng)}))
-    .sort((a,b)=>a.d0-b.d0);
-  const total=pts.length, MAX=9;
-  if(pts.length>MAX){ const step=pts.length/MAX, sel=[]; for(let i=0;i<MAX;i++) sel.push(pts[Math.floor(i*step)]); pts=sel; }
-  const coords=[o, ...pts, d].map(c=>`${(+c.lat).toFixed(6)},${(+c.lng).toFixed(6)}`).join('/');
-  return { url:'https://www.google.com/maps/dir/'+coords, total, usados:pts.length };
+  let pts=rotaPontos.slice();
+  const MAX=10; // o Google Maps aceita ~10 pontos por link
+  if(pts.length>MAX){
+    // reduz mantendo a forma do trajeto (origem, destino e pontos bem distribuídos) — nunca postos
+    const sel=[pts[0]]; const step=(pts.length-1)/(MAX-1);
+    for(let i=1;i<MAX-1;i++) sel.push(pts[Math.round(i*step)]);
+    sel.push(pts[pts.length-1]); pts=sel;
+  }
+  const coords=pts.map(c=>`${(+c.lat).toFixed(6)},${(+c.lng).toFixed(6)}`).join('/');
+  return { url:'https://www.google.com/maps/dir/'+coords, pontos:pts.length };
 }
 function abrirRotaGoogle(){
   const r=urlGoogleRota(); if(!r){ alert('Trace uma rota primeiro.'); return; }
@@ -2542,12 +2567,11 @@ function abrirRotaGoogle(){
 
 // ---------- Link para o motorista ----------
 function gerarLinkMotorista(){
-  const r=urlGoogleRota(); if(!r){ alert('Trace uma rota primeiro.'); return; }
-  if(!r.usados){ alert('Marque ao menos um posto (as caixinhas na lista) para enviar ao motorista.'); return; }
+  const r=urlGoogleRota(); if(!r){ alert('Trace ou importe uma rota primeiro.'); return; }
   const url=r.url;
   linkInput.value=url;
-  linkInfo.innerHTML=`Rota no Google Maps com <b>${r.usados}</b> posto(s) marcado(s)${r.total>r.usados?` (de ${r.total} — o Google mostra até 9)`:''}.`;
-  linkWa.href='https://wa.me/?text='+encodeURIComponent('Rota de abastecimento — Blue Transportes:\n'+url);
+  linkInfo.innerHTML='Rota exata para o motorista navegar no Google Maps — segue o trajeto que você informou, <b>sem desviar</b>.';
+  linkWa.href='https://wa.me/?text='+encodeURIComponent('Rota — Blue Transportes:\n'+url);
   linkQr.src='https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=8&data='+encodeURIComponent(url);
   linkQrWrap.style.display='block';
   modalLink.style.display='flex';
