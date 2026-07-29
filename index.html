@@ -7,7 +7,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
 <style>
   :root{
@@ -650,6 +650,20 @@
   .custo-card .cc-base{margin-top:10px;font-size:10.5px;color:var(--muted-2)}
   .custo-card .cc-vazio{font-size:12px;color:var(--muted);margin-top:8px}
 
+  /* ---- Plano de abastecimento inteligente ---- */
+  .plano-card{border-color:var(--ac-line);background:var(--ac-soft)}
+  .plano-card .cc-t{color:var(--ac)}
+  .plano-item{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-top:10px}
+  .pl-pos{width:22px;height:22px;border-radius:50%;background:var(--ac);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .pl-info{flex:1;min-width:0}
+  .pl-nome{font-size:12.5px;font-weight:650;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pl-sub{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .pl-num{text-align:right;flex:0 0 auto}
+  .pl-litros{font-size:13.5px;font-weight:680;color:var(--ink)}
+  .pl-custo{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .plano-card .pl-total{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:11px;border-top:1px solid var(--ac-line);font-size:12px;color:var(--ink-2);font-weight:550}
+  .plano-card .pl-total b{color:var(--ac);font-size:14px;font-weight:700}
+
   /* ---- Área de importação de planilha ---- */
   .dropzone{border:2px dashed #cbd5e1;border-radius:var(--r-lg);background:var(--card);padding:26px 18px;text-align:center;
     cursor:pointer;transition:.16s;user-select:none}
@@ -740,16 +754,6 @@
   .op-item.ruim .op-val{color:var(--dang)}
   .op-nota{font-size:11px;color:var(--muted-2);line-height:1.5}
 
-  /* ---- Aviso de mapa limpo ---- */
-  .mapa-dica{position:absolute;inset:0;z-index:450;display:none;align-items:center;justify-content:center;
-    padding:24px;pointer-events:none;background:rgba(246,247,249,.35)}
-  .mapa-dica .md-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-lg);
-    padding:26px 28px;max-width:340px;text-align:center;pointer-events:auto}
-  .mapa-dica .md-ic{color:var(--ac);display:flex;justify-content:center;margin-bottom:12px}
-  .mapa-dica .md-ic .ic{width:34px;height:34px;stroke-width:1.5}
-  .mapa-dica .md-t{font-size:16px;font-weight:680;color:var(--ink);letter-spacing:-.01em}
-  .mapa-dica .md-s{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:8px}
-
   /* ---- Ficha do posto ---- */
   .caixa-ficha{width:450px;max-width:95vw;padding:0;overflow:hidden}
   #fichaBody{max-height:88vh;overflow-y:auto}
@@ -799,6 +803,305 @@
   .diag span{font-weight:650;color:var(--ink)}
   .diag i{color:var(--muted);font-style:normal;word-break:break-word}
   .diag .diag-fim{border-top:1px solid var(--line);margin-top:6px;color:var(--muted);font-weight:600}
+
+  /* ============================================================
+     v5 — POLIMENTO PROFISSIONAL
+     Escala tipográfica maior nos números que importam, muito mais
+     espaço em branco, cantos e sombras mais suaves, neutros com leve
+     viés azul. Não mexe em estrutura/IDs — só eleva o acabamento.
+  ============================================================ */
+  :root{
+    --bg:#f2f4f9; --card:#ffffff; --line:#e3e7f1; --line-2:#eef1f7;
+    --ink:#0c1526; --ink-2:#33405a; --muted:#67718c; --muted-2:#98a2b8;
+    --ac:#1d4ed8; --ac-2:#2f5fe8; --ac-soft:#ebf1ff; --ac-line:#cfdcfb;
+    --ok:#0a7a52; --ok-soft:#e7f8f0; --warn:#b45309; --warn-soft:#fff6e7; --dang:#c0281c; --dang-soft:#fdecea;
+    --r:14px; --r-lg:20px; --r-xl:26px;
+    --sh-sm:0 1px 2px rgba(15,23,42,.05);
+    --sh-md:0 14px 32px -10px rgba(15,23,42,.16);
+    --sh-lg:0 30px 70px -14px rgba(15,23,42,.28);
+  }
+  html,body{font-size:14.5px}
+
+  /* ---- Ritmo geral ---- */
+  .conteudo{padding:28px}
+  .secao{margin-bottom:34px}
+  .card-form{padding:22px;border-color:var(--line)}
+  label{font-size:12.5px;margin:14px 0 6px}
+  input,select,textarea{padding:11px 14px;border-radius:11px;font-size:14px;border-color:#dbe0ea}
+  button{border-radius:11px;padding:11px 18px;font-size:14px;letter-spacing:-.005em}
+  .btn-primario{box-shadow:0 10px 24px -8px rgba(29,78,216,.45)}
+  .btn-primario:hover{box-shadow:0 14px 30px -8px rgba(29,78,216,.55);transform:translateY(-1px)}
+  .btn-sec{border-color:#dbe0ea}
+  .link-mini{font-size:13px}
+
+  /* ---- Barra superior ---- */
+  #topbar{height:68px;padding:0 28px;gap:16px;border-bottom-color:var(--line)}
+  .tb-title{font-size:19px;font-weight:700;letter-spacing:-.02em}
+  .tb-burger,#topbar .gear.tb-btn{width:38px;height:38px;border-radius:10px}
+  #topbar #syncStatus.sync{padding:7px 14px;border-radius:9px;font-size:12px}
+  .tb-user{width:36px;height:36px;font-size:13.5px}
+
+  /* ---- Menu lateral ---- */
+  #navrail{width:248px;padding:20px 14px;gap:3px}
+  .nav-top{padding:2px 6px 20px;margin-bottom:12px}
+  .nav-logo{padding:13px 15px;border-radius:12px}
+  .nav-logo img{height:32px}
+  .nav-sub{font-size:10px;letter-spacing:.24em;margin-top:2px}
+  .nav-sec{font-size:10.5px;letter-spacing:.1em;padding:16px 13px 7px}
+  .nav-item{padding:11px 13px;border-radius:10px;font-size:14px;gap:12px}
+  .nav-item.ativo{box-shadow:0 8px 20px -6px rgba(29,78,216,.55)}
+  #app.rail-min #navrail{width:72px}
+
+  /* ---- Painel de conteúdo ---- */
+  #painel{width:432px;min-width:432px}
+
+  /* ---- Início: hero + KPIs ---- */
+  .home-hero{padding:34px 32px;border-radius:var(--r-xl);position:relative}
+  .home-hero::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(560px 260px at 88% -20%,rgba(95,148,255,.35),transparent 65%)}
+  .home-hero .hh-oi{font-size:13px}
+  .home-hero .hh-t{font-size:28px;font-weight:730;letter-spacing:-.025em;margin-top:8px}
+  .home-hero .hh-s{font-size:13.5px;margin-top:8px;max-width:440px}
+  .home-kpis{gap:14px}
+  .home-kpi{padding:20px;border-radius:var(--r-lg);border-color:var(--line)}
+  .home-kpi:hover{box-shadow:var(--sh-md);border-color:var(--line)}
+  .home-kpi .ic{top:16px;right:16px;width:19px;height:19px}
+  .home-kpi .v{font-size:32px;font-weight:730;letter-spacing:-.025em}
+  .home-kpi .l{font-size:12px;margin-top:6px}
+  .home-acoes{gap:14px}
+  .home-card{padding:20px;border-radius:var(--r-lg);gap:9px}
+  .home-card .ci .ic{width:22px;height:22px}
+  .home-card .ct{font-size:14.5px}
+  .home-card .cs{font-size:12px}
+
+  /* ---- Resumo / custo / plano ---- */
+  .resumo-card{padding:20px}
+  .resumo-nums{gap:12px}
+  .resumo-nums .rn{padding:14px 8px;border-radius:var(--r)}
+  .resumo-nums .rn .v{font-size:22px}
+  .custo-card{padding:22px}
+  .custo-card .cc-t,.plano-card .cc-t{font-size:11px;letter-spacing:.09em}
+  .custo-card .cc-big{font-size:37px;letter-spacing:-.03em;margin-top:10px}
+  .custo-card .cc-grid{gap:12px;margin-top:17px;padding-top:16px}
+  .custo-card .cc-grid b{font-size:14.5px}
+  .custo-card .cc-eco{padding:12px 14px;font-size:12.5px;border-radius:var(--r)}
+  .plano-item{padding:14px 16px;border-radius:var(--r);gap:13px}
+  .pl-pos{width:25px;height:25px;font-size:11.5px}
+  .pl-nome{font-size:13.5px}
+  .pl-litros{font-size:15px}
+  .plano-card .pl-total{padding-top:14px;font-size:12.5px}
+  .plano-card .pl-total b{font-size:16px}
+
+  /* ---- Cards de posto / listas ---- */
+  .posto-card{padding:18px}
+  .posto-card .nome{font-size:14.5px}
+  .preco{padding:10px 8px;border-radius:var(--r)}
+  .preco .val{font-size:14.5px}
+  .lista-todos .item{padding:13px 15px;border-radius:var(--r)}
+  .lista-todos .item .nm{font-size:13.5px}
+
+  /* ---- Pendências ---- */
+  .pend-hero{gap:14px}
+  .pend-hero .ph{padding:18px 14px;border-radius:var(--r-lg)}
+  .pend-hero .ph .n{font-size:30px}
+  .pend-card{padding:16px 17px;border-radius:var(--r)}
+
+  /* ---- Autonomia ---- */
+  .aut-out{padding:19px;border-radius:var(--r-lg)}
+  .aut-out .big{font-size:24px}
+
+  /* ---- Oportunidades ---- */
+  .op-topo > div{padding:14px}
+  .op-topo b{font-size:17px}
+  .op-item{padding:12px 14px;border-radius:var(--r)}
+
+  /* ---- Gráficos / diagnóstico ---- */
+  .graf-card{padding:19px}
+
+  /* ---- Mapa ---- */
+  .legenda{padding:13px 15px;border-radius:var(--r-lg)}
+  .legenda .lin{font-size:11.5px}
+  .dica-add{padding:12px 22px;border-radius:24px;font-size:13.5px}
+
+  /* ---- Modais / ficha ---- */
+  .modal .caixa{padding:28px;border-radius:var(--r-xl)}
+  .fh-top{padding:24px 26px;border-radius:var(--r-xl) var(--r-xl) 0 0}
+  .fh-nome{font-size:19px}
+  .fh-body{padding:22px 26px 26px}
+  .imp-res{padding:19px;border-radius:var(--r-lg)}
+  .dropzone{padding:36px 22px;border-radius:var(--r-lg)}
+
+  /* ---- Tela de login ---- */
+  #loginTela{background:
+    radial-gradient(720px 420px at 82% -8%,rgba(95,148,255,.28),transparent 60%),
+    radial-gradient(600px 500px at 10% 110%,rgba(34,211,238,.12),transparent 55%),
+    var(--nav)}
+  #loginTela .login-box{width:410px;padding:46px 42px;border-radius:var(--r-xl);box-shadow:var(--sh-lg)}
+  #loginTela .login-logo{padding:16px 20px;border-radius:14px;margin-bottom:20px}
+  #loginTela .login-logo img{height:38px}
+  #loginTela h2{font-size:21px;letter-spacing:-.02em}
+  #loginTela p{font-size:11px;letter-spacing:.16em;margin-bottom:26px}
+  #loginTela input{padding:13px 14px;font-size:14.5px}
+  #loginTela input+input{margin-top:10px}
+  #loginTela .btn-primario{margin-top:18px;padding:13px}
+
+  /* ============================================================
+     v6 — CONFIANÇA E PESO VISUAL
+     Referência: nxmaps.com.br. O que faltava não era espaço em
+     branco — era peso: tipografia extra-bold, blocos de cor sólida
+     e cheia (sem gradiente suave), botões chapados de alto contraste.
+     Traduzido pra azul da Blue, sem virar laranja.
+  ============================================================ */
+  .secao h2{font-weight:800;letter-spacing:-.01em;font-size:12px}
+  .tb-title{font-weight:800;letter-spacing:-.025em}
+  .nav-item{font-weight:650}
+  .nav-item.ativo{font-weight:750}
+
+  /* ---- Botões: chapados, sem gradiente, sem sombra-glow suave ---- */
+  .btn-primario{background:var(--ac);box-shadow:none;font-weight:700;letter-spacing:-.005em}
+  .btn-primario:hover{background:#173fc4;box-shadow:none;transform:none}
+  .btn-primario:active{background:#122f99}
+  .btn-sec{font-weight:700;border-width:1.5px}
+
+  /* ---- Início: hero cheio, tipografia extra-bold, sem glow difuso ---- */
+  .home-hero{background:var(--ac);border-radius:var(--r-lg);padding:38px 36px;overflow:hidden}
+  .home-hero::before{display:none}
+  .home-hero::after{content:'';position:absolute;right:0;top:0;bottom:0;width:42%;pointer-events:none;
+    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.10) 40%,rgba(255,255,255,.10) 46%,transparent 46%,
+      transparent 60%,rgba(255,255,255,.08) 60%,rgba(255,255,255,.08) 64%,transparent 64%)}
+  .home-hero .hh-oi{font-size:13px;font-weight:650;opacity:.85}
+  .home-hero .hh-t{font-size:38px;font-weight:900;letter-spacing:-.03em;line-height:1.06;margin-top:10px;max-width:560px}
+  .home-hero .hh-s{font-size:14px;opacity:.88;margin-top:12px;max-width:420px}
+
+  /* ---- Números: mais peso, mais tamanho ---- */
+  .home-kpi{border:none;box-shadow:var(--sh-sm)}
+  .home-kpi:hover{box-shadow:var(--sh-md)}
+  .home-kpi .v{font-size:34px;font-weight:900;letter-spacing:-.03em}
+  .home-kpi .l{font-weight:650}
+  .custo-card .cc-big{font-weight:800;font-size:38px}
+  .pl-litros{font-weight:800}
+  .op-topo b{font-weight:800}
+  .pend-hero .ph .n{font-weight:800}
+
+  /* ---- Cartão em destaque: borda sólida cheia, não linha fina ---- */
+  .plano-card{border:2px solid var(--ac);background:var(--ac-soft)}
+  .posto-card.melhor{border:2px solid var(--ok);box-shadow:none}
+  .posto-card.abastecer{border:2px solid var(--warn);box-shadow:none}
+  .tag-melhor,.tag-abastecer{font-weight:800;letter-spacing:.03em}
+
+  /* ---- Menu lateral: item ativo mais sólido ---- */
+  .nav-item.ativo{box-shadow:none}
+  .nav-logo{box-shadow:none}
+
+  /* ---- Login: bloco de cor cheio, cabeçalho extra-bold ---- */
+  #loginTela{background:var(--nav)}
+  #loginTela::before{content:'';position:fixed;inset:0;pointer-events:none;
+    background:linear-gradient(100deg,transparent 55%,rgba(29,78,216,.55) 55%,rgba(29,78,216,.55) 100%)}
+  #loginTela .login-box{position:relative;z-index:1;box-shadow:0 40px 90px -20px rgba(0,0,0,.5)}
+  #loginTela h2{font-weight:900;letter-spacing:-.03em;font-size:23px}
+  #loginTela .btn-primario{font-weight:750}
+
+  /* ---- Barra superior: título com mais presença ---- */
+  #topbar{border-bottom:1.5px solid var(--line)}
+  #topbar #syncStatus.nuvem{font-weight:700}
+
+  /* ============================================================
+     v7 — MAPA COMO PEÇA DE DESIGN + COR COM SIGNIFICADO NA TELA INICIAL
+     Pedido: tela de início mais clara, mapa mais bonito, mais cores.
+  ============================================================ */
+
+  /* ---- Mapa: moldura, cantos e cor mais vivos ---- */
+  .map-wrap{padding:14px 14px 14px 0}
+  @media (max-width:820px){ .map-wrap{padding:0 14px 14px} }
+  #mapa{width:100%;height:100%;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg);border:1px solid var(--line)}
+  .leaflet-tile-pane{filter:saturate(1.4) contrast(1.05)}
+  .legenda{left:26px}
+  .pin{width:36px;height:36px;box-shadow:0 8px 18px rgba(5,32,70,.38),0 0 0 3px #fff}
+  .pin span{display:flex;align-items:center;justify-content:center}
+  .pin span svg{width:15px;height:15px;stroke:#fff;stroke-width:2}
+  .pin.bloq span svg,.pin.cinza span svg{opacity:.9}
+
+  /* ---- Início: cor com significado nos KPIs ---- */
+  .home-kpi{border-left:4px solid transparent;padding-left:17px}
+  .home-kpi .ic{position:absolute;right:14px;top:14px;width:16px;height:16px;padding:9px;
+    border-radius:50%;box-sizing:content-box;opacity:1}
+  .home-kpis .home-kpi:nth-child(1){border-left-color:var(--ac)}
+  .home-kpis .home-kpi:nth-child(1) .ic{background:var(--ac-soft);color:var(--ac)}
+  .home-kpis .home-kpi:nth-child(2){border-left-color:var(--ok)}
+  .home-kpis .home-kpi:nth-child(2) .ic{background:var(--ok-soft);color:var(--ok)}
+  .home-kpis .home-kpi:nth-child(3){border-left-color:var(--dang)}
+  .home-kpis .home-kpi:nth-child(3) .ic{background:var(--dang-soft);color:var(--dang)}
+  .home-kpis .home-kpi:nth-child(4){border-left-color:var(--warn)}
+  .home-kpis .home-kpi:nth-child(4) .ic{background:var(--warn-soft);color:var(--warn)}
+
+  /* ---- Início: cor nos cartões de acesso rápido ---- */
+  .home-card{border-top:3px solid transparent}
+  .home-card .ci{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:2px}
+  .home-acoes .home-card:nth-child(1){border-top-color:var(--ac)}
+  .home-acoes .home-card:nth-child(1) .ci{background:var(--ac-soft);color:var(--ac)}
+  .home-acoes .home-card:nth-child(2){border-top-color:var(--dang)}
+  .home-acoes .home-card:nth-child(2) .ci{background:var(--dang-soft);color:var(--dang)}
+  .home-acoes .home-card:nth-child(3){border-top-color:var(--accent)}
+  .home-acoes .home-card:nth-child(3) .ci{background:#e6fbfd;color:#0e7a90}
+  .home-acoes .home-card:nth-child(4){border-top-color:var(--ok)}
+  .home-acoes .home-card:nth-child(4) .ci{background:var(--ok-soft);color:var(--ok)}
+  .home-card.alerta{background:var(--card)}
+
+  /* ---- Clareza: mais contraste no texto secundário ---- */
+  :root{ --muted:#586178 }
+  .home-hero .hh-s{opacity:1;color:#dbe6ff}
+  .secao h2{color:var(--ink-2)}
+
+  /* ============================================================
+     v8 — COR EM TODAS AS ABAS
+     Estende o mesmo tratamento (cor com significado, mais peso) para
+     Postos, Indicadores, Oportunidades, Pendências e as demais —
+     não só Início e mapa.
+  ============================================================ */
+  .secao h2 .ic{color:var(--ac);opacity:1}
+
+  /* ---- Resumo (Postos / Indicadores): cada número com sua cor ---- */
+  .resumo-nums .rn{border-top:3px solid var(--ac);position:relative}
+  .resumo-nums .rn:nth-child(4n+1){border-top-color:var(--ac)}
+  .resumo-nums .rn:nth-child(4n+2){border-top-color:var(--accent)}
+  .resumo-nums .rn:nth-child(4n+3){border-top-color:var(--ok)}
+  .resumo-nums .rn:nth-child(4n+4){border-top-color:var(--dang)}
+  .uf-chip{border-left:3px solid var(--ac-line);font-weight:600}
+
+  /* ---- Oportunidades ---- */
+  .op-topo > div{border-top:3px solid var(--ac)}
+  .op-topo > div:nth-child(2){border-top-color:var(--accent)}
+  .op-topo > div:nth-child(3){border-top-color:var(--ok)}
+  .op-item.bom{border-left:3px solid var(--ok)}
+  .op-item.ruim{border-left:3px solid var(--dang)}
+
+  /* ---- Indicadores: títulos dos gráficos mais firmes ---- */
+  .graf-t{font-weight:800;font-size:12px;color:var(--ink)}
+  .graf-card{border-top:3px solid var(--ac-line)}
+
+  /* ---- Pendências: cartões com listra lateral mais forte ---- */
+  .pend-card{border-left-width:4px}
+  .pend-hero .ph{border-width:1.5px}
+
+  /* ---- Configurações / Gerenciadora / Usuários: destaque nos rótulos ---- */
+  .cfg-lbl{color:var(--ac)}
+  .fmt b{color:var(--ac)}
+
+  /* ---- Autonomia: barra de progresso mais viva ---- */
+  .aut-bar>i{background:linear-gradient(90deg,var(--accent),#5eead4)}
+
+  /* ---- Botões secundários com leve toque de cor no hover ---- */
+  .btn-sec:hover{border-color:var(--ac-line);background:var(--ac-soft);color:var(--ac)}
+
+  /* ---- Seleção de postos para o relatório ---- */
+  .sel-ctrl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);
+    margin-bottom:11px;padding:10px 13px;background:var(--line-2);border-radius:var(--r)}
+  .sel-ctrl label{display:flex;align-items:center;gap:7px;font-weight:650;color:var(--ink-2);cursor:pointer;margin:0}
+  .sel-ctrl input{width:auto}
+  .sel-ctrl span{font-weight:600}
+  .sel-ctrl .link-mini{margin-left:auto;padding:0}
+  .sel-posto{width:auto !important;flex:0 0 auto;cursor:pointer}
+  .pin.selecionado{box-shadow:0 0 0 4px var(--ac-soft),0 8px 18px rgba(5,32,70,.38),0 0 0 3px #fff}
 </style>
 
 <div id="app">
@@ -828,6 +1131,7 @@
 
       <div class="nav-sec">Operação</div>
       <button class="nav-item" id="nav-rota" onclick="mostrarAba('rota')" data-ic="route"><span class="ni-tx">Roteirização</span></button>
+      <button class="nav-item" id="nav-risco" onclick="mostrarAba('risco')" data-ic="clock"><span class="ni-tx">Painel de risco</span></button>
       <button class="nav-item" id="nav-gerenciadora" onclick="mostrarAba('gerenciadora')" data-ic="shield"><span class="ni-tx">Rota da gerenciadora</span></button>
       <button class="nav-item" id="nav-pendencias" onclick="mostrarAba('pendencias')" data-ic="alert"><span class="ni-tx">Pendências</span><span class="tab-badge" id="badgePend" style="display:none">0</span></button>
 
@@ -838,6 +1142,7 @@
       <div class="nav-sec">Análise</div>
       <button class="nav-item" id="nav-indicadores" onclick="mostrarAba('indicadores')" data-ic="chart"><span class="ni-tx">Indicadores</span></button>
       <button class="nav-item" id="nav-oportunidades" onclick="mostrarAba('oportunidades')" data-ic="target"><span class="ni-tx">Oportunidades</span></button>
+      <button class="nav-item" id="nav-relatorios" onclick="mostrarAba('relatorios')" data-ic="printer"><span class="ni-tx">Relatórios</span></button>
 
       <div class="nav-sec">Sistema</div>
       <button class="nav-item" id="nav-config" onclick="mostrarAba('config')" data-ic="settings"><span class="ni-tx">Configurações</span></button>
@@ -929,7 +1234,7 @@
 
         <div class="secao" id="secaoPerto">
           <div class="card-form">
-            <label>Ver postos perto de uma cidade</label>
+            <h2 data-ic="pin" style="margin-top:0;margin-bottom:10px">Ver postos perto de uma cidade</h2>
             <div class="linha">
               <input id="inpCidade" placeholder="Ex.: Uberlândia MG" onkeydown="if(event.key==='Enter') verPostosPerto()" />
               <button class="btn-sec" style="flex:0 0 auto" onclick="verPostosPerto()">Ver</button>
@@ -941,6 +1246,14 @@
         <div class="secao" id="secaoResultado" style="display:none">
           <h2 id="tituloResultado" data-ic="fuel">Postos no caminho</h2>
           <div id="resultado"></div>
+        </div>
+      </div>
+
+      <!-- ================= ABA PAINEL DE RISCO ================= -->
+      <div id="aba-risco" style="display:none">
+        <div class="secao">
+          <h2 data-ic="clock">Painel de risco da viagem</h2>
+          <div id="riscoConteudo"></div>
         </div>
       </div>
 
@@ -1000,6 +1313,14 @@
             <select id="opUF" onchange="renderOportunidades()"><option value="">Todos os estados</option></select>
           </div>
           <div id="opConteudo"></div>
+        </div>
+      </div>
+
+      <!-- ================= ABA RELATÓRIOS ================= -->
+      <div id="aba-relatorios" style="display:none">
+        <div class="secao">
+          <h2 data-ic="printer">Relatório da rota</h2>
+          <div id="relatorioConteudo"></div>
         </div>
       </div>
 
@@ -1210,13 +1531,6 @@
   </aside>
 
   <div class="map-wrap">
-    <div class="mapa-dica" id="mapaDica">
-      <div class="md-card">
-        <div class="md-ic" data-ic="route"></div>
-        <div class="md-t">Comece por uma rota</div>
-        <div class="md-s">Trace ou importe uma rota, ou busque uma cidade, para ver no mapa apenas os postos que interessam. Assim o mapa fica limpo e fácil de acompanhar.</div>
-      </div>
-    </div>
     <div class="dica-add" id="dicaAdd">Clique no mapa onde fica o posto…</div>
     <div class="legenda" id="legenda">
       <div class="lgt">Status do preço</div>
@@ -1348,11 +1662,16 @@ function fecharFrota(){ mostrarAba('inicio'); }
 // ---------- Estado ----------
 let postos = JSON.parse(localStorage.getItem('bluePostos')||'[]');
 let marcadores={}, editandoId=null, coordNovoPosto=null, modoAddPosto=false, previewMarker=null;
-let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, destinoSel=null, rotaPontos=null;
+let paradas=[], rotaCoords=null, rota_km=0, rota_horas=0, marcadoresRota=[], linhaRota=null, printData=null, rotaTitulo='', origemSel=null, destinoSel=null, rotaPontos=null, rotaCum=null, ultimaOrdemRota=[];
 let buscaPosto='', filtroUF='', ordemPostos='nome', ufMedias={}, pontoCentro=null, focoId=null;
 let postosSelecionados=new Set();
-function togglePosto(id, checked){ if(checked) postosSelecionados.add(id); else postosSelecionados.delete(id); renderMarcadores(); }
-function marcarTodosPostos(v){ document.querySelectorAll('#resultado .sel-posto').forEach(cb=>{ cb.checked=v; if(v) postosSelecionados.add(cb.dataset.id); else postosSelecionados.delete(cb.dataset.id); }); renderMarcadores(); }
+function _syncSelecao(){
+  renderMarcadores();
+  if(rotaCoords) listarPostosNaRota();
+  if(document.getElementById('aba-relatorios').style.display!=='none') renderRelatorio();
+}
+function togglePosto(id, checked){ if(checked) postosSelecionados.add(id); else postosSelecionados.delete(id); _syncSelecao(); }
+function marcarTodosPostos(v){ (ultimaOrdemRota||[]).forEach(p=>{ if(v) postosSelecionados.add(p.id); else postosSelecionados.delete(p.id); }); _syncSelecao(); }
 
 function salvar(){ localStorage.setItem('bluePostos',JSON.stringify(postos)); }
 
@@ -1495,9 +1814,9 @@ function postoPassaFiltro(p){
 function aplicarFiltros(){ renderMarcadores(); if(rotaCoords) listarPostosNaRota(); }
 
 // ---------- Abas ----------
-const _tituloAba={inicio:'Início',rota:'Roteirização',gerenciadora:'Rota da gerenciadora',pendencias:'Pendências',postos:'Postos',importacao:'Importação',indicadores:'Indicadores',oportunidades:'Oportunidades',config:'Configurações',usuarios:'Usuários'};
+const _tituloAba={inicio:'Início',rota:'Roteirização',risco:'Painel de risco',gerenciadora:'Rota da gerenciadora',pendencias:'Pendências',postos:'Postos',importacao:'Importação',indicadores:'Indicadores',oportunidades:'Oportunidades',relatorios:'Relatórios',config:'Configurações',usuarios:'Usuários'};
 function mostrarAba(nome){
-  ['inicio','rota','gerenciadora','pendencias','postos','importacao','indicadores','oportunidades','config','usuarios'].forEach(n=>{
+  ['inicio','rota','risco','gerenciadora','pendencias','postos','importacao','indicadores','oportunidades','relatorios','config','usuarios'].forEach(n=>{
     document.getElementById('aba-'+n).style.display = n===nome?'block':'none';
     const nav=document.getElementById('nav-'+n); if(nav) nav.classList.toggle('ativo', n===nome);
   });
@@ -1507,7 +1826,9 @@ function mostrarAba(nome){
   if(nome==='inicio') renderInicio();
   if(nome==='indicadores') renderGestao();
   if(nome==='oportunidades') renderOportunidades();
+  if(nome==='relatorios') renderRelatorio();
   if(nome==='usuarios') listarUsuarios();
+  if(nome==='risco') renderRisco();
 }
 function toggleRail(){ document.getElementById('app').classList.toggle('rail-min'); setTimeout(()=>{ try{ mapa.invalidateSize(); }catch(e){} },220); }
 
@@ -1536,7 +1857,7 @@ L.control.layers({
 }, null, {position:'topright', collapsed:true}).addTo(mapa);
 setTimeout(()=>mapa.invalidateSize(), 200);
 
-function pinIcon(classe,emoji,cor){ return L.divIcon({className:'', html:`<div class="pin ${classe}"${cor?` style="background:${cor}"`:''}><span>${emoji}</span></div>`, iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-30]}); }
+function pinIcon(classe,emoji,cor){ return L.divIcon({className:'', html:`<div class="pin ${classe}"${cor?` style="background:${cor}"`:''}><span>${emoji}</span></div>`, iconSize:[36,36], iconAnchor:[18,36], popupAnchor:[0,-34]}); }
 
 // ---------- Marcadores dos postos salvos ----------
 function renderMarcadores(){
@@ -1557,7 +1878,8 @@ function renderMarcadores(){
     const venc=precoVencido(p), opp=ehOportunidade(p);
     const _st=statusPreco(p);
     const _cls = p.naoAbastecer ? 'bloq' : (_st==='vencido'?'vencido':_st==='quase'?'quase':_st==='sem'?'cinza':'');
-    const m=L.marker([p.lat,p.lng],{icon:pinIcon(_cls,'')}).addTo(mapa);
+    const _selCls=postosSelecionados.has(p.id)?(_cls?_cls+' selecionado':'selecionado'):_cls;
+    const m=L.marker([p.lat,p.lng],{icon:pinIcon(_selCls,ic('fuel'))}).addTo(mapa);
     m.bindPopup(motorista
       ? `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}<br><br><a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank"><b>Abrir no Google Maps</b></a>`
       : `<b>${p.nome}</b>${p.ref?'<br><small>'+p.ref+'</small>':''}${p.jbs?'<br><b style="color:#047857">✓ Homologado JBS</b>':''}${p.naoAbastecer?'<br><b style="color:#b91c1c">⚠ NÃO ABASTECER</b>':''}<br><br>
@@ -1604,6 +1926,7 @@ function atualizarLista(){
   if(document.getElementById('aba-inicio').style.display!=='none') renderInicio();
   if(document.getElementById('aba-indicadores').style.display!=='none') renderGestao();
   if(document.getElementById('aba-oportunidades').style.display!=='none') renderOportunidades();
+  if(document.getElementById('aba-relatorios').style.display!=='none') renderRelatorio();
 }
 function renderSemLocal(){
   const el=document.getElementById('listaSemLocal'); const q=document.getElementById('qtdSemLocal'); if(!el) return;
@@ -2281,7 +2604,7 @@ async function tracarRota(){
 }
 
 async function desenharRota(coordsReq){
-  rotaPontos=coordsReq; pontoCentro=null; focoId=null;
+  rotaPontos=coordsReq; pontoCentro=null; focoId=null; postosSelecionados.clear();
   if(coordsReq.length<2){ infoRota.textContent='Preciso de origem e destino.'; return false; }
   infoRota.textContent='Calculando rota…';
   const path=coordsReq.map(c=>`${c.lng},${c.lat}`).join(';');
@@ -2296,6 +2619,7 @@ async function desenharRota(coordsReq){
     L.polyline(coords,{color:'#1366d6',weight:6,opacity:.95,lineCap:'round',lineJoin:'round'})
   ]).addTo(mapa);
   rotaCoords=coords; rota_km=rota.distance/1000; rota_horas=rota.duration/3600;
+  rotaCum=[0]; for(let i=1;i<coords.length;i++){ rotaCum[i]=rotaCum[i-1]+distKm(coords[i-1][0],coords[i-1][1],coords[i][0],coords[i][1]); }
   coordsReq.forEach((c,i)=>{ let cls='parada',emoji=String(i); if(i===0){cls='origem';emoji='A';} else if(i===coordsReq.length-1){cls='destino';emoji='B';} marcadoresRota.push(L.marker([c.lat,c.lng],{icon:pinIcon(cls,emoji)}).addTo(mapa)); });
   mapa.fitBounds(linhaRota.getBounds(),{padding:[50,50]});
   infoRota.innerHTML=`<b>${rota_km.toFixed(0)} km</b>`;
@@ -2358,8 +2682,11 @@ function limparRota(){
   paradas.forEach(p=>{ const b=document.getElementById('box_'+p.id); if(b) b.remove(); }); paradas=[];
   if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
   marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[];
-  rotaCoords=null; pontoCentro=null; focoId=null; secaoResultado.style.display='none'; infoRota.textContent='';
+  rotaCoords=null; rotaCum=null; rota_km=0; rota_horas=0; ultimaOrdemRota=[]; pontoCentro=null; focoId=null; secaoResultado.style.display='none'; infoRota.textContent='';
+  postosSelecionados.clear();
   renderMarcadores();
+  renderRisco();
+  if(document.getElementById('aba-relatorios').style.display!=='none') renderRelatorio();
 }
 
 // ---------- Distância ponto → rota ----------
@@ -2388,8 +2715,7 @@ function listarPostosNaRota(){
   lista.sort((a,b)=>{ const va=a[dkey], vb=b[dkey]; if(va==null&&vb==null) return a.dist-b.dist; if(va==null) return 1; if(vb==null) return -1; return va-vb; });
 
   // distância até o próximo posto AO LONGO da rota (pra planejar o tanque)
-  const cum=[0]; for(let i=1;i<rotaCoords.length;i++){ cum[i]=cum[i-1]+distKm(rotaCoords[i-1][0],rotaCoords[i-1][1],rotaCoords[i][0],rotaCoords[i][1]); }
-  const prog=p=>{ let best=Infinity,idx=0; for(let i=0;i<rotaCoords.length;i++){ const dx=p.lat-rotaCoords[i][0], dy=p.lng-rotaCoords[i][1], d=dx*dx+dy*dy; if(d<best){best=d;idx=i;} } return cum[idx]; };
+  const prog=p=>{ let best=Infinity,idx=0; for(let i=0;i<rotaCoords.length;i++){ const dx=p.lat-rotaCoords[i][0], dy=p.lng-rotaCoords[i][1], d=dx*dx+dy*dy; if(d<best){best=d;idx=i;} } return rotaCum[idx]; };
   lista.forEach(p=>p._prog=prog(p));
   const ordem=[...lista].sort((a,b)=>a._prog-b._prog);
   ordem.forEach((p,i)=>{ p._gap = i<ordem.length-1 ? (ordem[i+1]._prog - p._prog) : null; });
@@ -2398,7 +2724,9 @@ function listarPostosNaRota(){
   let maiorGap=0; ordem.forEach(p=>{ if(p._gap!=null && p._gap>maiorGap) maiorGap=p._gap; });
   window._maiorGapRota=maiorGap;
   ordem.forEach(p=>{ p._abastecer = aut>0 && p._gap!=null && p._gap>aut; });
+  ultimaOrdemRota=ordem;
   renderAutonomia();
+  renderRisco();
 
   const motorista=document.body.classList.contains('motorista');
   const precosRota=lista.filter(p=>p[dkey]!=null).map(p=>p[dkey]);
@@ -2411,18 +2739,30 @@ function listarPostosNaRota(){
     <div class="btn-linha acoes-rota" style="margin-top:0;margin-bottom:11px">
       <button class="btn-sec" onclick="imprimirRota()">Imprimir</button>
       <button class="btn-sec" onclick="gerarLinkMotorista()">Link p/ motorista</button></div>`;
-  const selCtrl='';
+  const nSel=lista.filter(p=>postosSelecionados.has(p.id)).length;
+  const selCtrl = motorista ? '' : `<div class="sel-ctrl">
+    <label><input type="checkbox" onchange="marcarTodosPostos(this.checked)" ${(nSel&&nSel===lista.length)?'checked':''} /> Selecionar todos</label>
+    <span>${nSel? nSel+' selecionado'+(nSel===1?'':'s') : 'nenhum selecionado'}</span>
+    <button class="link-mini" onclick="mostrarAba('relatorios')">Ver relatório →</button>
+  </div>`;
+  const plano = planoAbastecimento();
+  const planoPorId={}; if(plano) plano.paradas.forEach(s=>planoPorId[s.posto.id]=s);
+  const planoHtml = renderPlano(plano, dnome, motorista);
   const custoHtml = motorista ? '' : renderCustoRota(lista, dkey, dnome);
-  el.innerHTML = btnAcoes + resumo + custoHtml + selCtrl + lista.map(p=>{
+  el.innerHTML = btnAcoes + resumo + planoHtml + custoHtml + selCtrl + lista.map(p=>{
     const cell=(k,lbl)=>`<div class="preco ${k===dkey?'destaque':''}"><div class="lbl">${lbl}</div><div class="val">${fmt(p[k])}</div></div>`;
-    const chk='';
+    const chk = motorista ? '' : `<input type="checkbox" class="sel-posto" data-id="${p.id}" title="Selecionar para o relatório" onchange="togglePosto('${p.id}',this.checked)" ${postosSelecionados.has(p.id)?'checked':''} />`;
+    const planoStop=planoPorId[p.id];
     const gapTxt = p._gap!=null
       ? (p._abastecer
           ? 'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b> — além da autonomia!'
           : (p._gap>300?'':'')+'Próximo posto a <b>'+p._gap.toFixed(0)+' km</b>'+(p._gap>300?' — trecho longo!':''))
       : 'Último posto da rota';
-    return `<div class="posto-card${(!motorista&&p._abastecer)?' abastecer':''}">
-      ${(!motorista&&p._abastecer)?'<span class="tag-abastecer">ABASTECER AQUI</span>':''}
+    const tagHtml = planoStop
+      ? `<span class="tag-abastecer">PARAR · ${planoStop.litros.toFixed(0)} L</span>`
+      : ((!motorista&&p._abastecer)?'<span class="tag-abastecer">ABASTECER AQUI</span>':'');
+    return `<div class="posto-card${(planoStop||(!motorista&&p._abastecer))?' abastecer':''}">
+      ${tagHtml}
       <div class="nome" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span>${(!motorista&&p.jbs)?'<span class="jbs-tag">JBS</span>':''}${p.nome}</span>${chk}</div>
       <div class="dist">${p.ref?p.ref+' · ':''}${(!motorista&&p.hom)?''+p.hom+' · ':''}${(!motorista&&p.dtNeg)?''+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">vencido</b>':'')+' · ':''}${p.dist.toFixed(1)} km da rota</div>
       ${motorista?'':`<div class="precos">${cell('s10','S10')}${cell('s500','S500')}${cell('arla','Arla')}</div>`}
@@ -2488,6 +2828,149 @@ function renderCustoRota(lista, dkey, dnome){
   </div>`;
 }
 
+// ---------- Plano de abastecimento inteligente ----------
+// A rota é fixa (definida pela gerenciadora de risco): a otimização escolhe
+// só ENTRE os postos já dentro dela — nunca sai do trajeto.
+// Estratégia gulosa clássica do "problema do posto de gasolina": em cada
+// parada, olha até onde o tanque cheio alcança; se houver um posto MAIS
+// BARATO dentro desse alcance, abastece só o suficiente pra chegar até ele;
+// senão, enche o tanque (ou só o necessário pra terminar a rota). Isso nunca
+// deixa o caminhão sem diesel e minimiza o total gasto.
+function planoAbastecimento(){
+  const capKm = autonomiaKm();
+  if(!rotaCoords || !rota_km || !capKm) return null;
+  const dkey = config.dieselTipo;
+  const postosOrdenados = (ultimaOrdemRota||[]).filter(p=>p[dkey]!=null).slice().sort((a,b)=>a._prog-b._prog);
+  if(!postosOrdenados.length) return null;
+
+  const kml = autonomia.kml;
+  const paradas=[];
+  let posKm=0, tanqueKm=capKm; // sai da origem com o tanque cheio (autonomia já com 10% de reserva)
+  let inviavel=false;
+
+  for(let i=0;i<postosOrdenados.length;i++){
+    const st=postosOrdenados[i];
+    tanqueKm -= (st._prog-posKm);
+    posKm=st._prog;
+    if(tanqueKm < -0.5) inviavel=true;
+    tanqueKm=Math.max(0,tanqueKm);
+
+    // próximo posto mais barato que este, dentro do alcance do tanque cheio
+    let alvoKm=Math.min(posKm+capKm, rota_km);
+    for(let j=i+1;j<postosOrdenados.length;j++){
+      const sj=postosOrdenados[j];
+      if(sj._prog-posKm > capKm) break;
+      if(sj[dkey] < st[dkey]){ alvoKm=sj._prog; break; }
+    }
+    const necessario=alvoKm-posKm;
+    const encher=Math.min(Math.max(0,necessario-tanqueKm), capKm-tanqueKm);
+    if(encher>0.5){
+      const litros=encher/kml;
+      paradas.push({ posto:st, litros, custo:litros*st[dkey], kmChegada:posKm });
+      tanqueKm+=encher;
+    }
+  }
+  tanqueKm -= (rota_km-posKm);
+  if(tanqueKm < -0.5) inviavel=true;
+
+  return {
+    paradas, inviavel, capKm,
+    totalLitros: paradas.reduce((a,p)=>a+p.litros,0),
+    totalCusto: paradas.reduce((a,p)=>a+p.custo,0),
+  };
+}
+function renderPlano(plano, dnome, motorista){
+  if(!plano) return `<div class="custo-card plano-card"><div class="cc-t">Plano de abastecimento inteligente</div>
+    <div class="cc-vazio">Informe a <b>capacidade do tanque e o consumo</b> em "Autonomia do tanque" (acima) para eu calcular em quais postos parar e quantos litros abastecer em cada um.</div></div>`;
+  if(!plano.paradas.length) return `<div class="custo-card plano-card"><div class="cc-t">Plano de abastecimento inteligente</div>
+    <div class="cc-vazio">Com a autonomia informada, o tanque cheio na saída já cobre esta rota inteira — nenhuma parada é necessária.</div></div>`;
+  const linhas=plano.paradas.map((s,i)=>`
+    <div class="plano-item">
+      <div class="pl-pos">${i+1}</div>
+      <div class="pl-info">
+        <div class="pl-nome">${s.posto.nome}</div>
+        <div class="pl-sub">km ${s.kmChegada.toFixed(0)} da rota${s.posto.ref?' · '+s.posto.ref:''}</div>
+      </div>
+      <div class="pl-num">
+        <div class="pl-litros">${s.litros.toFixed(0)} L</div>
+        ${motorista?'':`<div class="pl-custo">${moeda(s.custo)}</div>`}
+      </div>
+    </div>`).join('');
+  return `<div class="custo-card plano-card">
+    <div class="cc-t">Plano de abastecimento inteligente</div>
+    ${linhas}
+    <div class="pl-total"><span>${plano.paradas.length} parada(s) · <b>${plano.totalLitros.toFixed(0)} L</b> de ${dnome}</span>${motorista?'':`<b>${moeda(plano.totalCusto)}</b>`}</div>
+    ${plano.inviavel?`<div class="aut-alert ruim" style="margin-top:10px">Mesmo enchendo o tanque em cada parada, há um trecho maior que a autonomia — reveja a rota ou cadastre postos nesse trecho.</div>`:''}
+    <div class="cc-base">Considerando saída com o tanque cheio · otimizado só entre os postos desta rota, sem sair do trajeto.</div>
+  </div>`;
+}
+
+// ---------- Painel de risco da viagem ----------
+// Combina a autonomia de combustível com as pausas de descanso exigidas pela
+// Lei do Motorista (13.103/2015: ao menos 30 min de pausa a cada 5h30 de direção)
+// numa única linha do tempo, pra decidir antes de sair, não durante a viagem.
+function calcularParadasDescanso(){
+  if(!(rota_horas>0) || !(rota_km>0)) return [];
+  const LIMITE_H=5.5;
+  const paradas=[];
+  for(let h=LIMITE_H; h<rota_horas; h+=LIMITE_H) paradas.push({ horas:h, km:(h/rota_horas)*rota_km });
+  return paradas;
+}
+function postoMaisPertoDoKm(km){
+  if(!ultimaOrdemRota.length) return null;
+  let best=null, bd=Infinity;
+  ultimaOrdemRota.forEach(p=>{ const d=Math.abs(p._prog-km); if(d<bd){ bd=d; best=p; } });
+  return bd<=25 ? best : null;
+}
+function renderRisco(){
+  const el=document.getElementById('riscoConteudo'); if(!el) return;
+  if(!rotaCoords || !rota_km){
+    el.innerHTML=`<div class="vazio">Trace uma rota na aba <b>Roteirização</b> para ver aqui as pausas obrigatórias de descanso, os trechos sem posto e um resumo de risco da viagem antes de sair.</div>`;
+    return;
+  }
+  const aut=autonomiaKm();
+  const maiorGap=window._maiorGapRota||0;
+  const descansos=calcularParadasDescanso();
+  const abastecer=ultimaOrdemRota.filter(p=>p._abastecer);
+  const h=Math.floor(rota_horas), m=Math.round((rota_horas-h)*60);
+  const horasTxt = h>0 ? `${h}h${m?m.toString().padStart(2,'0'):''}` : `${m}min`;
+
+  const hero=`<div class="pend-hero" style="flex-wrap:wrap">
+    <div class="ph ok"><div class="n">${rota_km.toFixed(0)}</div><div class="t">km da rota</div></div>
+    <div class="ph ${rota_horas>10?'quase':'ok'}"><div class="n">${horasTxt}</div><div class="t">tempo ao volante</div></div>
+    <div class="ph ${descansos.length?'quase':'ok'}"><div class="n">${descansos.length}</div><div class="t">pausa(s) obrigatória(s)</div></div>
+    <div class="ph ${(aut>0&&maiorGap>aut)?'venc':'ok'}"><div class="n">${maiorGap.toFixed(0)}</div><div class="t">maior trecho sem posto (km)</div></div>
+  </div>`;
+
+  let alertas='';
+  if(aut>0 && maiorGap>aut) alertas+=`<div class="aut-alert ruim" style="margin-top:12px">Trecho de <b>${maiorGap.toFixed(0)} km</b> sem posto negociado — maior que a autonomia do caminhão (<b>${aut.toFixed(0)} km</b>). Garanta o tanque cheio antes desse trecho.</div>`;
+  if(!aut) alertas+=`<div class="aviso" style="margin-top:12px">Preencha a capacidade e o consumo do tanque na aba Roteirização para eu calcular os trechos de risco por combustível.</div>`;
+  if(rota_horas>24) alertas+=`<div class="aviso" style="margin-top:12px">Viagem longa — cerca de <b>${Math.ceil(rota_horas/24)} dias</b> considerando as pausas de descanso. Avalie troca de motorista ou pernoite programado.</div>`;
+
+  const eventos=[
+    ...abastecer.map(p=>({km:p._prog, tipo:'abastecer', posto:p})),
+    ...descansos.map(d=>({km:d.km, tipo:'descanso', horas:d.horas, posto:postoMaisPertoDoKm(d.km)}))
+  ].sort((a,b)=>a.km-b.km);
+
+  const linha = eventos.length ? eventos.map(e=>{
+    if(e.tipo==='abastecer'){
+      return `<div class="pend-card" style="border-left-color:var(--ac)">
+        <div class="pc-top"><div>
+          <div class="pc-nome">${ic('fuel','ic-sm')} Abastecer — ${e.posto.nome}</div>
+          <div class="pc-sub">${e.posto.ref?e.posto.ref+' · ':''}km ${e.km.toFixed(0)} da rota</div>
+        </div></div></div>`;
+    }
+    return `<div class="pend-card quase">
+      <div class="pc-top"><div>
+        <div class="pc-nome">${ic('clock','ic-sm')} Pausa de descanso — ${e.horas.toFixed(1)}h de direção</div>
+        <div class="pc-sub">${e.posto?'Perto de '+e.posto.nome+' · ':'Sem posto próximo · '}km ${e.km.toFixed(0)} da rota</div>
+      </div></div></div>`;
+  }).join('') : `<div class="vazio">Nenhuma parada obrigatória de descanso nesta rota.</div>`;
+
+  el.innerHTML = hero + alertas
+    + `<div style="margin-top:18px"><h2 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0 0 10px">Linha do tempo da viagem</h2>${linha}</div>`;
+}
+
 // ---------- Postos perto de uma cidade ----------
 function distKm(lat1,lng1,lat2,lng2){ const R=6371,r=Math.PI/180; const dLat=(lat2-lat1)*r,dLng=(lng2-lng1)*r; const a=Math.sin(dLat/2)**2+Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
 async function verPostosPerto(){
@@ -2500,8 +2983,15 @@ async function verPostosPerto(){
   if(linhaRota){ mapa.removeLayer(linhaRota); linhaRota=null; }
   marcadoresRota.forEach(m=>mapa.removeLayer(m)); marcadoresRota=[]; rotaCoords=null;
   pontoCentro={lat:g.lat,lng:g.lng}; focoId=null; info.textContent='';
-  mapa.setView([g.lat,g.lng],8);
   renderMarcadores(); listarPostosPerto(cidade);
+  // puxa o mapa direto para a cidade (não fica zoom-out por postos distantes dentro do raio de 150 km)
+  const bemPerto=postos.filter(p=>p.lat!=null && distKm(p.lat,p.lng,g.lat,g.lng)<=40);
+  if(bemPerto.length){
+    const b=L.latLngBounds(bemPerto.map(p=>[p.lat,p.lng])); b.extend([g.lat,g.lng]);
+    mapa.fitBounds(b,{padding:[60,60],maxZoom:13});
+  } else {
+    mapa.setView([g.lat,g.lng],12);
+  }
 }
 function limparPerto(){ pontoCentro=null; document.getElementById('inpCidade').value=''; secaoResultado.style.display='none'; renderMarcadores(); }
 function listarPostosPerto(cidade){
@@ -2540,6 +3030,59 @@ function imprimirRota(){
     <div class="box"><b>Rota:</b> ${d.rota||'—'}<br><b>Distância:</b> ${d.info||'—'}</div>
     <table><thead><tr><th>Posto</th><th style="text-align:center">Dist.</th><th style="text-align:right">S10</th><th style="text-align:right">S500</th><th style="text-align:right">Arla</th></tr></thead><tbody>${linhas}</tbody></table>
     <div class="rod">Gerado em ${new Date().toLocaleString('pt-BR')} · postos do ${d.dnome} mais barato ao mais caro</div></body></html>`);
+  win.document.close(); win.focus(); setTimeout(()=>win.print(),300);
+}
+
+// ---------- Relatório (rota + postos selecionados) ----------
+function limparSelecaoRelatorio(){ postosSelecionados.clear(); _syncSelecao(); }
+function renderRelatorio(){
+  const el=document.getElementById('relatorioConteudo'); if(!el) return;
+  if(!rotaCoords || !ultimaOrdemRota.length){
+    el.innerHTML=`<div class="vazio">Trace ou importe uma rota na aba <b>Roteirização</b>. Lá, marque as caixinhas dos postos que quer neste relatório — sem nenhuma marcada, o relatório traz todos os postos da rota.</div>`;
+    return;
+  }
+  const dkey=config.dieselTipo, dnome=dkey==='s10'?'S10':'S500';
+  const todos=ultimaOrdemRota;
+  const modoTodos = postosSelecionados.size===0;
+  const selecionados = (modoTodos ? todos : todos.filter(p=>postosSelecionados.has(p.id))).slice().sort((a,b)=>a._prog-b._prog);
+
+  const resumo=`<div class="resumo-viagem">Rota: <b>${rotaTitulo || ((origem.value||'origem')+' → '+(destino.value||'destino'))}</b> · ${rota_km.toFixed(0)} km
+    <br><small>${modoTodos? 'Nenhum posto selecionado — mostrando todos os '+todos.length+' postos da rota.' : selecionados.length+' de '+todos.length+' postos selecionados.'} Ajuste a seleção na aba Roteirização.</small></div>`;
+  const custoHtml = renderCustoRota(selecionados, dkey, dnome);
+  const btns=`<div class="btn-linha" style="margin-top:0;margin-bottom:14px">
+    <button class="btn-sec" onclick="imprimirRelatorio()">Imprimir / exportar PDF</button>
+    <button class="btn-sec" onclick="limparSelecaoRelatorio()">Limpar seleção</button>
+  </div>`;
+  const linhas = selecionados.map(p=>`
+    <div class="posto-card">
+      <div class="nome">${(p.jbs)?'<span class="jbs-tag">JBS</span>':''}${p.nome}</div>
+      <div class="dist">${p.ref?p.ref+' · ':''}km ${p._prog.toFixed(0)} da rota${p.dtNeg?' · '+p.dtNeg+(precoVencido(p)?' <b style="color:#e5484d">vencido</b>':''):''}</div>
+      <div class="precos">
+        <div class="preco ${dkey==='s10'?'destaque':''}"><div class="lbl">S10</div><div class="val">${fmt(p.s10)}</div></div>
+        <div class="preco ${dkey==='s500'?'destaque':''}"><div class="lbl">S500</div><div class="val">${fmt(p.s500)}</div></div>
+        <div class="preco"><div class="lbl">Arla</div><div class="val">${fmt(p.arla)}</div></div>
+      </div>
+    </div>`).join('');
+  el.innerHTML = btns + resumo + custoHtml + (selecionados.length? linhas : '<div class="vazio">Nenhum posto selecionado.</div>');
+}
+function imprimirRelatorio(){
+  if(!rotaCoords || !ultimaOrdemRota.length){ alert('Trace uma rota primeiro.'); return; }
+  const todos=ultimaOrdemRota;
+  const modoTodos = postosSelecionados.size===0;
+  const selecionados=(modoTodos ? todos : todos.filter(p=>postosSelecionados.has(p.id))).slice().sort((a,b)=>a._prog-b._prog);
+  const linhas=selecionados.map(p=>`<tr><td>${p.nome}${p.ref?' <small>('+p.ref+')</small>':''}</td>
+      <td style="text-align:center">${p._prog.toFixed(0)} km</td><td style="text-align:right">${fmt(p.s10)}</td><td style="text-align:right">${fmt(p.s500)}</td><td style="text-align:right">${fmt(p.arla)}</td></tr>`).join('');
+  const win=window.open('','_blank'); if(!win){ alert('Permita pop-ups para imprimir.'); return; }
+  win.document.write(`<!doctype html><html lang="pt-br"><head><meta charset="utf-8"><title>Relatório — Blue Transportes</title>
+    <style>body{font-family:Inter,system-ui,Arial,sans-serif;color:#0f1b2d;padding:26px;max-width:820px;margin:auto}
+    h1{color:#0a4da2;margin:0 0 2px;font-size:22px}.tag{color:#888;font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
+    .box{background:#f5f7fb;border-radius:10px;padding:13px 15px;margin-bottom:14px;font-size:14px;line-height:1.7}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;border-bottom:1px solid #e6eaf1;text-align:left}
+    th{background:#0a4da2;color:#fff;font-size:11px;text-transform:uppercase}.rod{margin-top:22px;font-size:11px;color:#999}</style></head><body>
+    <h1>Blue Transportes</h1><div class="tag">Relatório de Abastecimento</div>
+    <div class="box"><b>Rota:</b> ${rotaTitulo || ((origem.value||'—')+' → '+(destino.value||'—'))}<br><b>Distância:</b> ${rota_km.toFixed(0)} km<br><b>Postos no relatório:</b> ${selecionados.length}${modoTodos?' (todos da rota — nenhum filtrado manualmente)':' (selecionados manualmente)'}</div>
+    <table><thead><tr><th>Posto</th><th style="text-align:center">Km da rota</th><th style="text-align:right">S10</th><th style="text-align:right">S500</th><th style="text-align:right">Arla</th></tr></thead><tbody>${linhas}</tbody></table>
+    <div class="rod">Gerado em ${new Date().toLocaleString('pt-BR')}</div></body></html>`);
   win.document.close(); win.focus(); setTimeout(()=>win.print(),300);
 }
 
@@ -2672,6 +3215,12 @@ async function excluirUsuario(user){
   if(/[#&]rota=/.test(location.hash||'')){ renderConfig(); checarLinkMotorista(); return; } // motorista: sem login
   const token=localStorage.getItem('authToken');
   if(token){ try{ const j=await authApi({action:'me', token}); if(j.ok){ authUser=j.user; authAdmin=j.admin; abrirApp(); return; } }catch{} }
+  // Dev local (ex.: `python -m http.server`): não há Cloudflare Functions publicadas,
+  // então /auth nem responde. Nesse caso só, libera o app sem exigir login real.
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){
+    try{ await authApi({action:'me', token:''}); }
+    catch{ authUser='Dev local'; authAdmin=true; abrirApp(); return; }
+  }
   mostrarLogin();
 })();
 </script>
