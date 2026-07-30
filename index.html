@@ -2027,6 +2027,7 @@ function renderResumoImport(r){
     +'<div class="ir-c'+(r.semLoc?' alerta':'')+'"><div class="v">'+r.semLoc+'</div><div class="l">sem localização</div></div>'
     +'</div>'
     +(r.inativos?'<div class="ir-nota">'+r.inativos+' posto(s) inativo(s) da planilha foram ignorados.</div>':'')
+    +(r.semColunaPreco?'<div class="ir-nota" style="background:var(--dang-soft);border-color:var(--dang-line);color:var(--dang);font-weight:650">Não encontrei nenhuma coluna de preço (S10, S500 ou Arla) nesta planilha — nenhum preço foi atualizado. Colunas do cabeçalho encontradas: <b>'+((r.cabecalhoOriginal||[]).join(', ')||'—')+'</b></div>':'')
     +(_nuvemAtiva?'<div class="ir-ok">Salvo na base compartilhada — toda a equipe já vê.</div>':'')
     +(linhas?'<div class="ir-lista">'+linhas+(r.mudancas.length>40?'<div class="li"><span>e mais '+(r.mudancas.length-40)+'…</span></div>':'')+'</div>':'')
     +'</div>';
@@ -2050,6 +2051,10 @@ async function processarLinhas(rows){
     dt:col('ultima neg','ult neg','dt neg','data neg','data'), hom:col('hom'), obs:col('observ'),
     contato:col('contato','telefone','fone') };
   if(ci.nome<0){ csvStatus.textContent='Não achei a coluna do nome do posto.'; return; }
+  // diagnóstico: se nenhuma coluna de preço foi reconhecida, os preços não vão ser
+  // atualizados em posto nenhum — melhor avisar do que falhar em silêncio
+  const semColunaPreco = ci.s10<0 && ci.s500<0 && ci.arla<0;
+  const cabecalhoOriginal = (rows[hr]||[]).map(h=>String(h||'').trim()).filter(Boolean);
 
   const chave=p=>{ const c=(p.cnpj||'').replace(/\D/g,''); return c.length>=11?'c'+c:'n'+_norm(p.nome)+'|'+_norm(p.ref); };
   const idx={}; postos.forEach(p=>idx[chave(p)]=p);
@@ -2081,7 +2086,10 @@ async function processarLinhas(rows){
     if(obj){
       if(dados.s10!=null && obj.s10!=null && Math.abs(dados.s10-obj.s10)>0.0005)
         mudancas.push({nome:obj.nome, antigo:obj.s10, novo:dados.s10});
-      Object.assign(obj,dados); upd++;
+      // só sobrescreve com o que veio preenchido na planilha — uma coluna vazia/não
+      // reconhecida nesta linha não pode apagar um preço já salvo
+      for(const kk in dados){ if(dados[kk]!=null && dados[kk]!=='') obj[kk]=dados[kk]; }
+      upd++;
     }
     else { obj={ id:'p'+Date.now()+'_'+r, gr:'', lat:null, lng:null, ...dados }; postos.push(obj); idx[k]=obj; add++; }
     if(coord){ obj.lat=coord.lat; obj.lng=coord.lng; }
@@ -2096,7 +2104,7 @@ async function processarLinhas(rows){
   salvar(); renderMarcadores();
   if(_nuvemAtiva){ csvStatus.textContent='Salvando na base compartilhada…'; await nuvemSalvarTudo(); }
   csvStatus.textContent='Importação concluída.';
-  renderResumoImport({ add, upd, semLoc, inativos, precos: mudancas.length, mudancas });
+  renderResumoImport({ add, upd, semLoc, inativos, precos: mudancas.length, mudancas, semColunaPreco, cabecalhoOriginal });
 }
 
 // ---------- Paradas ----------
