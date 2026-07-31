@@ -1224,16 +1224,11 @@ async function salvarLinkPlanilha(){
 }
 // Busca o CSV de preços: 1º a planilha do Google (se configurada), 2º o arquivo publicado junto com o site
 async function lerCsvFonte(){
+  // Só puxa de uma planilha do Google configurada. NÃO usa mais o arquivo
+  // embutido antigo, que sobrescrevia as importações feitas pela equipe.
   try{
     const j=await postosApi({action:'fetchsheet', token:tokenAuth()});
     if(j && j.ok && j.csv) return { csv:j.csv, fonte:'planilha do Google' };
-  }catch{}
-  try{
-    const r=await fetch('Postos-Blue-Transportes-PLANILHA.csv?v='+Date.now(),{cache:'no-store'});
-    if(r.ok){
-      const t=await r.text();
-      if(t && !/^\s*<(!doctype|html)/i.test(t)) return { csv:t, fonte:'arquivo do sistema' };
-    }
   }catch{}
   return null;
 }
@@ -2809,7 +2804,7 @@ async function authApi(payload){
 function abrirApp(){ document.getElementById('loginTela').style.display='none'; document.body.classList.toggle('is-admin', !!authAdmin);
   const tu=document.getElementById('tbUser'); if(tu) tu.textContent=(authUser||'U').trim().slice(0,1).toUpperCase();
   renderConfig(); renderAutonomiaInputs(); mostrarAba('inicio');
-  carregarPostos().then(()=>{ carregarCfgPlanilha(); if(authAdmin) sincronizarPlanilha(true); }); }
+  carregarPostos().then(()=>{ carregarCfgPlanilha(); }); }
 function mostrarLogin(){ document.getElementById('loginTela').style.display='flex'; setTimeout(()=>{ const s=document.getElementById('loginUser'); if(s) s.focus(); },120); }
 async function entrar(){
   const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('senhaInput').value;
