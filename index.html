@@ -2219,10 +2219,11 @@ async function importarRota(){
   const txt=impText.value.trim();
   if(!txt){ impStatus.textContent='Cole o link ou as cidades.'; return; }
   impStatus.textContent='Analisando…';
-  let pontos=[], titulo='';
+  let pontos=[], titulo='', falhas=[];
   try{
     if(/google\.[^/]*\/maps\/dir\//i.test(txt)){
-      pontos = await coordsDeMapsUrl(txt);
+      const res = await coordsDeMapsUrl(txt, s=>impStatus.textContent=s);
+      pontos = res.pts; falhas = res.falhas;
     } else if(/noxgr\.srv\.br/i.test(txt)){
       const link=(txt.match(/https?:\/\/\S+/)||[])[0];
       impStatus.textContent='Lendo a rota da NOX…';
@@ -2235,8 +2236,11 @@ async function importarRota(){
       pontos=[...txt.matchAll(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/g)].map(m=>({lat:+m[1],lng:+m[2]}));
     } else {
       const linhas=txt.split(/[\n;]+/).map(s=>s.trim()).filter(Boolean);
-      impStatus.textContent=`Localizando ${linhas.length} cidade(s)…`;
-      for(const l of linhas){ const g=await geocode(l); if(g) pontos.push(g); }
+      for(let i=0;i<linhas.length;i++){
+        impStatus.textContent=`Localizando ${i+1}/${linhas.length} cidade(s)…`;
+        const g=await _geoThrottle(linhas[i]);
+        if(g) pontos.push(g); else falhas.push(linhas[i]);
+      }
     }
   }catch(err){
     if(err.message==='func'||err.message==='parse')
@@ -2248,20 +2252,27 @@ async function importarRota(){
   rotaTitulo = titulo || 'Rota importada da gerenciadora';
   paradas=[]; document.getElementById('paradas').innerHTML='';
   impStatus.textContent='Rota importada! Traçando…';
+  const avisoFalhas = falhas.length ? `<div style="margin-top:8px;color:var(--dang)">Não localizei: ${falhas.join(', ')}. A rota foi traçada sem ${falhas.length>1?'esses pontos':'esse ponto'} — confira o trajeto.</div>` : '';
   const ok=await desenharRota(pontos);
-  if(ok){ impStatus.innerHTML='Pronto! Veja o trajeto e os postos na aba <b>Rota</b>.'; mostrarAba('rota'); }
-  else impStatus.textContent='Importei os pontos, mas não consegui traçar a rota.';
+  if(ok){ impStatus.innerHTML='Pronto! Veja o trajeto e os postos na aba <b>Rota</b>.'+avisoFalhas; mostrarAba('rota'); }
+  else impStatus.innerHTML='Importei os pontos, mas não consegui traçar a rota.'+avisoFalhas;
 }
-async function coordsDeMapsUrl(txt){
+async function coordsDeMapsUrl(txt, onProgress){
   const dir=txt.match(/maps\/dir\/([^\s"'<>]+)/i);
   let seg = dir? dir[1] : txt;
   seg = seg.split('/@')[0].split('/data=')[0];
   let pts=[...seg.matchAll(/(-?\d+\.\d+),(-?\d+\.\d+)/g)].map(m=>({lat:+m[1],lng:+m[2]}));
+  const falhas=[];
   if(pts.length<2 && dir){
     const parts=seg.split('/').filter(Boolean); pts=[];
-    for(const part of parts){ const g=await geocode(decodeURIComponent(part.replace(/\+/g,' '))); if(g) pts.push(g); }
+    for(let i=0;i<parts.length;i++){
+      const nome=decodeURIComponent(parts[i].replace(/\+/g,' '));
+      if(onProgress) onProgress(`Localizando ${i+1}/${parts.length} ponto(s) da rota…`);
+      const g=await _geoThrottle(nome);
+      if(g) pts.push(g); else falhas.push(nome);
+    }
   }
-  return pts;
+  return {pts, falhas};
 }
 function limparRota(){
   origem.value=''; destino.value='';
