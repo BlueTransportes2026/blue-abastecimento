@@ -643,66 +643,6 @@
   body.motorista #secaoPerto,
   body.motorista #legenda,
   body.motorista #resultado .acoes-rota{ display:none !important; }
-
-  /* ============================================================
-     TEMA ESCURO — "CENTRO DE COMANDO" (vem por último = prioridade)
-     Vira os tokens neutros; os componentes que usam var(--card),
-     var(--ink) etc. seguem automaticamente.
-  ============================================================ */
-  :root{
-    --bg:#0a1122; --card:#111d34; --card-2:#0e1830; --nav:#0a1424; --nav-2:#12203a;
-    --ink:#e9eef8; --ink-2:#b9c3d8; --muted:#8492ab; --muted-2:#657188;
-    --line:#213150; --line-2:#1a2740;
-    --ac:#3b82f6; --ac-2:#60a5fa; --ac-soft:rgba(59,130,246,.16); --ac-line:rgba(96,165,250,.38);
-    --ok:#34d399; --ok-soft:rgba(16,185,129,.15); --ok-line:rgba(52,211,153,.38);
-    --warn:#fbbf24; --warn-soft:rgba(245,158,11,.15); --warn-line:rgba(251,191,36,.38);
-    --dang:#f87171; --dang-soft:rgba(239,68,68,.16); --dang-line:rgba(248,113,113,.42);
-    --violet-soft:rgba(124,58,237,.18); --violet-line:rgba(139,92,246,.4); --violet-ink:#c4b5fd;
-    --cyan-soft:rgba(34,211,238,.14); --cyan-line:rgba(34,211,238,.38); --cyan-ink:#67e8f9;
-    --sh-sm:0 1px 2px rgba(0,0,0,.35);
-    --sh-md:0 16px 34px -12px rgba(0,0,0,.6);
-    --sh-lg:0 34px 80px -16px rgba(0,0,0,.75);
-  }
-  body{ background:
-    radial-gradient(1100px 540px at 100% -12%,rgba(34,211,238,.10),transparent 60%),
-    radial-gradient(860px 580px at -10% 6%,rgba(59,130,246,.14),transparent 58%),
-    var(--bg) !important; }
-
-  /* superfícies com branco/claro fixo → escurecidas */
-  input,select,textarea{ background:#0c1830 !important; color:var(--ink) !important; border-color:var(--line) !important; }
-  input:focus,select:focus,textarea:focus{ background:#0e1c38 !important; border-color:var(--ac) !important;
-    box-shadow:0 0 0 3px rgba(59,130,246,.25) !important; }
-  input::placeholder,textarea::placeholder{ color:var(--muted-2) !important; }
-  select option{ background:#0c1830; color:var(--ink); }
-  code{ background:rgba(255,255,255,.06) !important; color:var(--ink-2) !important; }
-  hr,.divisor{ border-color:var(--line) !important; }
-
-  /* Mapa (Leaflet) no escuro */
-  .leaflet-popup-content-wrapper,.leaflet-popup-tip{ background:#111d34 !important; color:var(--ink) !important;
-    box-shadow:0 16px 40px rgba(0,0,0,.65) !important; border:1px solid var(--line) !important; }
-  .leaflet-popup-content{ color:var(--ink) !important; }
-  .leaflet-popup-content a{ color:var(--ac-2) !important; }
-  .leaflet-popup-content small{ color:var(--muted) !important; }
-  .leaflet-bar a,.leaflet-control-layers,.leaflet-control-layers-toggle{
-    background:#111d34 !important; color:var(--ink) !important; border-color:var(--line) !important; }
-  .leaflet-bar a{ border-bottom-color:var(--line) !important; }
-  .leaflet-control-layers-expanded{ color:var(--ink) !important; }
-  .leaflet-control-layers label{ color:var(--ink) !important; }
-  .leaflet-control-attribution{ background:rgba(10,17,34,.82) !important; color:var(--muted-2) !important; }
-  .leaflet-control-attribution a{ color:var(--muted) !important; }
-
-  /* Aviso de mapa limpo, legenda e afins ganham fundo escuro translúcido */
-  .mapa-dica{ background:rgba(10,17,34,.45) !important; }
-  .legenda{ background:rgba(17,29,52,.94) !important; color:var(--ink) !important; }
-
-  /* login */
-  #loginTela .login-box{ background:var(--card) !important; }
-
-  /* barras de rolagem escuras */
-  ::-webkit-scrollbar{ width:11px; height:11px }
-  ::-webkit-scrollbar-thumb{ background:#26375a; border-radius:9px; border:2px solid var(--card) }
-  ::-webkit-scrollbar-thumb:hover{ background:#31456e }
-  ::-webkit-scrollbar-track{ background:transparent }
 </style>
 
 <div id="app">
@@ -2258,21 +2198,34 @@ async function importarRota(){
   else impStatus.innerHTML='Importei os pontos, mas não consegui traçar a rota.'+avisoFalhas;
 }
 async function coordsDeMapsUrl(txt, onProgress){
-  const dir=txt.match(/maps\/dir\/([^\s"'<>]+)/i);
-  let seg = dir? dir[1] : txt;
-  seg = seg.split('/@')[0].split('/data=')[0];
-  let pts=[...seg.matchAll(/(-?\d+\.\d+),(-?\d+\.\d+)/g)].map(m=>({lat:+m[1],lng:+m[2]}));
   const falhas=[];
-  if(pts.length<2 && dir){
-    const parts=seg.split('/').filter(Boolean); pts=[];
-    for(let i=0;i<parts.length;i++){
-      const nome=decodeURIComponent(parts[i].replace(/\+/g,' '));
-      if(onProgress) onProgress(`Localizando ${i+1}/${parts.length} ponto(s) da rota…`);
-      const g=await _geoThrottle(nome);
-      if(g) pts.push(g); else falhas.push(nome);
-    }
+  const dir=txt.match(/maps\/dir\/([^\s"'<>]+)/i);
+  if(!dir){
+    // link sem /dir/ — só extrai pares de coordenadas soltos
+    return { pts:[...txt.matchAll(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/g)].map(m=>({lat:+m[1],lng:+m[2]})), falhas };
   }
-  return {pts, falhas};
+  const seg = dir[1].split('/@')[0].split('/data=')[0].split('?')[0];
+  const parts = seg.split('/').filter(Boolean);
+  // O Google guarda as coordenadas exatas do DESTINO no bloco data (!1d<lng>!2d<lat>)
+  let destData=null;
+  const md = txt.match(/!1d(-?\d+\.\d+)!2d(-?\d+\.\d+)/);
+  if(md) destData={ lat:+md[2], lng:+md[1] };
+  const pts=[];
+  for(let i=0;i<parts.length;i++){
+    const part=parts[i];
+    const c=part.match(/^(-?\d+\.\d+),(-?\d+\.\d+)$/);
+    if(c){ pts.push({lat:+c[1], lng:+c[2]}); continue; }          // ponto por coordenada
+    const nome=decodeURIComponent(part.replace(/\+/g,' ')).trim(); // ponto por nome
+    if(!nome) continue;
+    // destino nomeado: usa as coordenadas exatas do próprio Google (mais confiável que geocodificar)
+    if(i===parts.length-1 && destData){ pts.push(destData); continue; }
+    if(onProgress) onProgress(`Localizando ${i+1}/${parts.length} ponto(s) da rota…`);
+    const g=await _geoThrottle(nome);
+    if(g) pts.push(g);
+    else if(i===parts.length-1 && destData) pts.push(destData);
+    else falhas.push(nome);
+  }
+  return { pts, falhas };
 }
 function limparRota(){
   origem.value=''; destino.value='';
