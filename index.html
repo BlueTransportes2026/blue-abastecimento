@@ -2148,7 +2148,10 @@ async function processarLinhas(rows){
       upd++;
     }
     else { obj={ id:'p'+Date.now()+'_'+r, gr:'', lat:null, lng:null, ...dados }; postos.push(obj); idx[k]=obj; add++; }
-    if(coord){ obj.lat=coord.lat; obj.lng=coord.lng; }
+    // só define coordenada em posto NOVO ou ainda sem localização — nunca
+    // sobrescreve a localização de um posto que já existe (protege os ajustes
+    // feitos à mão). Para mover um posto já cadastrado, edite-o na ficha.
+    if(coord && obj.lat==null){ obj.lat=coord.lat; obj.lng=coord.lng; }
     else if(obj.lat==null){ const q=[end,cidade,uf].filter(Boolean).join(', '); if(q) geocodar.push({p:obj,q}); else semLoc++; }
   }
   salvar(); renderMarcadores();
